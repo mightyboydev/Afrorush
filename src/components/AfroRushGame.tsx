@@ -70,7 +70,7 @@ export default function AfroRushGame({
     const config: Phaser.Types.Core.GameConfig = {
       type: Phaser.AUTO,
       parent: containerRef.current,
-      backgroundColor: "#1a0f33",
+      backgroundColor: "#120716",
       pixelArt: false,
       scale: {
         mode: Phaser.Scale.RESIZE,
@@ -159,7 +159,7 @@ export default function AfroRushGame({
   const goalPct = Math.round((hud?.goalProgress ?? 0) * 100);
 
   return (
-    <div className="relative h-full w-full overflow-hidden bg-[#1a0f33] select-none">
+    <div className="relative h-full w-full overflow-hidden bg-[#120716] select-none">
       <div ref={containerRef} className="phaser-wrap absolute inset-0" />
 
       {/* Top HUD */}

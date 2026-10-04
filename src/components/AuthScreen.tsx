@@ -37,29 +37,30 @@ export default function AuthScreen() {
   };
 
   return (
-    <main className="relative flex min-h-screen w-full items-center justify-center overflow-hidden bg-[#1a0f33] px-4 py-8 text-white">
-      {/* Decorative background */}
-      <div className="pointer-events-none absolute inset-0 rush-pattern opacity-40" />
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-[#2b1055]/30 via-[#1a0f33]/50 to-[#1a0f33]" />
-      <div className="pointer-events-none absolute -left-20 top-10 h-72 w-72 rounded-full bg-rush-flame/20 blur-3xl" />
-      <div className="pointer-events-none absolute -right-20 bottom-10 h-72 w-72 rounded-full bg-rush-jade/20 blur-3xl" />
+    <main className="relative flex min-h-screen w-full items-center justify-center overflow-hidden bg-[#120716] px-4 py-8 text-white">
+      <div className="pointer-events-none absolute inset-0 rush-pattern opacity-60" />
+      <div className="pointer-events-none absolute inset-0 street-stripes opacity-[0.07]" />
+      <div className="pointer-events-none absolute -left-24 top-0 h-80 w-80 rounded-full bg-rush-flame/30 blur-3xl" />
+      <div className="pointer-events-none absolute -right-24 bottom-0 h-80 w-80 rounded-full bg-rush-magenta/30 blur-3xl" />
 
       <div className="relative z-10 w-full max-w-md">
-        {/* Brand */}
         <div className="mb-6 text-center">
-          <div className="mb-2 text-[11px] uppercase tracking-[0.4em] text-rush-gold">
-            African Street Racing
+          <div className="mx-auto mb-3 inline-block -rotate-2 rounded-md border-2 border-black bg-rush-gold px-3 py-1 text-[11px] font-black uppercase tracking-widest text-black shadow-[3px_3px_0_#000]">
+            African street culture + racing
           </div>
-          <h1 className="text-5xl font-black uppercase leading-none text-stroke sm:text-6xl">
+          <h1 className="font-street text-6xl uppercase leading-none text-white drop-shadow-[4px_4px_0_#000] sm:text-7xl">
             Afro<span className="text-rush-flame">Rush</span>
           </h1>
-          <p className="mx-auto mt-3 max-w-xs text-xs text-white/60">
-            Sign in to race online, build a crew, and chase the leaderboard.
+          <p className="mx-auto mt-3 max-w-xs text-base font-black uppercase text-rush-gold">
+            Na street we dey. Ride. Link up. Rep your crew.
+          </p>
+          <p className="mx-auto mt-1 max-w-xs text-xs text-white/60">
+            Enter the motor park, find your people and become street legend.
           </p>
         </div>
 
         {/* Card */}
-        <div className="rounded-2xl border border-white/10 bg-black/40 p-5 backdrop-blur-md sm:p-6">
+        <div className="street-card p-5 sm:p-6">
           {/* Tab switch */}
           <div className="mb-5 grid grid-cols-2 gap-1 rounded-xl bg-black/40 p-1">
             <button
@@ -123,11 +124,11 @@ export default function AuthScreen() {
             <button
               type="submit"
               disabled={busy}
-              className={`w-full rounded-xl bg-gradient-to-r from-rush-flame to-rush-gold px-4 py-3 text-sm font-bold uppercase tracking-widest text-white shadow-lg shadow-rush-flame/30 transition-all hover:opacity-90 disabled:opacity-50 ${
-                mode === "signup" ? "!from-rush-jade !to-rush-gold" : ""
+              className={`w-full rounded-xl street-btn bg-rush-flame px-4 py-3 text-sm text-white disabled:opacity-50 ${
+                mode === "signup" ? "!bg-rush-jade" : ""
               }`}
             >
-              {busy ? "Please wait…" : mode === "login" ? "Sign In" : "Create Account"}
+              {busy ? "Wait small…" : mode === "login" ? "Enter the park" : "Join the street"}
             </button>
           </form>
 

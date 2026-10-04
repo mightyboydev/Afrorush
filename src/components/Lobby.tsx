@@ -60,9 +60,9 @@ export default function Lobby({ onStartRace }: LobbyProps) {
   }
 
   return (
-    <main className="relative min-h-screen w-full overflow-hidden bg-[#1a0f33] text-white">
+    <main className="relative min-h-screen w-full overflow-hidden bg-[#120716] text-white">
       <div className="pointer-events-none absolute inset-0 rush-pattern opacity-25" />
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-[#2b1055]/30 via-[#1a0f33]/50 to-[#1a0f33]" />
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-[#2b1055]/30 via-[#120716]/50 to-[#120716]" />
 
       <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-5xl flex-col">
         <LobbyHeader profile={profile} onSignOut={signOutUser} />
@@ -70,7 +70,7 @@ export default function Lobby({ onStartRace }: LobbyProps) {
         <Tabs tab={tab} setTab={setTab} />
 
         <div className="flex-1 px-4 pb-6 sm:px-6">
-          {tab === "home" && <HomeTab profile={profile} onStartRace={onStartRace} />}
+          {tab === "home" && <HomeTab profile={profile} onStartRace={onStartRace} setTab={setTab} />}
           {tab === "garage" && <GarageTab profile={profile} unlocked={unlocked} />}
           {tab === "crews" && <CrewsTab profile={profile} />}
           {tab === "leaderboard" && <LeaderboardTab profile={profile} />}
@@ -198,55 +198,97 @@ function Tabs({ tab, setTab }: { tab: Tab; setTab: (t: Tab) => void }) {
   );
 }
 
-// ---------- Home Tab ----------
+// ---------- Home Tab (Motor Park) ----------
 
-function HomeTab({ profile, onStartRace }: { profile: PlayerProfile; onStartRace: (m: RaceMode) => void }) {
+function HomeTab({ profile, onStartRace, setTab }: { profile: PlayerProfile; onStartRace: (m: RaceMode) => void; setTab: (t: Tab) => void }) {
   const [online, setOnline] = useState<LeaderboardEntry[]>([]);
   const [crews, setCrews] = useState<Crew[]>([]);
+  const [board, setBoard] = useState<LeaderboardEntry[]>([]);
 
   useEffect(() => subscribeToOnlinePlayers((players) => {
     setOnline(players.map((p) => ({
-      uid: p.uid,
-      username: p.username,
-      photoURL: p.photoURL,
-      rep: 0,
-      cash: 0,
-      crewTag: p.crewTag,
-      crewColor: p.crewColor,
-      totalScore: 0,
+      uid: p.uid, username: p.username, photoURL: p.photoURL, rep: 0, cash: 0,
+      crewTag: p.crewTag, crewColor: p.crewColor, totalScore: 0,
     })));
   }), []);
   useEffect(() => subscribeToCrews(setCrews), []);
+  useEffect(() => subscribeToLeaderboard(setBoard), []);
 
-  // Derive myCrew from the live crews list + the profile's crewId.
-  // No setState-in-effect needed — pure derivation.
-  const myCrew = profile.crewId
-    ? crews.find((c) => c.id === profile.crewId) ?? null
-    : null;
+  const myCrew = profile.crewId ? crews.find((c) => c.id === profile.crewId) ?? null : null;
+  const topCrews = [...crews].sort((a, b) => b.totalRep - a.totalRep).slice(0, 3);
+  const lvl = levelFromRep(profile.rep);
+  const next = nextRepTarget(profile.rep);
+  const prev = Math.pow(lvl - 1, 2) * 100;
+  const pct = Math.max(4, Math.min(100, Math.round(((profile.rep - prev) / Math.max(1, next - prev)) * 100)));
+  const bike = getItem(profile.loadout.bikeId);
 
+  const picks: RaceMode[] = ["freestyle-run", "street-race", "delivery-rush", "police-chase", "street-race", "delivery-rush", "police-chase"];
+  const pick = picks[new Date().getDay()];
   const modes: RaceMode[] = ["street-race", "delivery-rush", "police-chase", "freestyle-run"];
 
+  const gist = [
+    `${Math.max(1, online.length)} rider${online.length === 1 ? "" : "s"} dey the park right now 🔥`,
+    board[0] ? `${board[0].username} dey wear the crown with ${board[0].rep.toLocaleString()} rep 👑` : "Nobody don take the crown yet. Na you fit take am 👑",
+    topCrews[0] ? `[${topCrews[0].tag}] ${topCrews[0].name} na the number one crew 💪` : "No crew don rise yet. Start one, carry your people 🤝",
+    "Go-slow no fit stop real riders 🏍️",
+    "Rep na respect. Race, win, collect am.",
+  ];
+
   return (
-    <div className="space-y-4 pt-3">
-      {/* Online players strip */}
-      <Section title="Online Now" badge={`${online.length} rider${online.length === 1 ? "" : "s"}`}>
+    <div className="space-y-5 pt-3">
+      {/* Gist ticker */}
+      <div className="overflow-hidden rounded-xl border-2 border-black bg-rush-gold py-1.5 text-black shadow-[3px_3px_0_#000]">
+        <div className="marquee-track flex w-max gap-10 whitespace-nowrap text-xs font-black uppercase tracking-wide">
+          {[...gist, ...gist].map((g, i) => (<span key={i}>{g}</span>))}
+        </div>
+      </div>
+
+      {/* Player card */}
+      <div className="street-card p-4">
+        <div className="flex items-center gap-3">
+          <Avatar profile={profile} size={56} />
+          <div className="min-w-0 flex-1">
+            <div className="truncate font-street text-xl uppercase leading-tight text-white">{profile.username}</div>
+            <div className="text-[11px] font-bold uppercase tracking-wider text-rush-gold">
+              Lv {lvl} · {levelTitle(lvl)}{myCrew ? ` · [${myCrew.tag}]` : ""}
+            </div>
+            <div className="text-[11px] text-white/60">Riding: {bike?.name ?? "Lagos Spark"}</div>
+          </div>
+          <div className="text-right">
+            <div className="font-street text-lg text-rush-gold">{formatNaira(profile.cash)}</div>
+            <div className="text-[10px] uppercase tracking-widest text-white/50">cash</div>
+          </div>
+        </div>
+        <div className="mt-3 h-3 overflow-hidden rounded-full border-2 border-black bg-black/60">
+          <div className="h-full bg-gradient-to-r from-rush-flame to-rush-gold" style={{ width: `${pct}%` }} />
+        </div>
+        <div className="mt-1 text-[10px] uppercase tracking-widest text-white/50">{profile.rep.toLocaleString()} / {next.toLocaleString()} rep to next level</div>
+      </div>
+
+      {/* Big actions */}
+      <div className="grid grid-cols-2 gap-3">
+        <button onClick={() => onStartRace(pick)} className="street-btn col-span-2 bg-rush-flame py-5 text-2xl text-white">
+          🏁 Race now
+          <span className="mt-0.5 block text-[11px] font-bold normal-case tracking-normal text-white/80">Today's pick: {MODE_INFO[pick].name}</span>
+        </button>
+        <button onClick={() => setTab("garage")} className="street-btn bg-rush-gold py-4 text-black">🔧 Customize</button>
+        <button onClick={() => setTab("crews")} className="street-btn bg-rush-magenta py-4 text-white">🤝 Crew</button>
+        <button onClick={() => setTab("leaderboard")} className="street-btn col-span-2 bg-rush-jade py-4 text-white">🏆 Leaderboard</button>
+      </div>
+
+      {/* Motor Park */}
+      <Section title="Motor Park" subtitle="Who dey around" badge={`${online.length} online`}>
         {online.length === 0 ? (
-          <EmptyHint>No one else online — be the first to hit the streets today.</EmptyHint>
+          <EmptyHint>The park dey quiet. Be the first rider to show face today.</EmptyHint>
         ) : (
           <div className="no-scrollbar flex gap-2 overflow-x-auto pb-1">
             {online.map((p) => (
-              <div key={p.uid} className="flex shrink-0 flex-col items-center gap-1 rounded-xl bg-black/30 px-3 py-2 backdrop-blur-sm">
-                <Avatar profile={p} size={36} />
-                <div className="max-w-[64px] truncate text-[10px] font-bold uppercase tracking-wider text-white">
-                  {p.username}
-                </div>
+              <div key={p.uid} className="street-card relative flex shrink-0 flex-col items-center gap-1 px-3 py-2">
+                <span className="absolute right-1.5 top-1.5 h-2.5 w-2.5 rounded-full bg-green-400 shadow-[0_0_8px_#4ade80]" />
+                <Avatar profile={p} size={40} />
+                <div className="max-w-[72px] truncate text-[10px] font-black uppercase text-white">{p.username}</div>
                 {p.crewTag && (
-                  <span
-                    className="rounded px-1 py-0.5 text-[8px] font-bold uppercase tracking-widest text-black"
-                    style={{ background: p.crewColor ?? "#fff" }}
-                  >
-                    {p.crewTag}
-                  </span>
+                  <span className="rounded px-1 py-0.5 text-[8px] font-black uppercase text-black" style={{ background: p.crewColor ?? "#fff" }}>{p.crewTag}</span>
                 )}
               </div>
             ))}
@@ -254,69 +296,67 @@ function HomeTab({ profile, onStartRace }: { profile: PlayerProfile; onStartRace
         )}
       </Section>
 
-      {/* Your Crew card */}
-      <Section title="Your Crew">
-        {profile.crewId && myCrew ? (
-          <div
-            className="rounded-2xl border-2 p-4 backdrop-blur-sm"
-            style={{ borderColor: myCrew.color, background: `${myCrew.color}22` }}
-          >
+      {/* Crew */}
+      <Section title="Your Crew" subtitle="Your people">
+        {myCrew ? (
+          <button onClick={() => setTab("crews")} className="street-card w-full p-4 text-left" style={{ borderColor: myCrew.color }}>
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-[10px] uppercase tracking-widest text-white/50">Crew</div>
-                <div className="text-2xl font-black uppercase" style={{ textShadow: `0 0 24px ${myCrew.color}` }}>
-                  {myCrew.name}
-                </div>
+                <div className="font-street text-2xl uppercase" style={{ color: myCrew.color }}>{myCrew.name}</div>
+                <div className="text-[11px] uppercase tracking-widest text-white/60">{myCrew.memberCount} members · {myCrew.totalRep.toLocaleString()} rep</div>
               </div>
-              <div className="text-right">
-                <div className="rounded bg-black/40 px-2 py-0.5 font-mono text-sm font-bold tracking-widest text-white">
-                  [{myCrew.tag}]
-                </div>
-                <div className="mt-1 text-[10px] uppercase tracking-widest text-white/60">
-                  {myCrew.memberCount} members · {myCrew.totalRep.toLocaleString()} rep
-                </div>
-              </div>
+              <span className="rounded bg-black/50 px-2 py-1 font-mono text-sm font-bold text-white">[{myCrew.tag}]</span>
             </div>
-          </div>
+          </button>
         ) : (
-          <EmptyHint>
-            You're not in a crew yet. Head to the <strong className="text-rush-magenta">Crews</strong> tab to start or join one.
-          </EmptyHint>
+          <button onClick={() => setTab("crews")} className="street-card w-full border-dashed p-4 text-left text-sm text-white/80">
+            No crew yet. <strong className="text-rush-gold">Start one or join one →</strong> na crew dey carry street.
+          </button>
         )}
       </Section>
 
-      {/* Race modes grid */}
-      <Section title="Race Now" subtitle="Pick your battle">
+      {/* Leaderboard preview */}
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Section title="Top Riders" subtitle="Global">
+          <div className="street-card divide-y divide-white/10">
+            {board.slice(0, 3).map((e, i) => (
+              <div key={e.uid} className="flex items-center gap-3 px-3 py-2">
+                <span className="w-6 font-street text-lg text-rush-gold">{i + 1}</span>
+                <Avatar profile={e} size={28} />
+                <span className="flex-1 truncate text-sm font-bold text-white">{e.username}</span>
+                <span className="font-mono text-xs text-rush-gold">{e.rep.toLocaleString()}</span>
+              </div>
+            ))}
+            {board.length === 0 && <div className="px-3 py-3 text-xs text-white/50">Board dey empty. Go race!</div>}
+          </div>
+        </Section>
+        <Section title="Top Crews" subtitle="Crew wars">
+          <div className="street-card divide-y divide-white/10">
+            {topCrews.map((c, i) => (
+              <div key={c.id} className="flex items-center gap-3 px-3 py-2">
+                <span className="w-6 font-street text-lg text-rush-gold">{i + 1}</span>
+                <span className="flex-1 truncate text-sm font-bold" style={{ color: c.color }}>{c.name}</span>
+                <span className="font-mono text-xs text-white/70">{c.totalRep.toLocaleString()}</span>
+              </div>
+            ))}
+            {topCrews.length === 0 && <div className="px-3 py-3 text-xs text-white/50">No crew don rise yet.</div>}
+          </div>
+        </Section>
+      </div>
+
+      {/* Race modes */}
+      <Section title="Pick your battle" subtitle="All modes">
         <div className="grid gap-3 sm:grid-cols-2">
           {modes.map((m) => {
             const info = MODE_INFO[m];
-            const high = profile.highScores[m] ?? 0;
             return (
-              <button
-                key={m}
-                onClick={() => onStartRace(m)}
-                className="group relative overflow-hidden rounded-2xl border border-white/10 bg-black/30 p-4 text-left backdrop-blur-sm transition-all hover:scale-[1.01] hover:border-white/30"
-                style={{ boxShadow: `inset 4px 0 0 ${info.accent}` }}
-              >
+              <button key={m} onClick={() => onStartRace(m)} className="street-card p-4 text-left transition-transform active:translate-y-0.5" style={{ borderColor: info.accent }}>
                 <div className="flex items-center justify-between">
-                  <div>
-                    <div className="text-[10px] font-bold uppercase tracking-widest" style={{ color: info.accent }}>
-                      {info.tag}
-                    </div>
-                    <div className="mt-1 text-lg font-black uppercase text-white">{info.name}</div>
-                  </div>
-                  <div
-                    className="flex h-10 w-10 items-center justify-center rounded-xl text-xl"
-                    style={{ background: `${info.accent}33`, color: info.accent }}
-                  >
-                    {m === "street-race" ? "🏁" : m === "delivery-rush" ? "📦" : m === "police-chase" ? "🚓" : "∞"}
-                  </div>
+                  <div className="font-street text-lg uppercase text-white">{info.name}</div>
+                  <span className="text-[10px] font-black uppercase tracking-widest" style={{ color: info.accent }}>{info.tag}</span>
                 </div>
-                <p className="mt-2 text-xs text-white/60">{info.desc}</p>
-                <div className="mt-3 flex items-center justify-between border-t border-white/10 pt-2">
-                  <span className="text-[10px] uppercase tracking-widest text-white/40">Best</span>
-                  <span className="font-mono text-xs font-bold text-rush-gold">{high.toLocaleString()}</span>
-                </div>
+                <p className="mt-1 text-xs text-white/65">{info.desc}</p>
+                <div className="mt-2 text-[11px] text-white/50">Best: <span className="font-mono font-bold text-rush-gold">{(profile.highScores[m] ?? 0).toLocaleString()}</span></div>
               </button>
             );
           })}
