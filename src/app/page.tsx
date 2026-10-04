@@ -21,7 +21,7 @@ import Lobby from "@/components/Lobby";
 const AfroRushGame = dynamic(() => import("@/components/AfroRushGame"), {
   ssr: false,
   loading: () => (
-    <div className="flex h-full w-full items-center justify-center bg-[#1a0f33]">
+    <div className="flex h-full w-full items-center justify-center bg-[#120716]">
       <div className="text-center">
         <div className="mb-3 inline-block h-10 w-10 animate-spin rounded-full border-4 border-rush-gold border-t-transparent" />
         <div className="text-sm uppercase tracking-widest text-white/60">Loading engine…</div>
@@ -137,9 +137,9 @@ function ResultsScreen({
   const won = result.finished;
   const isQuit = result.reason === "quit";
   return (
-    <main className="relative flex min-h-screen w-full flex-col items-center justify-center gap-6 overflow-hidden bg-[#1a0f33] px-4 py-8 text-white sm:px-6">
+    <main className="relative flex min-h-screen w-full flex-col items-center justify-center gap-6 overflow-hidden bg-[#120716] px-4 py-8 text-white sm:px-6">
       <div className="pointer-events-none absolute inset-0 rush-pattern opacity-30" />
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-[#2b1055]/30 via-[#1a0f33]/50 to-[#1a0f33]" />
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-[#2b1055]/30 via-[#120716]/50 to-[#120716]" />
 
       <div className="relative z-10 flex flex-col items-center gap-6">
         <div className="text-center">
@@ -219,7 +219,7 @@ function Stat({ label, value, accent }: { label: string; value: string | number;
 
 function Fullscreen({ message }: { message: string }) {
   return (
-    <main className="flex min-h-screen items-center justify-center bg-[#1a0f33] text-white">
+    <main className="flex min-h-screen items-center justify-center bg-[#120716] text-white">
       <div className="text-center">
         <div className="mb-3 inline-block h-10 w-10 animate-spin rounded-full border-4 border-rush-gold border-t-transparent" />
         <div className="text-sm uppercase tracking-widest text-white/60">{message}</div>
