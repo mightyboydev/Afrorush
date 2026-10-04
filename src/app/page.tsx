@@ -6,13 +6,29 @@
 // user-driven transitions (start race / finish race / back to lobby) update.
 
 import { useState } from "react";
+import dynamic from "next/dynamic";
 import { AuthProvider, useAuth } from "@/lib/auth";
 import { applyRaceResult } from "@/lib/firestore";
 import { getItem, type RaceMode } from "@/lib/storage";
 import type { RaceResult } from "@/game/AfroRushScene";
 import AuthScreen from "@/components/AuthScreen";
 import Lobby from "@/components/Lobby";
-import AfroRushGame from "@/components/AfroRushGame";
+
+// AfroRushGame imports Phaser at module top-level. Phaser references `window`
+// during evaluation, which breaks Next.js's static prerender of "/". We load
+// the game component with ssr:false so Phaser is only ever evaluated in the
+// browser. (page.tsx is a Client Component, so ssr:false is allowed.)
+const AfroRushGame = dynamic(() => import("@/components/AfroRushGame"), {
+  ssr: false,
+  loading: () => (
+    <div className="flex h-full w-full items-center justify-center bg-[#1a0f33]">
+      <div className="text-center">
+        <div className="mb-3 inline-block h-10 w-10 animate-spin rounded-full border-4 border-rush-gold border-t-transparent" />
+        <div className="text-sm uppercase tracking-widest text-white/60">Loading engine…</div>
+      </div>
+    </div>
+  ),
+});
 
 type Phase = "lobby" | { kind: "race"; mode: RaceMode } | { kind: "results"; result: RaceResult };
 
