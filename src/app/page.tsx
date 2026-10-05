@@ -1,8 +1,9 @@
 "use client";
 
 // src/app/page.tsx — AfroRush entry point.
-// Phase 1 flow: LoadingScreen → Landing → Onboarding → 3D World.
-// Phaser race game runs as a mini-game when entering the Race Track (Phase 2).
+// Flow: LoadingScreen → Landing → Onboarding → Main app (4-tab bottom nav).
+// Tabs: Home (apartment), Map (3D world), Phone (smartphone), Buy (shop).
+// Race mode launches as a full-screen Phaser overlay.
 
 import { useState, useRef, useEffect } from "react";
 import dynamic from "next/dynamic";
@@ -14,6 +15,11 @@ import Joystick from "@/components/Joystick";
 import WorldUI from "@/components/WorldUI";
 import DialogueBox from "@/components/DialogueBox";
 import MissionTracker, { type Mission } from "@/components/MissionTracker";
+import BottomNav, { type Tab } from "@/components/BottomNav";
+import HomeScreen from "@/components/HomeScreen";
+import MapScreen from "@/components/MapScreen";
+import PhoneScreen from "@/components/PhoneScreen";
+import BuyScreen from "@/components/BuyScreen";
 import type { NPCData } from "@/world/NPCs";
 import type { RaceMode } from "@/lib/storage";
 import type { RaceResult } from "@/game/AfroRushScene";
@@ -35,30 +41,26 @@ type Phase =
   | { kind: "loading" }
   | { kind: "auth" }
   | { kind: "onboarding" }
-  | { kind: "world" };
+  | { kind: "app" };
 
 function AfroRushRoot() {
   const { state } = useAuth();
   const { user, profile, loading, loadingProfile } = state;
   const [booted, setBooted] = useState(false);
 
-  // Show loading screen for a minimum branding time on first load.
   useEffect(() => {
     const t = setTimeout(() => setBooted(true), 1200);
     return () => clearTimeout(t);
   }, []);
 
-  // Derive the current phase from auth state — no setState-in-effect needed.
   function derivePhase(): Phase {
     if (!booted || loading) return { kind: "loading" };
     if (!user) return { kind: "auth" };
     if (loadingProfile || !profile) return { kind: "loading" };
     if (!profile.onboardingComplete) return { kind: "onboarding" };
-    return { kind: "world" };
+    return { kind: "app" };
   }
   const phase = derivePhase();
-
-  // ---- Render gates ----
 
   if (phase.kind === "loading") {
     return loadingProfile
@@ -68,13 +70,16 @@ function AfroRushRoot() {
   if (phase.kind === "auth") return <Landing />;
   if (phase.kind === "onboarding") return <Onboarding />;
 
-  return <WorldShell profile={profile!} />;
+  return <AppShell profile={profile!} />;
 }
 
-// ---------- 3D World Shell ----------
+// ---------- Main App Shell (4-tab bottom nav) ----------
 
-function WorldShell({ profile }: { profile: NonNullable<ReturnType<typeof useAuth>["state"]["profile"]> }) {
+function AppShell({ profile }: { profile: NonNullable<ReturnType<typeof useAuth>["state"]["profile"]> }) {
+  const { state } = useAuth();
+  const unlocked = state.unlocked;
   const inputRef = useRef({ x: 0, y: 0, boost: false });
+  const [tab, setTab] = useState<Tab>("map"); // start on Map (3D world)
   const [riding, setRiding] = useState(false);
   const [cityReady, setCityReady] = useState(false);
   const [activeNPC, setActiveNPC] = useState<NPCData | null>(null);
@@ -83,13 +88,13 @@ function WorldShell({ profile }: { profile: NonNullable<ReturnType<typeof useAut
   const [raceResult, setRaceResult] = useState<RaceResult | null>(null);
   const [weather, setWeather] = useState<"clear" | "rain" | "harmattan">("clear");
 
-  // Keyboard input (desktop)
+  // Keyboard input (desktop) — only active when on Map tab
   useEffect(() => {
+    if (tab !== "map") return;
     const keys: Record<string, boolean> = {};
     const down = (e: KeyboardEvent) => {
       keys[e.key.toLowerCase()] = true;
       if (e.key === " " || e.key === "Shift") inputRef.current.boost = true;
-      // Weather toggle for demo (W key + Shift)
       if (e.key.toLowerCase() === "w" && e.shiftKey) {
         setWeather((w) => w === "clear" ? "rain" : w === "rain" ? "harmattan" : "clear");
       }
@@ -117,8 +122,12 @@ function WorldShell({ profile }: { profile: NonNullable<ReturnType<typeof useAut
       cancelAnimationFrame(raf);
       window.removeEventListener("keydown", down);
       window.removeEventListener("keyup", up);
+      // Reset input when leaving map tab
+      inputRef.current.x = 0;
+      inputRef.current.y = 0;
+      inputRef.current.boost = false;
     };
-  }, []);
+  }, [tab]);
 
   // Pause rendering when tab is hidden
   useEffect(() => {
@@ -133,9 +142,7 @@ function WorldShell({ profile }: { profile: NonNullable<ReturnType<typeof useAut
     return () => document.removeEventListener("visibilitychange", handler);
   }, []);
 
-  // Accept a mission from an NPC
   const handleAcceptMission = (missionId: string) => {
-    // Find the mission in NPC data
     const npc = activeNPC;
     if (!npc?.missions?.[0]) return;
     const m = npc.missions[0];
@@ -145,23 +152,24 @@ function WorldShell({ profile }: { profile: NonNullable<ReturnType<typeof useAut
     });
   };
 
-  // Race Track opens Phaser
-  const handleOpenPlace = (id: string) => {
-    if (id === "race-track") {
-      setRaceMode("street-race");
-    }
-  };
-
-  // Race finished
   const handleRaceFinish = (result: RaceResult) => {
     setRaceResult(result);
     setRaceMode(null);
-    // TODO Phase 4: persist to Firestore via server route
+  };
+
+  // Visit a location from the Map screen → either start race or switch to map tab
+  const handleVisitLocation = (id: string) => {
+    if (id === "race-track") {
+      setRaceMode("street-race");
+    } else {
+      // Switch to 3D world view
+      setTab("map");
+    }
   };
 
   return (
     <div className="fixed inset-0 overflow-hidden bg-rush-sky">
-      {/* 3D Canvas */}
+      {/* 3D Canvas — always rendered so it stays warm, but covered by other tabs */}
       <City
         avatar={profile.avatar}
         quality={profile.graphicsQuality}
@@ -172,11 +180,36 @@ function WorldShell({ profile }: { profile: NonNullable<ReturnType<typeof useAut
         onReady={() => setCityReady(true)}
       />
 
-      {/* Loading overlay until city is ready */}
-      {!cityReady && <LoadingScreen message="Building the city…" />}
+      {/* Tab content overlays */}
+      <div className="fixed inset-0 z-10 overflow-y-auto pb-20">
+        {tab === "home" && (
+          <div className="mx-auto max-w-md px-4 pt-4 safe-pt">
+            <HomeScreen profile={profile} />
+          </div>
+        )}
+        {tab === "map" && (
+          <div className="mx-auto max-w-md px-4 pt-4 safe-pt">
+            <MapScreen
+              profile={profile}
+              onVisitLocation={handleVisitLocation}
+              onlineCount={0}
+            />
+          </div>
+        )}
+        {tab === "phone" && (
+          <div className="mx-auto max-w-md px-4 pt-4 safe-pt">
+            <PhoneScreen profile={profile} />
+          </div>
+        )}
+        {tab === "buy" && (
+          <div className="mx-auto max-w-md px-4 pt-4 safe-pt">
+            <BuyScreen profile={profile} unlocked={unlocked} />
+          </div>
+        )}
+      </div>
 
-      {/* HUD overlays */}
-      {cityReady && (
+      {/* HUD overlays — only on Map tab (when exploring the 3D world) */}
+      {tab === "map" && cityReady && (
         <>
           <WorldUI
             profile={profile}
@@ -185,8 +218,8 @@ function WorldShell({ profile }: { profile: NonNullable<ReturnType<typeof useAut
             onHorn={() => {}}
             onBoost={(active) => { inputRef.current.boost = active; }}
             onEmote={() => {}}
-            onOpenPlace={handleOpenPlace}
-            onOpenMenu={() => {}}
+            onOpenPlace={handleVisitLocation}
+            onOpenMenu={() => setTab("phone")}
             onOpenNotifications={() => {}}
           />
           <Joystick inputRef={inputRef} />
@@ -196,8 +229,6 @@ function WorldShell({ profile }: { profile: NonNullable<ReturnType<typeof useAut
             onClose={() => setActiveNPC(null)}
             onAcceptMission={handleAcceptMission}
           />
-
-          {/* Weather indicator */}
           {weather !== "clear" && (
             <div className="pointer-events-none absolute left-1/2 top-20 z-20 -translate-x-1/2">
               <div className="rounded-full bg-rush-navy/80 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-white">
@@ -208,7 +239,7 @@ function WorldShell({ profile }: { profile: NonNullable<ReturnType<typeof useAut
         </>
       )}
 
-      {/* Phaser race game overlay (when entering Race Track) */}
+      {/* Phaser race game overlay */}
       {raceMode && (
         <div className="fixed inset-0 z-50 bg-black">
           <AfroRushGame
@@ -229,6 +260,9 @@ function WorldShell({ profile }: { profile: NonNullable<ReturnType<typeof useAut
           onClose={() => setRaceResult(null)}
         />
       )}
+
+      {/* Bottom navigation — always visible */}
+      <BottomNav active={tab} onChange={setTab} unreadNotifications={3} />
     </div>
   );
 }
@@ -246,8 +280,8 @@ function RaceResultOverlay({
 }) {
   const won = result.finished;
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-      <div className="rush-card w-full max-w-sm p-6 text-center">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4">
+      <div className="rush-card rush-bounce-in w-full max-w-sm p-6 text-center">
         <div className="text-[11px] uppercase tracking-[0.3em] text-rush-gold">Race Complete</div>
         <h2
           className="font-display text-3xl"
@@ -263,7 +297,7 @@ function RaceResultOverlay({
         </div>
         <button
           onClick={onClose}
-          className="mt-4 w-full rounded-2xl bg-rush-green px-4 py-3 text-sm font-bold uppercase tracking-wider text-white"
+          className="mt-4 w-full rounded-2xl bg-rush-green px-4 py-3 text-sm font-bold uppercase tracking-wider text-white shadow-lg shadow-rush-green/30 active:scale-95"
         >
           Back to City
         </button>

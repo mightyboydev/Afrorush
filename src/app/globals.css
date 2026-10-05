@@ -162,6 +162,37 @@
 .rush-glow-green { box-shadow: 0 0 0 4px rgba(31, 184, 111, 0.2), 0 8px 24px -6px rgba(31, 184, 111, 0.4); }
 .rush-glow-gold  { box-shadow: 0 0 0 4px rgba(255, 197, 49, 0.2), 0 8px 24px -6px rgba(255, 197, 49, 0.4); }
 
+/* Premium bottom navigation bar — like a modern phone dock */
+.rush-dock {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-top: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 0 -4px 24px -6px rgba(20, 33, 61, 0.15);
+}
+
+/* App icon (squircle) — like iOS home screen */
+.rush-squircle {
+  border-radius: 22%;
+  background: linear-gradient(135deg, var(--icon-from, #1fb86f), var(--icon-to, #178a55));
+  box-shadow: 0 4px 12px -2px rgba(20, 33, 61, 0.2), inset 0 -2px 4px rgba(0,0,0,0.1);
+}
+
+/* Smooth slide-up animation for tab content */
+@keyframes rush-slide-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.rush-slide-up { animation: rush-slide-up 0.25s ease-out; }
+
+/* Bounce-in for modals */
+@keyframes rush-bounce-in {
+  0% { opacity: 0; transform: scale(0.9) translateY(20px); }
+  60% { opacity: 1; transform: scale(1.02) translateY(-2px); }
+  100% { transform: scale(1) translateY(0); }
+}
+.rush-bounce-in { animation: rush-bounce-in 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+
 /* Animated pulsing dot */
 @keyframes rush-pulse {
   0%, 100% { opacity: 1; transform: scale(1); }
