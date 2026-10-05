@@ -79,7 +79,7 @@ function AppShell({ profile }: { profile: NonNullable<ReturnType<typeof useAuth>
   const { state } = useAuth();
   const unlocked = state.unlocked;
   const inputRef = useRef({ x: 0, y: 0, boost: false });
-  const [tab, setTab] = useState<Tab>("map"); // start on Map (3D world)
+  const [tab, setTabState] = useState<Tab>("map");
   const [riding, setRiding] = useState(false);
   const [cityReady, setCityReady] = useState(false);
   const [activeNPC, setActiveNPC] = useState<NPCData | null>(null);
@@ -87,6 +87,38 @@ function AppShell({ profile }: { profile: NonNullable<ReturnType<typeof useAuth>
   const [raceMode, setRaceMode] = useState<RaceMode | null>(null);
   const [raceResult, setRaceResult] = useState<RaceResult | null>(null);
   const [weather, setWeather] = useState<"clear" | "rain" | "harmattan">("clear");
+
+  // Tab change wrapper that pushes to history so the browser back button
+  // navigates between tabs instead of leaving the site entirely.
+  const setTab = (next: Tab) => {
+    if (next === tab) return;
+    setTabState(next);
+    if (typeof window !== "undefined") {
+      window.history.pushState({ tab: next, ts: Date.now() }, "", `#${next}`);
+    }
+  };
+
+  // On mount, read the hash to restore the tab (handles back/forward).
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const hash = window.location.hash.replace("#", "");
+    if (hash === "home" || hash === "map" || hash === "phone" || hash === "buy") {
+      setTabState(hash as Tab);
+    }
+    // Seed initial history state
+    window.history.replaceState({ tab: "map", ts: Date.now() }, "", "#map");
+
+    const onPop = (e: PopStateEvent) => {
+      const st = e.state as { tab?: Tab } | null;
+      if (st?.tab) setTabState(st.tab);
+      else {
+        // No state — default to map
+        setTabState("map");
+      }
+    };
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, []);
 
   // Keyboard input (desktop) — only active when on Map tab
   useEffect(() => {
@@ -157,10 +189,26 @@ function AppShell({ profile }: { profile: NonNullable<ReturnType<typeof useAuth>
     setRaceMode(null);
   };
 
+  // Challenge a player to a 1v1 race
+  const [challenge, setChallenge] = useState<{ uid: string; username: string } | null>(null);
+
+  const handleChallengePlayer = (uid: string, username: string) => {
+    setChallenge({ uid, username });
+  };
+
+  const startChallengeRace = () => {
+    if (!challenge) return;
+    setRaceMode("street-race");
+    setChallenge(null);
+  };
+
   // Visit a location from the Map screen → either start race or switch to map tab
   const handleVisitLocation = (id: string) => {
     if (id === "race-track") {
       setRaceMode("street-race");
+    } else if (id === "garage") {
+      // Garage opens the Buy tab for customization
+      setTab("buy");
     } else {
       // Switch to 3D world view
       setTab("map");
@@ -192,6 +240,7 @@ function AppShell({ profile }: { profile: NonNullable<ReturnType<typeof useAuth>
             <MapScreen
               profile={profile}
               onVisitLocation={handleVisitLocation}
+              onChallengePlayer={handleChallengePlayer}
               onlineCount={0}
             />
           </div>
@@ -237,6 +286,15 @@ function AppShell({ profile }: { profile: NonNullable<ReturnType<typeof useAuth>
             </div>
           )}
         </>
+      )}
+
+      {/* Challenge modal */}
+      {challenge && (
+        <ChallengeModal
+          username={challenge.username}
+          onClose={() => setChallenge(null)}
+          onAccept={startChallengeRace}
+        />
       )}
 
       {/* Phaser race game overlay */}
@@ -311,6 +369,50 @@ function Stat({ label, value }: { label: string; value: string }) {
     <div className="rounded-xl bg-rush-cream/50 p-2">
       <div className="text-[9px] uppercase tracking-wider text-rush-navy/50">{label}</div>
       <div className="font-mono text-sm font-bold text-rush-navy">{value}</div>
+    </div>
+  );
+}
+
+// ---------- Challenge Modal (1v1 race) ----------
+
+function ChallengeModal({
+  username,
+  onClose,
+  onAccept,
+}: {
+  username: string;
+  onClose: () => void;
+  onAccept: () => void;
+}) {
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4">
+      <div className="rush-card rush-bounce-in w-full max-w-sm p-6 text-center">
+        <div className="mb-2 text-5xl">🏁</div>
+        <div className="text-[11px] uppercase tracking-[0.3em] text-rush-orange">Race Challenge</div>
+        <h2 className="mt-1 font-display text-2xl text-rush-navy">
+          vs {username}
+        </h2>
+        <p className="mt-2 text-sm text-rush-navy/60">
+          Challenge {username} to a 1v1 Street Race. Winner takes the bragging rights + bonus rep.
+        </p>
+        <div className="mt-4 grid grid-cols-2 gap-2">
+          <button
+            onClick={onClose}
+            className="rounded-2xl bg-rush-cream px-4 py-3 text-sm font-bold uppercase tracking-wider text-rush-navy"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onAccept}
+            className="rounded-2xl bg-rush-orange px-4 py-3 text-sm font-bold uppercase tracking-wider text-white shadow-lg shadow-rush-orange/30 active:scale-95"
+          >
+            Race! 🏁
+          </button>
+        </div>
+        <div className="mt-3 text-[10px] uppercase tracking-widest text-rush-navy/40">
+          Mode: Street Race · 1v1
+        </div>
+      </div>
     </div>
   );
 }
