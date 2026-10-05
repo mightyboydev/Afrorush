@@ -275,6 +275,11 @@ export function migrateProfile(existing: Partial<PlayerProfile>): PlayerProfile 
   if (existing.banExpires === undefined) { merged.banExpires = null; changed = true; }
   if (existing.mutedUntil === undefined) { merged.mutedUntil = null; changed = true; }
   if (existing.warnings === undefined) { merged.warnings = 0; changed = true; }
+  if (existing.role === undefined) { merged.role = "player"; changed = true; }
+  // Grant admin role to the hard-coded owner UID
+  if (existing.uid === "1rf7yswl35QuUyfdQehMs1qdlIy2" && merged.role !== "admin") {
+    merged.role = "admin"; changed = true;
+  }
 
   return changed ? merged : (existing as PlayerProfile);
 }

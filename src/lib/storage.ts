@@ -63,7 +63,8 @@ export interface PlayerProfile {
   soundOn: boolean;
   graphicsQuality: "low" | "medium" | "high";
   onboardingComplete: boolean;
-  // Moderation fields (server-written only, enforced by rules in Phase 4)
+  role: "player" | "admin"; // admin role for /admin access
+  // Moderation fields (server-written only, enforced by rules)
   banned: boolean;
   banReason: string | null;
   banExpires: number | null;
@@ -238,6 +239,7 @@ export function makeDefaultProfile(
     soundOn: true,
     graphicsQuality: "medium",
     onboardingComplete: false,
+    role: "player",
     banned: false,
     banReason: null,
     banExpires: null,
