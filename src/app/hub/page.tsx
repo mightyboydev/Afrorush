@@ -25,12 +25,19 @@ const AfroRushGame = lazy(() => import("@/components/AfroRushGame"));
 const City = lazy(() => import("@/world/City"));
 
 const LOCATIONS = [
-  { id: "motor-park", name: "Motor Park", emoji: "🛺", color: "#1fb86f", desc: "Social hub. Find crews, okadas, danfos." },
+  { id: "motor-park", name: "Motor Park", emoji: "🛺", color: "#1fb86f", desc: "Social hub. Okadas, danfos, keke." },
   { id: "garage", name: "Garage", emoji: "🏍️", color: "#ff6a1a", desc: "Customize your bike & outfit." },
   { id: "race-track", name: "Race Track", emoji: "🏁", color: "#ffc531", desc: "Street, Delivery, Police Chase, Freestyle." },
-  { id: "market", name: "Market", emoji: "🛍️", color: "#c026d3", desc: "Buy items with Naira and gold." },
+  { id: "market", name: "Balogun Market", emoji: "🛍️", color: "#c026d3", desc: "Buy items with Naira and gold." },
   { id: "suya-spot", name: "Suya Spot", emoji: "🍢", color: "#ff6a1a", desc: "Daily free reward + food buffs." },
   { id: "crew-hq", name: "Crew HQ", emoji: "👥", color: "#7c3aed", desc: "Manage crew, crew wars." },
+  // Nigerian real places
+  { id: "stadium", name: "National Stadium", emoji: "🏟️", color: "#1fb86f", desc: "Lagos National Stadium, Surulere." },
+  { id: "quilox", name: "Quilox Club", emoji: "🎉", color: "#ff6a1a", desc: "Lagos hottest nightclub. V/I." },
+  { id: "church", name: "Cathedral", emoji: "⛪", color: "#16a3b1", desc: "Holy Cross Cathedral." },
+  { id: "mosque", name: "Central Mosque", emoji: "🕌", color: "#16a3b1", desc: "Lagos Central Mosque." },
+  { id: "unilag", name: "UNILAG", emoji: "🎓", color: "#ffc531", desc: "University of Lagos, Akoka." },
+  { id: "lekki", name: "Lekki Bridge", emoji: "🌉", color: "#7c3aed", desc: "Lekki-Ikoyi Link Bridge." },
 ];
 
 type Overlay = "race-mode" | "shop" | "suya" | "crew" | "motor-park" | null;
@@ -75,7 +82,16 @@ function HubContent() {
     else if (id === "suya-spot") setOverlay("suya");
     else if (id === "crew-hq") setOverlay("crew");
     else if (id === "motor-park") setOverlay("motor-park");
+    else {
+      // Nigerian places — show a visit confirmation (future: teleport in 3D world)
+      const loc = LOCATIONS.find((l) => l.id === id);
+      if (loc) {
+        setSelectedLocation(loc);
+      }
+    }
   };
+
+  const [selectedLocation, setSelectedLocation] = useState<{ id: string; name: string; emoji: string; color: string; desc: string } | null>(null);
 
   if (loading || loadingProfile || !profile) {
     return (
@@ -254,6 +270,29 @@ function HubContent() {
       {/* Race result */}
       {raceResult && (
         <RaceResultOverlay result={raceResult} profile={profile} onClose={() => setRaceResult(null)} />
+      )}
+
+      {/* Nigerian location detail modal */}
+      {selectedLocation && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setSelectedLocation(null)}>
+          <div className="rush-bounce-in rush-card w-full max-w-sm p-6 text-center" onClick={(e) => e.stopPropagation()}>
+            <div className="mb-2 text-5xl">{selectedLocation.emoji}</div>
+            <div className="text-[10px] uppercase tracking-[0.3em]" style={{ color: selectedLocation.color }}>{selectedLocation.name}</div>
+            <h2 className="font-display text-2xl text-rush-navy">{selectedLocation.name}</h2>
+            <p className="mt-2 text-sm text-rush-navy/60">{selectedLocation.desc}</p>
+            <div className="mt-4 flex gap-2">
+              <button onClick={() => setSelectedLocation(null)} className="flex-1 rounded-2xl bg-rush-cream px-4 py-3 text-sm font-bold uppercase tracking-wider text-rush-navy">
+                Close
+              </button>
+              <button
+                onClick={() => { setOverlay("motor-park"); setSelectedLocation(null); }}
+                className="flex-1 rounded-2xl bg-rush-green px-4 py-3 text-sm font-bold uppercase tracking-wider text-white"
+              >
+                Go There →
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </main>
   );
