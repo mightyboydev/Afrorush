@@ -34,8 +34,8 @@ export default function City({ avatar, quality, riding, inputRef, weather = "cle
   const playerPosRef = useRef(new THREE.Vector3(0, 0, 0)); // shared between Player + CameraControls
   const presets = useMemo(() => ({
     low:    { dpr: 1.0,  fps: 30 },
-    medium: { dpr: 1.5,  fps: 30 },
-    high:   { dpr: 2.0,  fps: 60 },
+    medium: { dpr: 2.0,  fps: 30 },
+    high:   { dpr: 2.5,  fps: 60 },
   }), []);
   const preset = presets[quality];
   const [timeOfDay] = useState(0.35);
