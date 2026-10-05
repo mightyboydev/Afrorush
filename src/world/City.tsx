@@ -1,13 +1,15 @@
 "use client";
 
-// src/world/City.tsx — main 3D scene wrapper. Loads Canvas, environment,
-// buildings, player, and handles controls. Quality from profile.
+// src/world/City.tsx — main 3D scene wrapper.
 
 import { Suspense, useRef, useState, useMemo } from "react";
 import { Canvas } from "@react-three/fiber";
 import * as THREE from "three";
 import Environment from "./Environment";
 import { CityLayout } from "./Buildings";
+import { NPCGroup, type NPCData } from "./NPCs";
+import OtherPlayers from "./OtherPlayers";
+import Weather, { type WeatherType } from "./Weather";
 import Player, { type PlayerHandle } from "./Player";
 import type { AvatarConfig } from "@/lib/storage";
 
@@ -16,18 +18,20 @@ export interface CityProps {
   quality: "low" | "medium" | "high";
   riding: boolean;
   inputRef: React.MutableRefObject<{ x: number; y: number; boost: boolean }>;
+  weather?: WeatherType;
+  onTalkToNPC?: (npc: NPCData) => void;
   onReady?: () => void;
 }
 
-export default function City({ avatar, quality, riding, inputRef, onReady }: CityProps) {
-  const [timeOfDay] = useState(0.35); // morning — Phase 5 will animate this
+export default function City({ avatar, quality, riding, inputRef, weather = "clear", onTalkToNPC, onReady }: CityProps) {
   const playerRef = useRef<PlayerHandle>(null);
   const presets = useMemo(() => ({
     low:    { dpr: 0.75, fps: 30 },
     medium: { dpr: 1.0,  fps: 30 },
     high:   { dpr: 1.5,  fps: 60 },
   }), []);
-  const preset = presets[quality];
+  const preset = presets[quality] ?? presets.medium;
+  const [timeOfDay] = useState(0.35);
 
   return (
     <Canvas
@@ -44,6 +48,9 @@ export default function City({ avatar, quality, riding, inputRef, onReady }: Cit
       <Suspense fallback={null}>
         <Environment timeOfDay={timeOfDay} quality={quality} />
         <CityLayout />
+        <NPCGroup onTalk={onTalkToNPC ?? (() => {})} />
+        <OtherPlayers />
+        <Weather type={weather} />
         <Player
           ref={playerRef}
           avatar={avatar}
