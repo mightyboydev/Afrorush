@@ -20,7 +20,11 @@ service cloud.firestore {
     // Money, rep, banned, warnings, etc. are server-written only.
     match /users/{uid} {
       allow read: if true;
-      allow create: if request.auth != null && request.auth.uid == uid;
+      allow create: if request.auth != null && request.auth.uid == uid
+        && request.resource.data.cash == 500
+        && request.resource.data.gold == 50
+        && request.resource.data.rep == 0
+        && request.resource.data.banned == false;
       allow update: if request.auth != null && request.auth.uid == uid
         && request.resource.data.diff(resource.data).affectedKeys()
           .hasOnly([
@@ -46,7 +50,10 @@ service cloud.firestore {
       // Writes go through server (purchaseItem API).
       match /meta/{docId} {
         allow read: if request.auth != null && request.auth.uid == uid;
-        allow write: if request.auth != null && request.auth.uid == uid;
+        // Owner may only seed the default unlocks once; later changes are server-only.
+        allow create: if request.auth != null && request.auth.uid == uid
+          && request.resource.data.ids == ['bike-spark', 'outfit-street', 'stk-none', 'horn-beep', 'exh-stock'];
+        allow update, delete: if false;
       }
     }
 
