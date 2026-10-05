@@ -33,29 +33,39 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
 function AdminGate({ children }: { children: React.ReactNode }) {
   const { state } = useAuth();
-  const { user, loading } = state;
+  const { user, profile, loading } = state;
   const [role, setRole] = useState<Role>("loading");
 
   useEffect(() => {
+    // Hard-coded owner UID — always has access
     if (user && user.uid === "1rf7yswl35QuUyfdQehMs1qdlIy2") {
       setRole("owner");
       return;
     }
     if (!user) { setRole("none"); return; }
-    const db = getFirebaseDb();
-    const unsub = onSnapshot(
-      doc(db, "admins", user.uid),
-      (snap) => {
-        if (snap.exists()) {
-          const r = snap.data()?.role as string;
-          if (r === "owner" || r === "admin" || r === "moderator") setRole(r as Role);
-          else setRole("none");
-        } else setRole("none");
-      },
-      () => setRole("none")
-    );
-    return () => unsub();
-  }, [user]);
+    // Check profile.role === "admin"
+    if (profile && profile.role === "admin") {
+      setRole("admin");
+      return;
+    }
+    // Fallback: check admins collection
+    if (user) {
+      const db = getFirebaseDb();
+      const unsub = onSnapshot(
+        doc(db, "admins", user.uid),
+        (snap) => {
+          if (snap.exists()) {
+            const r = snap.data()?.role as string;
+            if (r === "owner" || r === "admin" || r === "moderator") setRole(r as Role);
+            else setRole("none");
+          } else setRole("none");
+        },
+        () => setRole("none")
+      );
+      return () => unsub();
+    }
+    setRole("none");
+  }, [user, profile]);
 
   if (loading || role === "loading") {
     return (
@@ -213,6 +223,75 @@ function AdminOverview() {
           )}
         </div>
       </div>
+
+      {/* Recent signups */}
+      <RecentSignups />
+    </div>
+  );
+}
+
+// Recent signups table
+function RecentSignups() {
+  const [users, setUsers] = useState<Array<{ uid: string; username: string; email: string | null; createdAt: number; role: string }>>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const all = await fetchAllUsers();
+        if (cancelled) return;
+        // Sort by createdAt desc, take 5
+        const recent = (all as Array<Record<string, unknown>>)
+          .map((u) => ({
+            uid: u.uid as string,
+            username: String(u.username ?? "Unknown"),
+            email: (u.email as string) ?? null,
+            createdAt: (u.createdAt as number) ?? 0,
+            role: String(u.role ?? "player"),
+          }))
+          .sort((a, b) => b.createdAt - a.createdAt)
+          .slice(0, 5);
+        if (!cancelled) { setUsers(recent); setLoading(false); }
+      } catch {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  return (
+    <div className="rush-card p-4">
+      <div className="mb-3 text-[10px] font-bold uppercase tracking-wider text-rush-navy/50">Recent Signups</div>
+      {loading ? (
+        <div className="text-xs text-rush-navy/50">Loading…</div>
+      ) : users.length === 0 ? (
+        <div className="text-xs text-rush-navy/50">No signups yet</div>
+      ) : (
+        <div className="space-y-2">
+          {users.map((u) => (
+            <div key={u.uid} className="flex items-center justify-between rounded-lg bg-rush-cream/50 px-3 py-2">
+              <div className="flex items-center gap-2">
+                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-rush-green text-[10px] font-bold text-white">
+                  {u.username.charAt(0).toUpperCase()}
+                </div>
+                <div>
+                  <div className="text-xs font-bold text-rush-navy">{u.username}</div>
+                  <div className="text-[10px] text-rush-navy/50">{u.email ?? "No email"}</div>
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="text-[10px] text-rush-navy/40">
+                  {u.createdAt ? new Date(u.createdAt).toLocaleDateString("en-NG", { month: "short", day: "numeric" }) : "—"}
+                </div>
+                {u.role === "admin" && (
+                  <span className="rounded bg-rush-gold/20 px-1 text-[9px] font-bold uppercase text-rush-gold">ADMIN</span>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -381,6 +460,26 @@ function UserDetailModal({ user, actorUid, onClose, onUpdated }: {
               <button disabled={busy} onClick={() => call(() => clearWarnings(actorUid, "admin", user.uid))} className="rounded-lg bg-rush-navy px-3 py-2 text-xs font-bold uppercase text-white disabled:opacity-50">Clear Warnings</button>
             </div>
           </div>
+
+          {/* Role management */}
+          <div className="rounded-xl bg-rush-cream/30 p-3">
+            <div className="mb-2 text-[10px] font-bold uppercase tracking-wider text-rush-navy/60">Role</div>
+            <div className="grid grid-cols-2 gap-2">
+              <button disabled={busy} onClick={() => call(async () => {
+                const db = getFirebaseDb();
+                await updateDoc(doc(db, "users", user.uid), { role: "admin" });
+              })} className="rounded-lg bg-rush-purple px-3 py-2 text-xs font-bold uppercase text-white disabled:opacity-50">
+                👑 Make Admin
+              </button>
+              <button disabled={busy} onClick={() => call(async () => {
+                const db = getFirebaseDb();
+                await updateDoc(doc(db, "users", user.uid), { role: "player" });
+              })} className="rounded-lg bg-rush-navy px-3 py-2 text-xs font-bold uppercase text-white disabled:opacity-50">
+                Demote to Player
+              </button>
+            </div>
+          </div>
+
           {error && <div className="rounded-xl bg-red-50 px-3 py-2 text-xs text-red-600">{error}</div>}
         </div>
       </div>
