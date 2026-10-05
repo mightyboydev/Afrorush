@@ -10,7 +10,6 @@ import {
   nextRepTarget,
   levelTitle,
   formatNaira,
-  DISTRICTS,
   type PlayerProfile,
 } from "@/lib/storage";
 
@@ -112,48 +111,24 @@ export default function WorldUI({
         </div>
       </div>
 
-      {/* ---------- Place pills (center, floating over the 3D world) ---------- */}
-      <div className="pointer-events-none flex-1 px-4">
-        <div className="relative mx-auto h-full max-w-md">
-          {/* Visible place pills — only a few are shown initially */}
-          {DISTRICTS.slice(0, 4).map((d, i) => {
-            const positions = [
-              { top: "8%", left: "0%" },
-              { top: "20%", right: "0%" },
-              { top: "55%", left: "0%" },
-              { top: "70%", right: "5%" },
-            ];
-            const p = positions[i];
-            return (
-              <button
-                key={d.id}
-                onClick={() => onOpenPlace(d.id)}
-                className="rush-glass-pill rush-float pointer-events-auto absolute flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-rush-navy"
-                style={{ ...p, animationDelay: `${i * 0.5}s` }}
-              >
-                <span className="text-base">{d.emoji}</span>
-                <span style={{ color: d.color }}>{d.name}</span>
-              </button>
-            );
-          })}
-        </div>
-      </div>
+      {/* ---------- Center spacer (no place pills — those are on the Map tab) ---------- */}
+      <div className="flex-1" />
 
-      {/* ---------- Bottom action buttons ---------- */}
-      <div className="pointer-events-none absolute bottom-4 right-4 z-30 flex flex-col gap-2">
+      {/* ---------- Bottom action buttons (above bottom nav) ---------- */}
+      <div className="pointer-events-none absolute bottom-20 right-4 z-30 flex flex-col gap-2">
         {/* Emote wheel toggle */}
         {showEmotes && (
           <div className="pointer-events-auto mb-2 flex gap-1.5">
-            {["👋", "🎉", "🕺", " horns"].map((e, i) => (
+            {["👋", "🎉", "🕺", "🤙"].map((e, i) => (
               <button
                 key={i}
                 onClick={() => {
-                  onEmote(e.trim());
+                  onEmote(e);
                   setShowEmotes(false);
                 }}
-                className="flex h-10 w-10 items-center justify-center rounded-full bg-white/95 text-lg rush-soft-shadow"
+                className="flex h-10 w-10 items-center justify-center rounded-full rush-glass-pill text-lg"
               >
-                {e.trim()}
+                {e}
               </button>
             ))}
           </div>
@@ -161,7 +136,7 @@ export default function WorldUI({
 
         <button
           onClick={() => setShowEmotes((s) => !s)}
-          className="pointer-events-auto flex h-12 w-12 items-center justify-center rounded-full bg-white/95 text-xl rush-soft-shadow"
+          className="pointer-events-auto flex h-12 w-12 items-center justify-center rounded-full rush-glass-pill text-xl"
           aria-label="Emotes"
         >
           😊
@@ -169,7 +144,7 @@ export default function WorldUI({
 
         <button
           onClick={onHorn}
-          className="pointer-events-auto flex h-12 w-12 items-center justify-center rounded-full bg-white/95 text-xl rush-soft-shadow"
+          className="pointer-events-auto flex h-12 w-12 items-center justify-center rounded-full rush-glass-pill text-xl"
           aria-label="Horn"
         >
           📣
@@ -177,8 +152,8 @@ export default function WorldUI({
 
         <button
           onClick={onToggleRide}
-          className={`pointer-events-auto flex h-14 w-14 items-center justify-center rounded-full text-2xl rush-soft-shadow transition-all ${
-            riding ? "bg-rush-orange text-white" : "bg-white/95"
+          className={`pointer-events-auto flex h-14 w-14 items-center justify-center rounded-full text-2xl transition-all ${
+            riding ? "bg-rush-orange text-white shadow-lg shadow-rush-orange/40" : "rush-glass-pill"
           }`}
           aria-label={riding ? "Hop off bike" : "Hop on bike"}
         >
@@ -191,7 +166,7 @@ export default function WorldUI({
           onPointerCancel={handleBoostUp}
           onPointerLeave={handleBoostUp}
           className={`pointer-events-auto flex h-16 w-16 touch-none items-center justify-center rounded-full text-2xl transition-all ${
-            boostHeld ? "scale-95 bg-rush-gold text-white" : "bg-rush-green text-white"
+            boostHeld ? "scale-95 bg-rush-gold text-white shadow-lg shadow-rush-gold/40" : "bg-rush-green text-white shadow-lg shadow-rush-green/30"
           }`}
           style={{ touchAction: "none" }}
           aria-label="Boost"
