@@ -6,6 +6,7 @@
 // Race mode launches as a full-screen Phaser overlay.
 
 import { useState, useRef, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import { AuthProvider, useAuth } from "@/lib/auth";
 import LoadingScreen from "@/components/LoadingScreen";
@@ -41,12 +42,13 @@ type Phase =
   | { kind: "loading" }
   | { kind: "auth" }
   | { kind: "onboarding" }
-  | { kind: "app" };
+  | { kind: "redirect" };
 
 function AfroRushRoot() {
   const { state } = useAuth();
   const { user, profile, loading, loadingProfile } = state;
   const [booted, setBooted] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     const t = setTimeout(() => setBooted(true), 1200);
@@ -58,9 +60,16 @@ function AfroRushRoot() {
     if (!user) return { kind: "auth" };
     if (loadingProfile || !profile) return { kind: "loading" };
     if (!profile.onboardingComplete) return { kind: "onboarding" };
-    return { kind: "app" };
+    return { kind: "redirect" };
   }
   const phase = derivePhase();
+
+  // Redirect to /hub when authenticated + onboarded
+  useEffect(() => {
+    if (phase.kind === "redirect") {
+      router.replace("/hub");
+    }
+  }, [phase.kind, router]);
 
   if (phase.kind === "loading") {
     return loadingProfile
@@ -69,8 +78,10 @@ function AfroRushRoot() {
   }
   if (phase.kind === "auth") return <Landing />;
   if (phase.kind === "onboarding") return <Onboarding />;
-
-  return <AppShell profile={profile!} />;
+  if (phase.kind === "redirect") {
+    return <LoadingScreen message="Entering the streets…" />;
+  }
+  return <LoadingScreen />;
 }
 
 // ---------- Main App Shell (4-tab bottom nav) ----------

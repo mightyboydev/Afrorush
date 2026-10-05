@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Bungee, Plus_Jakarta_Sans, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
+import CookieConsent from "@/components/CookieConsent";
 
 const bungee = Bungee({
   variable: "--font-bungee",
@@ -77,6 +78,7 @@ export default function RootLayout({
         className={`${bungee.variable} ${jakarta.variable} ${jetbrains.variable} antialiased bg-background text-foreground`}
       >
         {children}
+        <CookieConsent />
       </body>
     </html>
   );
