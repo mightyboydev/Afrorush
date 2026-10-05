@@ -12,10 +12,16 @@ import Landing from "@/components/Landing";
 import Onboarding from "@/components/Onboarding";
 import Joystick from "@/components/Joystick";
 import WorldUI from "@/components/WorldUI";
+import DialogueBox from "@/components/DialogueBox";
+import MissionTracker, { type Mission } from "@/components/MissionTracker";
+import type { NPCData } from "@/world/NPCs";
+import type { RaceMode } from "@/lib/storage";
+import type { RaceResult } from "@/game/AfroRushScene";
 
-// 3D City is heavy and uses `window` (THREE). Load with ssr:false so it never
-// runs during Next.js prerender.
+// 3D City is heavy and uses `window` (THREE). Load with ssr:false.
 const City = dynamic(() => import("@/world/City"), { ssr: false });
+// Phaser race game — also needs `window`.
+const AfroRushGame = dynamic(() => import("@/components/AfroRushGame"), { ssr: false });
 
 export default function AfroRushPage() {
   return (
@@ -71,14 +77,22 @@ function WorldShell({ profile }: { profile: NonNullable<ReturnType<typeof useAut
   const inputRef = useRef({ x: 0, y: 0, boost: false });
   const [riding, setRiding] = useState(false);
   const [cityReady, setCityReady] = useState(false);
+  const [activeNPC, setActiveNPC] = useState<NPCData | null>(null);
+  const [missions, setMissions] = useState<Mission[]>([]);
+  const [raceMode, setRaceMode] = useState<RaceMode | null>(null);
+  const [raceResult, setRaceResult] = useState<RaceResult | null>(null);
+  const [weather, setWeather] = useState<"clear" | "rain" | "harmattan">("clear");
 
   // Keyboard input (desktop)
   useEffect(() => {
     const keys: Record<string, boolean> = {};
     const down = (e: KeyboardEvent) => {
       keys[e.key.toLowerCase()] = true;
-      // Boost on space / shift
       if (e.key === " " || e.key === "Shift") inputRef.current.boost = true;
+      // Weather toggle for demo (W key + Shift)
+      if (e.key.toLowerCase() === "w" && e.shiftKey) {
+        setWeather((w) => w === "clear" ? "rain" : w === "rain" ? "harmattan" : "clear");
+      }
     };
     const up = (e: KeyboardEvent) => {
       keys[e.key.toLowerCase()] = false;
@@ -90,7 +104,6 @@ function WorldShell({ profile }: { profile: NonNullable<ReturnType<typeof useAut
       if (keys["s"] || keys["arrowdown"]) y += 1;
       if (keys["a"] || keys["arrowleft"]) x -= 1;
       if (keys["d"] || keys["arrowright"]) x += 1;
-      // Normalize diagonal
       const mag = Math.sqrt(x * x + y * y);
       if (mag > 1) { x /= mag; y /= mag; }
       inputRef.current.x = x;
@@ -110,7 +123,6 @@ function WorldShell({ profile }: { profile: NonNullable<ReturnType<typeof useAut
   // Pause rendering when tab is hidden
   useEffect(() => {
     const handler = () => {
-      // Pause input when tab hidden
       if (document.hidden) {
         inputRef.current.x = 0;
         inputRef.current.y = 0;
@@ -121,6 +133,32 @@ function WorldShell({ profile }: { profile: NonNullable<ReturnType<typeof useAut
     return () => document.removeEventListener("visibilitychange", handler);
   }, []);
 
+  // Accept a mission from an NPC
+  const handleAcceptMission = (missionId: string) => {
+    // Find the mission in NPC data
+    const npc = activeNPC;
+    if (!npc?.missions?.[0]) return;
+    const m = npc.missions[0];
+    setMissions((prev) => {
+      if (prev.some((x) => x.id === missionId)) return prev;
+      return [...prev, { id: m.id, title: m.title, desc: m.desc, reward: m.reward, progress: 0 }];
+    });
+  };
+
+  // Race Track opens Phaser
+  const handleOpenPlace = (id: string) => {
+    if (id === "race-track") {
+      setRaceMode("street-race");
+    }
+  };
+
+  // Race finished
+  const handleRaceFinish = (result: RaceResult) => {
+    setRaceResult(result);
+    setRaceMode(null);
+    // TODO Phase 4: persist to Firestore via server route
+  };
+
   return (
     <div className="fixed inset-0 overflow-hidden bg-rush-sky">
       {/* 3D Canvas */}
@@ -129,6 +167,8 @@ function WorldShell({ profile }: { profile: NonNullable<ReturnType<typeof useAut
         quality={profile.graphicsQuality}
         riding={riding}
         inputRef={inputRef}
+        weather={weather}
+        onTalkToNPC={(npc) => setActiveNPC(npc)}
         onReady={() => setCityReady(true)}
       />
 
@@ -142,22 +182,101 @@ function WorldShell({ profile }: { profile: NonNullable<ReturnType<typeof useAut
             profile={profile}
             riding={riding}
             onToggleRide={() => setRiding((r) => !r)}
-            onHorn={() => {
-              // Phase 2: hook into horn sound
-            }}
+            onHorn={() => {}}
             onBoost={(active) => { inputRef.current.boost = active; }}
-            onEmote={() => { /* Phase 3 */ }}
-            onOpenPlace={(id) => {
-              if (id === "race-track") {
-                // Phase 2: open Phaser race game
-              }
-            }}
-            onOpenMenu={() => { /* Phase 4: settings sheet */ }}
-            onOpenNotifications={() => { /* Phase 3: notifications */ }}
+            onEmote={() => {}}
+            onOpenPlace={handleOpenPlace}
+            onOpenMenu={() => {}}
+            onOpenNotifications={() => {}}
           />
           <Joystick inputRef={inputRef} />
+          <MissionTracker missions={missions} />
+          <DialogueBox
+            npc={activeNPC}
+            onClose={() => setActiveNPC(null)}
+            onAcceptMission={handleAcceptMission}
+          />
+
+          {/* Weather indicator */}
+          {weather !== "clear" && (
+            <div className="pointer-events-none absolute left-1/2 top-20 z-20 -translate-x-1/2">
+              <div className="rounded-full bg-rush-navy/80 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-white">
+                {weather === "rain" ? "🌧️ Rain" : "🏜️ Harmattan"}
+              </div>
+            </div>
+          )}
         </>
       )}
+
+      {/* Phaser race game overlay (when entering Race Track) */}
+      {raceMode && (
+        <div className="fixed inset-0 z-50 bg-black">
+          <AfroRushGame
+            mode={raceMode}
+            loadout={profile.loadout}
+            soundOn={profile.soundOn}
+            onExit={() => setRaceMode(null)}
+            onFinish={handleRaceFinish}
+          />
+        </div>
+      )}
+
+      {/* Race results overlay */}
+      {raceResult && (
+        <RaceResultOverlay
+          result={raceResult}
+          profile={profile}
+          onClose={() => setRaceResult(null)}
+        />
+      )}
+    </div>
+  );
+}
+
+// ---------- Race Result Overlay ----------
+
+function RaceResultOverlay({
+  result,
+  profile,
+  onClose,
+}: {
+  result: RaceResult;
+  profile: { username: string; cash: number; rep: number };
+  onClose: () => void;
+}) {
+  const won = result.finished;
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+      <div className="rush-card w-full max-w-sm p-6 text-center">
+        <div className="text-[11px] uppercase tracking-[0.3em] text-rush-gold">Race Complete</div>
+        <h2
+          className="font-display text-3xl"
+          style={{ color: won ? "#1fb86f" : "#ef4444" }}
+        >
+          {won ? "Victory!" : result.reason === "caught" ? "Busted!" : "Wrecked!"}
+        </h2>
+        <div className="mt-4 grid grid-cols-2 gap-2">
+          <Stat label="Score" value={result.score.toLocaleString()} />
+          <Stat label="Distance" value={`${result.distance}m`} />
+          <Stat label="Cash" value={`+₦${result.cashEarned}`} />
+          <Stat label="Rep" value={`+${result.repEarned}`} />
+        </div>
+        <button
+          onClick={onClose}
+          className="mt-4 w-full rounded-2xl bg-rush-green px-4 py-3 text-sm font-bold uppercase tracking-wider text-white"
+        >
+          Back to City
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function Stat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-xl bg-rush-cream/50 p-2">
+      <div className="text-[9px] uppercase tracking-wider text-rush-navy/50">{label}</div>
+      <div className="font-mono text-sm font-bold text-rush-navy">{value}</div>
     </div>
   );
 }
