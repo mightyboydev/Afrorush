@@ -3,7 +3,7 @@
 // src/world/Player.tsx — third-person player character with walk + ride controls.
 
 import { useRef, useImperativeHandle, forwardRef } from "react";
-import { useFrame, useThree } from "@react-three/fiber";
+import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import type { AvatarConfig } from "@/lib/storage";
 
@@ -35,18 +35,13 @@ const Player = forwardRef<PlayerHandle, PlayerProps>(function Player(
   const groupRef = useRef<THREE.Group>(null);
   const modelRef = useRef<THREE.Group>(null);
   const legSwing = useRef(0);
-  const { camera } = useThree();
 
   // Cached vectors to avoid allocations in the frame loop.
   // Using refs (not useMemo) so the linter doesn't flag in-place mutation.
   const tmpForward = useRef(new THREE.Vector3(0, 0, -1)).current; // forward = -Z (isometric)
   const tmpRight = useRef(new THREE.Vector3(1, 0, 0)).current;
   const tmpVel = useRef(new THREE.Vector3()).current;
-  const camOffset = useRef(new THREE.Vector3(0, 35, 35)).current; // isometric camera offset
-  const camTarget = useRef(new THREE.Vector3()).current;
-  const camLookAt = useRef(new THREE.Vector3()).current;
   const velocity = useRef(new THREE.Vector3()).current;
-  const upVec = useRef(new THREE.Vector3(0, 1, 0)).current;
   const targetRot = useRef(0);
 
   // Expose imperative handle for parent (used by multiplayer later).
@@ -118,12 +113,7 @@ const Player = forwardRef<PlayerHandle, PlayerProps>(function Player(
       legSwing.current *= 0.85; // ease back to zero
     }
 
-    // Isometric camera follow — tight tracking, no lag
-    camTarget.copy(g.position).add(camOffset);
-    camera.position.lerp(camTarget, Math.min(1, dt * 6));
-    camLookAt.copy(g.position);
-    camLookAt.y += 2;
-    camera.lookAt(camLookAt);
+    // Camera is handled ONLY by CameraControls in City.tsx (two controllers caused the shaking).
 
     // Notify parent (throttled externally if used for multiplayer)
     if (onMove) onMove(g.position.clone(), riding);

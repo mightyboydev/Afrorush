@@ -142,28 +142,31 @@ function CameraControls({ playerPosRef }: { playerPosRef: React.MutableRefObject
     };
   }, [gl]);
 
-  // Smoothly apply zoom + follow player
-  useFrame(() => {
-    // Lerp zoom toward target
-    zoomRef.current += (targetZoom.current - zoomRef.current) * 0.12;
+  // Smoothly apply zoom + follow player.
+  // The camera sits at a RIGID offset from a smoothed focus point, so it can't wobble.
+  const focus = useRef({ x: 0, z: 0, ready: false });
+  useFrame((_, dtRaw) => {
+    const dt = Math.min(dtRaw, 0.05); // ignore frame spikes
+    const kFocus = 1 - Math.exp(-dt * 9);
+    const kZoom = 1 - Math.exp(-dt * 7);
 
-    // Camera follows player XZ position (with pan offset)
-    const px = playerPosRef.current.x + targetPan.current.x;
-    const pz = playerPosRef.current.z + targetPan.current.z;
+    zoomRef.current += (targetZoom.current - zoomRef.current) * kZoom;
 
-    // Isometric angle — camera above and behind at 45°
-    const angle = Math.PI / 4; // 45°
-    const camX = px;
-    const camZ = pz + zoomRef.current * Math.cos(angle);
-    const camY = zoomRef.current * Math.sin(angle);
+    const tx = playerPosRef.current.x + targetPan.current.x;
+    const tz = playerPosRef.current.z + targetPan.current.z;
+    const f = focus.current;
+    if (!f.ready) { f.x = tx; f.z = tz; f.ready = true; }
+    f.x += (tx - f.x) * kFocus;
+    f.z += (tz - f.z) * kFocus;
 
-    // Smoothly move camera
-    camera.position.x += (camX - camera.position.x) * 0.1;
-    camera.position.y += (camY - camera.position.y) * 0.1;
-    camera.position.z += (camZ - camera.position.z) * 0.1;
-
-    // Look at player (slightly above ground)
-    camera.lookAt(px, 1, pz);
+    // Isometric angle: camera above and behind at 45 degrees
+    const angle = Math.PI / 4;
+    camera.position.set(
+      f.x,
+      zoomRef.current * Math.sin(angle),
+      f.z + zoomRef.current * Math.cos(angle)
+    );
+    camera.lookAt(f.x, 1, f.z);
   });
 
   return null;
