@@ -1,10 +1,21 @@
 "use client";
 
-// src/app/admin/users/page.tsx — user management with all admin actions.
+// src/app/admin/users/page.tsx — user management (client-side, no env vars).
 
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth";
 import { formatNaira, levelFromRep, levelTitle } from "@/lib/storage";
+import {
+  fetchAllUsers,
+  adjustCash,
+  adjustGold,
+  adjustRep,
+  warnUser,
+  muteUser,
+  banUser,
+  unbanUser,
+  clearWarnings,
+} from "@/lib/admin-client";
 
 interface AdminUser {
   uid: string;
@@ -31,13 +42,11 @@ export default function AdminUsers() {
 
   const fetchUsers = async () => {
     if (!user) return;
-    const token = await user.getIdToken();
-    const res = await fetch(`/api/admin/users?q=${encodeURIComponent(search)}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    if (res.ok) {
-      const data = await res.json() as { users: AdminUser[] };
-      setUsers(data.users);
+    try {
+      const result = await fetchAllUsers(search);
+      setUsers(result as AdminUser[]);
+    } catch {
+      // ignore
     }
     setLoading(false);
   };
@@ -89,40 +98,29 @@ export default function AdminUsers() {
       )}
 
       {selected && (
-        <UserDetailModal user={selected} onClose={() => setSelected(null)} onUpdated={fetchUsers} />
+        <UserDetailModal user={selected} actorUid={user?.uid ?? ""} onClose={() => setSelected(null)} onUpdated={fetchUsers} />
       )}
     </div>
   );
 }
 
-function UserDetailModal({ user, onClose, onUpdated }: {
+function UserDetailModal({ user, actorUid, onClose, onUpdated }: {
   user: AdminUser;
+  actorUid: string;
   onClose: () => void;
   onUpdated: () => void;
 }) {
-  const { state } = useAuth();
-  const user2 = state.user;
   const [busy, setBusy] = useState(false);
   const [reason, setReason] = useState("");
   const [amount, setAmount] = useState("100");
   const [error, setError] = useState<string | null>(null);
 
-  const call = async (path: string, body: Record<string, unknown>) => {
+  const call = async (fn: () => Promise<void>) => {
     setBusy(true);
     setError(null);
     try {
-      const t = await user2?.getIdToken();
-      const res = await fetch(`/api/admin/${path}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${t}` },
-        body: JSON.stringify(body),
-      });
-      if (!res.ok) {
-        const data = await res.json() as { error: string };
-        setError(data.error);
-      } else {
-        onUpdated();
-      }
+      await fn();
+      onUpdated();
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -166,21 +164,21 @@ function UserDetailModal({ user, onClose, onUpdated }: {
             <input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} className="mb-2 w-full rounded-lg border border-rush-cream px-3 py-2 text-sm" />
             <input type="text" value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Reason (required)" className="mb-2 w-full rounded-lg border border-rush-cream px-3 py-2 text-sm" />
             <div className="grid grid-cols-2 gap-2">
-              <button disabled={busy} onClick={() => call("cash", { targetUid: user.uid, amount: parseInt(amount), reason })} className="rounded-lg bg-rush-green px-3 py-2 text-xs font-bold uppercase text-white disabled:opacity-50">+ Cash</button>
-              <button disabled={busy} onClick={() => call("cash", { targetUid: user.uid, amount: -parseInt(amount), reason })} className="rounded-lg bg-rush-orange px-3 py-2 text-xs font-bold uppercase text-white disabled:opacity-50">− Cash</button>
-              <button disabled={busy} onClick={() => call("gold", { targetUid: user.uid, amount: parseInt(amount), reason })} className="rounded-lg bg-rush-gold px-3 py-2 text-xs font-bold uppercase text-white disabled:opacity-50">+ Gold</button>
-              <button disabled={busy} onClick={() => call("rep", { targetUid: user.uid, amount: parseInt(amount), reason })} className="rounded-lg bg-rush-jade px-3 py-2 text-xs font-bold uppercase text-white disabled:opacity-50">+ Rep</button>
+              <button disabled={busy} onClick={() => call(() => adjustCash(actorUid, "admin", user.uid, parseInt(amount), reason || "No reason"))} className="rounded-lg bg-rush-green px-3 py-2 text-xs font-bold uppercase text-white disabled:opacity-50">+ Cash</button>
+              <button disabled={busy} onClick={() => call(() => adjustCash(actorUid, "admin", user.uid, -parseInt(amount), reason || "No reason"))} className="rounded-lg bg-rush-orange px-3 py-2 text-xs font-bold uppercase text-white disabled:opacity-50">− Cash</button>
+              <button disabled={busy} onClick={() => call(() => adjustGold(actorUid, "admin", user.uid, parseInt(amount), reason || "No reason"))} className="rounded-lg bg-rush-gold px-3 py-2 text-xs font-bold uppercase text-white disabled:opacity-50">+ Gold</button>
+              <button disabled={busy} onClick={() => call(() => adjustRep(actorUid, "admin", user.uid, parseInt(amount), reason || "No reason"))} className="rounded-lg bg-rush-jade px-3 py-2 text-xs font-bold uppercase text-white disabled:opacity-50">+ Rep</button>
             </div>
           </div>
 
           <div className="rounded-xl bg-rush-cream/30 p-3">
             <div className="mb-2 text-[10px] font-bold uppercase tracking-wider text-rush-navy/60">Moderation</div>
             <div className="grid grid-cols-2 gap-2">
-              <button disabled={busy} onClick={() => call("warn", { targetUid: user.uid, reason: reason || "No reason" })} className="rounded-lg bg-rush-gold px-3 py-2 text-xs font-bold uppercase text-white disabled:opacity-50">⚠ Warn</button>
-              <button disabled={busy} onClick={() => call("mute", { targetUid: user.uid, until: Date.now() + 24 * 3600 * 1000, reason: reason || "Muted 24h" })} className="rounded-lg bg-rush-purple px-3 py-2 text-xs font-bold uppercase text-white disabled:opacity-50">🔇 Mute 24h</button>
-              <button disabled={busy} onClick={() => call("ban", { targetUid: user.uid, reason: reason || "Banned", expires: null })} className="rounded-lg bg-red-500 px-3 py-2 text-xs font-bold uppercase text-white disabled:opacity-50">🚫 Ban</button>
-              <button disabled={busy} onClick={() => call("unban", { targetUid: user.uid })} className="rounded-lg bg-rush-green px-3 py-2 text-xs font-bold uppercase text-white disabled:opacity-50">✓ Unban</button>
-              <button disabled={busy} onClick={() => call("clear-warnings", { targetUid: user.uid })} className="rounded-lg bg-rush-navy px-3 py-2 text-xs font-bold uppercase text-white disabled:opacity-50">Clear Warnings</button>
+              <button disabled={busy} onClick={() => call(() => warnUser(actorUid, "admin", user.uid, reason || "No reason"))} className="rounded-lg bg-rush-gold px-3 py-2 text-xs font-bold uppercase text-white disabled:opacity-50">⚠ Warn</button>
+              <button disabled={busy} onClick={() => call(() => muteUser(actorUid, "admin", user.uid, Date.now() + 24 * 3600 * 1000, reason || "Muted 24h"))} className="rounded-lg bg-rush-purple px-3 py-2 text-xs font-bold uppercase text-white disabled:opacity-50">🔇 Mute 24h</button>
+              <button disabled={busy} onClick={() => call(() => banUser(actorUid, "admin", user.uid, reason || "Banned", null))} className="rounded-lg bg-red-500 px-3 py-2 text-xs font-bold uppercase text-white disabled:opacity-50">🚫 Ban</button>
+              <button disabled={busy} onClick={() => call(() => unbanUser(actorUid, "admin", user.uid))} className="rounded-lg bg-rush-green px-3 py-2 text-xs font-bold uppercase text-white disabled:opacity-50">✓ Unban</button>
+              <button disabled={busy} onClick={() => call(() => clearWarnings(actorUid, "admin", user.uid))} className="rounded-lg bg-rush-navy px-3 py-2 text-xs font-bold uppercase text-white disabled:opacity-50">Clear Warnings</button>
             </div>
           </div>
 
