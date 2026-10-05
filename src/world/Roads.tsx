@@ -376,12 +376,12 @@ function Pedestrian({
         <meshStandardMaterial color="#8d5524" roughness={0.5} />
       </mesh>
       {/* Eyes */}
-      <mesh position={[-0.08, 1.7, 0.2]}>
-        <sphereGeometry args={[0.03, 12, 12]} />
+      <mesh position={[-0.08, 1.7, 0.25]}>
+        <sphereGeometry args={[0.065, 12, 12]} />
         <meshStandardMaterial color="#1a1a1a" />
       </mesh>
-      <mesh position={[0.08, 1.7, 0.2]}>
-        <sphereGeometry args={[0.03, 12, 12]} />
+      <mesh position={[0.08, 1.7, 0.25]}>
+        <sphereGeometry args={[0.065, 12, 12]} />
         <meshStandardMaterial color="#1a1a1a" />
       </mesh>
       {/* Legs — capsules */}

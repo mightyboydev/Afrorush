@@ -90,12 +90,12 @@ export function NPC({ data, onClick }: { data: NPCData; onClick: (npc: NPCData) 
           <meshStandardMaterial color="#8d5524" roughness={0.5} />
         </mesh>
         {/* Eyes */}
-        <mesh position={[-0.1, 2.0, 0.23]}>
-          <sphereGeometry args={[0.04, 12, 12]} />
+        <mesh position={[-0.1, 2.0, 0.28]}>
+          <sphereGeometry args={[0.09, 12, 12]} />
           <meshStandardMaterial color="#1a1a1a" />
         </mesh>
-        <mesh position={[0.1, 2.0, 0.23]}>
-          <sphereGeometry args={[0.04, 12, 12]} />
+        <mesh position={[0.1, 2.0, 0.28]}>
+          <sphereGeometry args={[0.09, 12, 12]} />
           <meshStandardMaterial color="#1a1a1a" />
         </mesh>
         {/* Smile */}

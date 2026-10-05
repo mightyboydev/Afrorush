@@ -83,12 +83,12 @@ function OtherPlayer({ data }: { data: PlayerDot }) {
           <meshStandardMaterial color="#8d5524" roughness={0.5} />
         </mesh>
         {/* Eyes */}
-        <mesh position={[-0.09, 1.95, 0.22]}>
-          <sphereGeometry args={[0.035, 12, 12]} />
+        <mesh position={[-0.09, 1.95, 0.27]}>
+          <sphereGeometry args={[0.07, 12, 12]} />
           <meshStandardMaterial color="#1a1a1a" />
         </mesh>
-        <mesh position={[0.09, 1.95, 0.22]}>
-          <sphereGeometry args={[0.035, 12, 12]} />
+        <mesh position={[0.09, 1.95, 0.27]}>
+          <sphereGeometry args={[0.07, 12, 12]} />
           <meshStandardMaterial color="#1a1a1a" />
         </mesh>
         {/* Legs — capsules */}

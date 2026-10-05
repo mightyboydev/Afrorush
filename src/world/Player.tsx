@@ -115,17 +115,12 @@ const Player = forwardRef<PlayerHandle, PlayerProps>(function Player(
     if (moving) {
       legSwing.current += dt * (riding ? 14 : 10);
     } else {
-      legSwing.current *= 0.85; // ease back to zero
+      legSwing.current *= 0.85;
     }
 
-    // Isometric camera follow — tight tracking, no lag
-    camTarget.copy(g.position).add(camOffset);
-    camera.position.lerp(camTarget, Math.min(1, dt * 6));
-    camLookAt.copy(g.position);
-    camLookAt.y += 2;
-    camera.lookAt(camLookAt);
-
-    // Notify parent (throttled externally if used for multiplayer)
+    // Camera follow is handled by CameraControls in City.tsx.
+    // Player just moves; camera tracks player position via external lookAt.
+    // We store the player position in a ref that CameraControls reads.
     if (onMove) onMove(g.position.clone(), riding);
   });
 
@@ -256,21 +251,21 @@ function WalkingModel({
       </mesh>
 
       {/* Face — eyes */}
-      <mesh position={[-0.1, 2.05, 0.24]}>
-        <sphereGeometry args={[0.04, 12, 12]} />
+      <mesh position={[-0.1, 2.05, 0.29]}>
+        <sphereGeometry args={[0.12, 12, 12]} />
         <meshStandardMaterial color="#1a1a1a" />
       </mesh>
-      <mesh position={[0.1, 2.05, 0.24]}>
-        <sphereGeometry args={[0.04, 12, 12]} />
+      <mesh position={[0.1, 2.05, 0.29]}>
+        <sphereGeometry args={[0.12, 12, 12]} />
         <meshStandardMaterial color="#1a1a1a" />
       </mesh>
       {/* Eye whites */}
-      <mesh position={[-0.1, 2.05, 0.22]}>
-        <sphereGeometry args={[0.06, 12, 12]} />
+      <mesh position={[-0.1, 2.05, 0.28]}>
+        <sphereGeometry args={[0.12, 12, 12]} />
         <meshStandardMaterial color="#ffffff" />
       </mesh>
-      <mesh position={[0.1, 2.05, 0.22]}>
-        <sphereGeometry args={[0.06, 12, 12]} />
+      <mesh position={[0.1, 2.05, 0.28]}>
+        <sphereGeometry args={[0.12, 12, 12]} />
         <meshStandardMaterial color="#ffffff" />
       </mesh>
 
@@ -371,7 +366,7 @@ function RidingModel({ avatar }: { avatar: AvatarConfig }) {
         </mesh>
         {/* Headlight */}
         <mesh position={[0, 0.9, -0.7]}>
-          <sphereGeometry args={[0.08, 12, 12]} />
+          <sphereGeometry args={[0.12, 12, 12]} />
           <meshStandardMaterial color="#fff5b8" emissive="#fff5b8" emissiveIntensity={0.8} />
         </mesh>
       </group>
