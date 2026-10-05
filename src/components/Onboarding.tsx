@@ -4,6 +4,7 @@
 // Step 1: Rider name. Step 2: Avatar (skin tone, hair, outfit). Step 3: Starting bike + city.
 
 import { useState } from "react";
+import dynamic from "next/dynamic";
 import { useAuth } from "@/lib/auth";
 import { updateProfile } from "@/lib/firestore";
 import {
@@ -16,6 +17,9 @@ import {
   DEFAULT_AVATAR,
   type AvatarConfig,
 } from "@/lib/storage";
+
+// 3D character preview — ssr:false because it uses Three.js
+const CharacterPreview3D = dynamic(() => import("@/components/CharacterPreview"), { ssr: false });
 
 export default function Onboarding() {
   const { state, refreshProfile } = useAuth();
@@ -106,9 +110,10 @@ export default function Onboarding() {
               This is the name other riders will see in the city. You can change it later in Settings.
             </p>
 
-            {/* Live avatar preview */}
-            <div className="mt-6 flex justify-center">
-              <AvatarPreview avatar={avatar} size={120} />
+            {/* Live 3D character preview */}
+            <div className="mt-6">
+              <CharacterPreview3D avatar={avatar} height={280} />
+              <p className="mt-2 text-center text-[10px] text-rush-navy/40">Drag to rotate your character</p>
             </div>
           </div>
         )}
@@ -196,9 +201,10 @@ export default function Onboarding() {
               </div>
             </div>
 
-            {/* Live avatar preview */}
-            <div className="flex justify-center">
-              <AvatarPreview avatar={avatar} size={100} />
+            {/* Live 3D character preview */}
+            <div className="mt-4">
+              <CharacterPreview3D avatar={avatar} height={240} />
+              <p className="mt-1 text-center text-[10px] text-rush-navy/40">Drag to rotate</p>
             </div>
           </div>
         )}
