@@ -1,30 +1,61 @@
 import type { Metadata, Viewport } from "next";
+import { Bungee, Plus_Jakarta_Sans, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
+const bungee = Bungee({
+  variable: "--font-bungee",
+  subsets: ["latin"],
+  weight: "400",
+  display: "swap",
+});
+
+const jakarta = Plus_Jakarta_Sans({
+  variable: "--font-jakarta",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
+  display: "swap",
+});
+
+const jetbrains = JetBrains_Mono({
+  variable: "--font-jetbrains",
+  subsets: ["latin"],
+  weight: ["400", "500", "700"],
+  display: "swap",
+});
+
 export const metadata: Metadata = {
-  title: "AfroRush — African Street Culture + Racing",
+  metadataBase: new URL("https://afrorush.vercel.app"),
+  title: "AfroRush — 3D African Street World",
   description:
-    "AfroRush is African street culture with racing at the heart. Enter the motor park, ride your okada, build your crew and become a street legend.",
+    "AfroRush is a loud, alive 3D open-world adventure set in a vibrant African city. Walk, ride an okada, take missions, hang out with other players, join crews and race. Become a Street Legend.",
   keywords: [
     "AfroRush",
+    "3D game",
     "African game",
-    "okada racing",
+    "okada",
+    "open world",
     "browser game",
-    "Phaser 3",
+    "react-three-fiber",
     "Next.js",
-    "street racing",
   ],
   authors: [{ name: "AfroRush" }],
+  manifest: "/manifest.json",
+  icons: {
+    icon: "/afrorush-logo.jpg",
+    apple: "/afrorush-logo.jpg",
+  },
   openGraph: {
-    title: "AfroRush — African Street Culture + Racing",
+    title: "AfroRush — 3D African Street World",
     description:
-      "Ride your okada across vibrant African cities. Build your crew, master the streets and become a legend.",
+      "Ride okada, take missions, build a crew, and become a Street Legend in a vibrant 3D African city.",
     type: "website",
+    images: [{ url: "/afrorush-logo.jpg", width: 512, height: 512, alt: "AfroRush" }],
   },
   twitter: {
     card: "summary_large_image",
     title: "AfroRush",
-    description: "African street racing game.",
+    description: "A loud, alive 3D open-world adventure in a vibrant African city.",
+    images: ["/afrorush-logo.jpg"],
   },
 };
 
@@ -33,7 +64,8 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
-  themeColor: "#120716",
+  themeColor: "#1fb86f",
+  viewportFit: "cover",
 };
 
 export default function RootLayout({
@@ -41,12 +73,9 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
-        <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Rubik:wght@400;600;800&display=swap" rel="stylesheet" />
-      </head>
-      <body className="antialiased bg-background text-foreground">
+      <body
+        className={`${bungee.variable} ${jakarta.variable} ${jetbrains.variable} antialiased bg-background text-foreground`}
+      >
         {children}
       </body>
     </html>
