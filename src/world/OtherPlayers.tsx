@@ -72,18 +72,45 @@ function OtherPlayer({ data }: { data: PlayerDot }) {
   return (
     <group position={data.pos}>
       <group ref={meshRef}>
-        {/* Body */}
-        <mesh castShadow position={[0, 1.2, 0]}>
-          <boxGeometry args={[0.5, 0.7, 0.35]} />
-          <meshStandardMaterial color={data.color} roughness={0.8} />
+        {/* Body — capsule (smooth cartoon) */}
+        <mesh castShadow position={[0, 1.3, 0]}>
+          <capsuleGeometry args={[0.25, 0.35, 12, 24]} />
+          <meshStandardMaterial color={data.color} roughness={0.6} />
         </mesh>
-        {/* Head */}
-        <mesh castShadow position={[0, 1.8, 0]}>
-          <boxGeometry args={[0.3, 0.3, 0.3]} />
-          <meshStandardMaterial color="#8d5524" />
+        {/* Head — sphere */}
+        <mesh castShadow position={[0, 1.9, 0]}>
+          <sphereGeometry args={[0.26, 20, 20]} />
+          <meshStandardMaterial color="#8d5524" roughness={0.5} />
+        </mesh>
+        {/* Eyes */}
+        <mesh position={[-0.09, 1.95, 0.22]}>
+          <sphereGeometry args={[0.035, 12, 12]} />
+          <meshStandardMaterial color="#1a1a1a" />
+        </mesh>
+        <mesh position={[0.09, 1.95, 0.22]}>
+          <sphereGeometry args={[0.035, 12, 12]} />
+          <meshStandardMaterial color="#1a1a1a" />
+        </mesh>
+        {/* Legs — capsules */}
+        <mesh castShadow position={[-0.13, 0.6, 0]}>
+          <capsuleGeometry args={[0.09, 0.45, 8, 16]} />
+          <meshStandardMaterial color="#2a2a3a" roughness={0.7} />
+        </mesh>
+        <mesh castShadow position={[0.13, 0.6, 0]}>
+          <capsuleGeometry args={[0.09, 0.45, 8, 16]} />
+          <meshStandardMaterial color="#2a2a3a" roughness={0.7} />
+        </mesh>
+        {/* Arms — capsules */}
+        <mesh castShadow position={[-0.35, 1.45, 0]}>
+          <capsuleGeometry args={[0.08, 0.3, 8, 16]} />
+          <meshStandardMaterial color={data.color} roughness={0.6} />
+        </mesh>
+        <mesh castShadow position={[0.35, 1.45, 0]}>
+          <capsuleGeometry args={[0.08, 0.3, 8, 16]} />
+          <meshStandardMaterial color={data.color} roughness={0.6} />
         </mesh>
         {/* Online dot */}
-        <mesh position={[0.25, 1.9, 0.15]}>
+        <mesh position={[0.25, 1.95, 0.15]}>
           <sphereGeometry args={[0.06, 8, 8]} />
           <meshBasicMaterial color="#1fb86f" />
         </mesh>

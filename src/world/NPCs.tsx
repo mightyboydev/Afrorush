@@ -79,29 +79,52 @@ export function NPC({ data, onClick }: { data: NPCData; onClick: (npc: NPCData) 
       onPointerOut={() => { document.body.style.cursor = "default"; }}
     >
       <group ref={bobRef}>
-        {/* Body */}
-        <mesh castShadow position={[0, 1.2, 0]}>
-          <boxGeometry args={[0.6, 0.8, 0.4]} />
-          <meshStandardMaterial color={data.color} roughness={0.8} />
+        {/* Body — capsule (smooth, cartoon) */}
+        <mesh castShadow position={[0, 1.3, 0]}>
+          <capsuleGeometry args={[0.28, 0.4, 12, 24]} />
+          <meshStandardMaterial color={data.color} roughness={0.6} />
         </mesh>
-        {/* Head */}
-        <mesh castShadow position={[0, 1.9, 0]}>
-          <boxGeometry args={[0.35, 0.35, 0.35]} />
-          <meshStandardMaterial color="#8d5524" />
+        {/* Head — sphere (smooth) */}
+        <mesh castShadow position={[0, 1.95, 0]}>
+          <sphereGeometry args={[0.28, 20, 20]} />
+          <meshStandardMaterial color="#8d5524" roughness={0.5} />
         </mesh>
-        {/* Hat */}
-        <mesh castShadow position={[0, 2.15, 0]}>
-          <cylinderGeometry args={[0.25, 0.25, 0.15, 8]} />
+        {/* Eyes */}
+        <mesh position={[-0.1, 2.0, 0.23]}>
+          <sphereGeometry args={[0.04, 12, 12]} />
           <meshStandardMaterial color="#1a1a1a" />
         </mesh>
-        {/* Legs */}
-        <mesh castShadow position={[-0.15, 0.4, 0]}>
-          <boxGeometry args={[0.2, 0.8, 0.2]} />
-          <meshStandardMaterial color="#2a2a3a" />
+        <mesh position={[0.1, 2.0, 0.23]}>
+          <sphereGeometry args={[0.04, 12, 12]} />
+          <meshStandardMaterial color="#1a1a1a" />
         </mesh>
-        <mesh castShadow position={[0.15, 0.4, 0]}>
-          <boxGeometry args={[0.2, 0.8, 0.2]} />
-          <meshStandardMaterial color="#2a2a3a" />
+        {/* Smile */}
+        <mesh position={[0, 1.85, 0.24]}>
+          <torusGeometry args={[0.06, 0.015, 8, 12, Math.PI]} />
+          <meshStandardMaterial color="#1a1a1a" />
+        </mesh>
+        {/* Hat — smooth cap */}
+        <mesh castShadow position={[0, 2.18, 0]}>
+          <sphereGeometry args={[0.3, 16, 16, 0, Math.PI * 2, 0, Math.PI * 0.55]} />
+          <meshStandardMaterial color="#1a1a1a" roughness={0.6} />
+        </mesh>
+        {/* Legs — capsules */}
+        <mesh castShadow position={[-0.15, 0.55, 0]}>
+          <capsuleGeometry args={[0.1, 0.5, 8, 16]} />
+          <meshStandardMaterial color="#2a2a3a" roughness={0.7} />
+        </mesh>
+        <mesh castShadow position={[0.15, 0.55, 0]}>
+          <capsuleGeometry args={[0.1, 0.5, 8, 16]} />
+          <meshStandardMaterial color="#2a2a3a" roughness={0.7} />
+        </mesh>
+        {/* Arms — capsules */}
+        <mesh castShadow position={[-0.38, 1.45, 0]}>
+          <capsuleGeometry args={[0.09, 0.35, 8, 16]} />
+          <meshStandardMaterial color={data.color} roughness={0.6} />
+        </mesh>
+        <mesh castShadow position={[0.38, 1.45, 0]}>
+          <capsuleGeometry args={[0.09, 0.35, 8, 16]} />
+          <meshStandardMaterial color={data.color} roughness={0.6} />
         </mesh>
         {/* Interaction indicator (floating !) */}
         <Text

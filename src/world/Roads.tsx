@@ -364,23 +364,43 @@ function Pedestrian({
 
   return (
     <group ref={ref}>
-      {/* Simple low-poly pedestrian */}
-      <mesh castShadow position={[0, 0.8, 0]}>
-        <boxGeometry args={[0.4, 0.8, 0.25]} />
-        <meshStandardMaterial color={color} roughness={0.8} />
+      {/* Smooth cartoon pedestrian */}
+      {/* Body — capsule */}
+      <mesh castShadow position={[0, 1.1, 0]}>
+        <capsuleGeometry args={[0.22, 0.3, 12, 24]} />
+        <meshStandardMaterial color={color} roughness={0.6} />
       </mesh>
-      <mesh castShadow position={[0, 1.4, 0]}>
-        <boxGeometry args={[0.3, 0.3, 0.3]} />
-        <meshStandardMaterial color="#8d5524" />
+      {/* Head — sphere */}
+      <mesh castShadow position={[0, 1.65, 0]}>
+        <sphereGeometry args={[0.24, 20, 20]} />
+        <meshStandardMaterial color="#8d5524" roughness={0.5} />
       </mesh>
-      {/* Legs */}
-      <mesh castShadow position={[-0.1, 0.3, 0]}>
-        <boxGeometry args={[0.15, 0.5, 0.15]} />
-        <meshStandardMaterial color="#2a2a3a" />
+      {/* Eyes */}
+      <mesh position={[-0.08, 1.7, 0.2]}>
+        <sphereGeometry args={[0.03, 12, 12]} />
+        <meshStandardMaterial color="#1a1a1a" />
       </mesh>
-      <mesh castShadow position={[0.1, 0.3, 0]}>
-        <boxGeometry args={[0.15, 0.5, 0.15]} />
-        <meshStandardMaterial color="#2a2a3a" />
+      <mesh position={[0.08, 1.7, 0.2]}>
+        <sphereGeometry args={[0.03, 12, 12]} />
+        <meshStandardMaterial color="#1a1a1a" />
+      </mesh>
+      {/* Legs — capsules */}
+      <mesh castShadow position={[-0.12, 0.55, 0]}>
+        <capsuleGeometry args={[0.08, 0.4, 8, 16]} />
+        <meshStandardMaterial color="#2a2a3a" roughness={0.7} />
+      </mesh>
+      <mesh castShadow position={[0.12, 0.55, 0]}>
+        <capsuleGeometry args={[0.08, 0.4, 8, 16]} />
+        <meshStandardMaterial color="#2a2a3a" roughness={0.7} />
+      </mesh>
+      {/* Arms — capsules */}
+      <mesh castShadow position={[-0.3, 1.2, 0]}>
+        <capsuleGeometry args={[0.07, 0.28, 8, 16]} />
+        <meshStandardMaterial color={color} roughness={0.6} />
+      </mesh>
+      <mesh castShadow position={[0.3, 1.2, 0]}>
+        <capsuleGeometry args={[0.07, 0.28, 8, 16]} />
+        <meshStandardMaterial color={color} roughness={0.6} />
       </mesh>
     </group>
   );

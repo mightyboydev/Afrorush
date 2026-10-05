@@ -1,11 +1,11 @@
 "use client";
 
-// src/world/City.tsx — main 3D scene with isometric camera, post-processing,
-// new road network, traffic, pedestrians, and NPCs.
+// src/world/City.tsx — main 3D scene with isometric camera, premium post-processing,
+// higher DPR for "4K HD" feel, stronger bloom, vignette, color grading.
 
 import { Suspense, useRef, useState, useMemo } from "react";
 import { Canvas } from "@react-three/fiber";
-import { EffectComposer, Bloom, SMAA } from "@react-three/postprocessing";
+import { EffectComposer, Bloom, SMAA, Vignette, BrightnessContrast, HueSaturation } from "@react-three/postprocessing";
 import * as THREE from "three";
 import Environment from "./Environment";
 import { CityLayout } from "./Buildings";
@@ -28,10 +28,11 @@ export interface CityProps {
 
 export default function City({ avatar, quality, riding, inputRef, weather = "clear", onTalkToNPC, onReady }: CityProps) {
   const playerRef = useRef<PlayerHandle>(null);
+  // Higher DPR for sharper "4K HD" look
   const presets = useMemo(() => ({
-    low:    { dpr: 0.75, fps: 30 },
-    medium: { dpr: 1.0,  fps: 30 },
-    high:   { dpr: 1.5,  fps: 60 },
+    low:    { dpr: 1.0,  fps: 30 },
+    medium: { dpr: 1.5,  fps: 30 },
+    high:   { dpr: 2.0,  fps: 60 },
   }), []);
   const preset = presets[quality];
   const [timeOfDay] = useState(0.35);
@@ -39,14 +40,17 @@ export default function City({ avatar, quality, riding, inputRef, weather = "cle
   return (
     <Canvas
       className="world-canvas"
-      shadows={quality === "high"}
+      shadows={quality !== "low"}
       dpr={preset.dpr}
-      gl={{ antialias: quality !== "low", powerPreference: "high-performance" }}
-      // Isometric-style camera — high angle, looking down at ~45°
-      camera={{ position: [0, 35, 35], fov: 35, near: 0.1, far: 300 }}
+      gl={{
+        antialias: quality !== "low",
+        powerPreference: "high-performance",
+        toneMapping: THREE.ACESFilmicToneMapping,
+        toneMappingExposure: 1.1,
+      }}
+      camera={{ position: [0, 25, 25], fov: 40, near: 0.1, far: 300 }}
       onCreated={({ gl, camera }) => {
         gl.setClearColor(new THREE.Color("#87ceeb"));
-        // Lock camera to isometric angle (player moves under it)
         camera.lookAt(0, 0, 0);
         onReady?.();
       }}
@@ -67,15 +71,19 @@ export default function City({ avatar, quality, riding, inputRef, weather = "cle
           quality={quality}
         />
 
-        {/* Post-processing — bloom + anti-aliasing for polish */}
+        {/* Premium post-processing — stronger bloom, vignette, color grading */}
         {quality !== "low" && (
           <EffectComposer>
             <Bloom
-              intensity={0.4}
-              luminanceThreshold={0.6}
+              intensity={0.8}
+              luminanceThreshold={0.55}
               luminanceSmoothing={0.3}
               mipmapBlur
+              radius={0.7}
             />
+            <HueSaturation saturation={0.15} />
+            <BrightnessContrast brightness={0.02} contrast={0.1} />
+            <Vignette eskil={false} offset={0.3} darkness={0.5} />
             <SMAA />
           </EffectComposer>
         )}
