@@ -132,6 +132,30 @@
   box-shadow: 0 4px 12px -4px rgba(20, 33, 61, 0.18);
   border: 2px solid rgba(20, 33, 61, 0.06);
 }
+
+/* Glassmorphism — frosted glass effect for premium UI */
+.rush-glass {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 8px 32px -8px rgba(20, 33, 61, 0.18);
+}
+.rush-glass-dark {
+  background: rgba(20, 33, 61, 0.6);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px -8px rgba(0, 0, 0, 0.3);
+}
+.rush-glass-pill {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 999px;
+  border: 1.5px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 4px 16px -4px rgba(20, 33, 61, 0.2);
+}
 .rush-soft-shadow {
   box-shadow: 0 6px 24px -6px rgba(20, 33, 61, 0.15);
 }
