@@ -20,6 +20,7 @@ import {
 import { getFirebaseDb } from "./firebase";
 import {
   DEFAULT_UNLOCKED,
+  makeDefaultProfile,
   type Crew,
   type Loadout,
   type PlayerProfile,
@@ -36,11 +37,26 @@ const UNLOCKED_KEY = "unlocked";
 
 // ---------- Profiles ----------
 
+
+// Older profiles (created by earlier versions) may lack newer fields.
+// Fill the gaps so the UI never reads undefined (e.g. graphicsQuality, avatar).
+function withDefaults(uid: string, data: Partial<PlayerProfile>): PlayerProfile {
+  const base = makeDefaultProfile(uid, data.email ?? null, data.username ?? "Rider", data.photoURL ?? null);
+  return {
+    ...base,
+    ...data,
+    avatar: { ...base.avatar, ...(data.avatar ?? {}) },
+    loadout: { ...base.loadout, ...(data.loadout ?? {}) },
+    highScores: { ...base.highScores, ...(data.highScores ?? {}) },
+    graphicsQuality: data.graphicsQuality ?? base.graphicsQuality,
+  } as PlayerProfile;
+}
+
 export async function fetchProfile(uid: string): Promise<PlayerProfile | null> {
   const db = getFirebaseDb();
   const snap = await getDoc(doc(db, USERS, uid));
   if (!snap.exists()) return null;
-  return snap.data() as PlayerProfile;
+  return withDefaults(uid, snap.data() as Partial<PlayerProfile>);
 }
 
 export async function fetchUnlocked(uid: string): Promise<string[]> {
@@ -64,7 +80,7 @@ export function subscribeToProfile(
 ): Unsubscribe {
   const db = getFirebaseDb();
   return onSnapshot(doc(db, USERS, uid), (snap) => {
-    cb(snap.exists() ? (snap.data() as PlayerProfile) : null);
+    cb(snap.exists() ? withDefaults(uid, snap.data() as Partial<PlayerProfile>) : null);
   });
 }
 

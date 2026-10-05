@@ -2,11 +2,8 @@
 // All money, rep, ban, and catalog mutations go through here.
 
 import { getAdminDb, getAdminAuth, verifyAdminToken, getUserRole } from "./firebase-admin";
-import { doc, getDoc, updateDoc, increment, collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { FieldValue } from "firebase-admin/firestore";
 
-// Hmm — those imports above are from the client SDK. We need admin SDK writes.
-// Let's use the admin firestore directly.
-import type { FirebaseFirestore } from "firebase-admin/firestore";
 
 export interface AuditEntry {
   actorUid: string;
@@ -44,7 +41,7 @@ export async function writeAudit(entry: AuditEntry): Promise<void> {
     const db = getAdminDb();
     await db.collection("adminLogs").add({
       ...entry,
-      serverTimestamp: serverTimestamp(),
+      serverTimestamp: FieldValue.serverTimestamp(),
     });
   } catch {
     /* best-effort — don't fail the main op if logging fails */
