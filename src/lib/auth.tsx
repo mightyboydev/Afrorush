@@ -21,8 +21,15 @@ import {
   startPresenceHeartbeat,
   subscribeToProfile,
   subscribeToUnlocked,
+  updateProfile,
 } from "./firestore";
-import { makeDefaultProfile, type PlayerProfile } from "./storage";
+import {
+  makeDefaultProfile,
+  DEFAULT_AVATAR,
+  DEFAULT_LOADOUT,
+  DEFAULT_HIGH_SCORES,
+  type PlayerProfile,
+} from "./storage";
 
 export interface AuthState {
   user: User | null;
@@ -102,8 +109,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           if (!cancelled) setError((e as Error).message);
         }
       } else {
-        setProfile(existing);
-        setUnlocked(existingUnlocked);
+        // MIGRATE: Old profiles may be missing Phase 1+ fields (avatar, gold,
+        // city, graphicsQuality, onboardingComplete, banned, etc.).
+        // Patch any missing fields with defaults so the app doesn't crash.
+        const migrated = migrateProfile(existing);
+        if (migrated !== existing) {
+          try { await updateProfile(user.uid, migrated); } catch { /* best-effort */ }
+        }
+        if (!cancelled) {
+          setProfile(migrated);
+          setUnlocked(existingUnlocked);
+        }
       }
 
       if (cancelled) return;
@@ -231,4 +247,34 @@ function prettyAuthError(msg: string): string {
   if (lower.includes("too-many-requests")) return "Too many attempts. Try again in a minute.";
   if (lower.includes("operation-not-allowed")) return "This sign-in method isn't enabled in Firebase yet.";
   return msg.replace("Firebase: ", "").replace(/\(auth\/.*\)\.?/g, "").trim() || "Something went wrong.";
+}
+
+// Migrate an old profile document to the current schema.
+// Returns the SAME object if no migration was needed, or a NEW object
+// with missing fields filled in from defaults.
+export function migrateProfile(existing: Partial<PlayerProfile>): PlayerProfile {
+  const defaults = makeDefaultProfile(
+    existing.uid ?? "",
+    existing.email ?? null,
+    existing.username ?? "Rider",
+    existing.photoURL ?? null
+  );
+  let changed = false;
+  const merged: PlayerProfile = { ...defaults, ...existing } as PlayerProfile;
+
+  // Ensure nested objects are present
+  if (!existing.avatar) { merged.avatar = { ...DEFAULT_AVATAR }; changed = true; }
+  if (!existing.loadout) { merged.loadout = { ...DEFAULT_LOADOUT }; changed = true; }
+  if (!existing.highScores) { merged.highScores = { ...DEFAULT_HIGH_SCORES }; changed = true; }
+  if (existing.gold === undefined) { merged.gold = 50; changed = true; }
+  if (existing.city === undefined) { merged.city = "lagos"; changed = true; }
+  if (existing.graphicsQuality === undefined) { merged.graphicsQuality = "medium"; changed = true; }
+  if (existing.onboardingComplete === undefined) { merged.onboardingComplete = false; changed = true; }
+  if (existing.banned === undefined) { merged.banned = false; changed = true; }
+  if (existing.banReason === undefined) { merged.banReason = null; changed = true; }
+  if (existing.banExpires === undefined) { merged.banExpires = null; changed = true; }
+  if (existing.mutedUntil === undefined) { merged.mutedUntil = null; changed = true; }
+  if (existing.warnings === undefined) { merged.warnings = 0; changed = true; }
+
+  return changed ? merged : (existing as PlayerProfile);
 }
