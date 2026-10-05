@@ -1,12 +1,19 @@
 "use client";
 
-// src/components/Landing.tsx — logged-out landing page.
-// Bright, friendly, with floating place pills, live stats, news banner,
-// bottom sheet with Sign up free / Log in.
+// src/components/Landing.tsx — Premium landing page inspired by phlifestyle.fun.
+// 3D character preview with shuffle + drag to rotate, gender toggle, outfit
+// color pickers, clean auth form, live stats, footer links.
 
 import { useState, useEffect } from "react";
+import dynamic from "next/dynamic";
 import { useAuth } from "@/lib/auth";
-import { DISTRICTS } from "@/lib/storage";
+import { SKIN_TONES, HAIR_STYLES, HAIR_COLORS, DEFAULT_AVATAR, type AvatarConfig } from "@/lib/storage";
+
+// 3D character preview — ssr:false
+const CharacterPreview3D = dynamic(() => import("@/components/CharacterPreview"), { ssr: false });
+
+const SHIRT_COLORS = ["#ffffff", "#1a1a1a", "#1e3a5f", "#87ceeb", "#1fb86f", "#e94f37", "#ffc531", "#7c3aed"];
+const PANTS_COLORS = ["#1e3a5f", "#1a1a1a", "#2a2a3a", "#5a3a1a", "#1fb86f"];
 
 export default function Landing() {
   const { state, signInWithEmail, signUpWithEmail, signInWithGoogle } = useAuth();
@@ -16,7 +23,13 @@ export default function Landing() {
   const [username, setUsername] = useState("");
   const [busy, setBusy] = useState(false);
 
-  // Animated live stats (Phase 5 will pull real numbers)
+  // Character customization state (for signup preview)
+  const [gender, setGender] = useState<"man" | "woman">("man");
+  const [avatar, setAvatar] = useState<AvatarConfig>({ ...DEFAULT_AVATAR });
+  const [shirtColor, setShirtColor] = useState("#ffffff");
+  const [pantsColor, setPantsColor] = useState("#1e3a5f");
+
+  // Animated live stats
   const [onlineCount, setOnlineCount] = useState(1247);
   useEffect(() => {
     const id = setInterval(() => {
@@ -43,11 +56,34 @@ export default function Landing() {
     try { await signInWithGoogle(); } catch { /* surfaced */ } finally { setBusy(false); }
   };
 
+  // Shuffle character look
+  const shuffle = () => {
+    const skins = SKIN_TONES;
+    const hairs = HAIR_STYLES;
+    const hairColors = HAIR_COLORS;
+    const shirts = SHIRT_COLORS;
+    const pants = PANTS_COLORS;
+    setAvatar({
+      skinTone: skins[Math.floor(Math.random() * skins.length)],
+      hair: hairs[Math.floor(Math.random() * hairs.length)],
+      hairColor: hairColors[Math.floor(Math.random() * hairColors.length)],
+      outfit: "outfit-street",
+    });
+    setShirtColor(shirts[Math.floor(Math.random() * shirts.length)]);
+    setPantsColor(pants[Math.floor(Math.random() * pants.length)]);
+  };
+
+  // Build avatar with custom colors for preview
+  const previewAvatar: AvatarConfig = {
+    ...avatar,
+    outfit: shirtColor === "#ffffff" ? "outfit-street" : shirtColor === "#d4af37" ? "outfit-kente" : "outfit-street",
+  };
+
   return (
     <main className="relative min-h-screen w-full overflow-hidden bg-gradient-to-b from-[#b3e5fc] via-[#fff8e7] to-[#fff8e7]">
-      {/* Sky gradient + floating clouds (CSS) */}
+      {/* Decorative clouds */}
       <div className="pointer-events-none absolute inset-0">
-        <div className="absolute left-[10%] top-[8%] h-16 w-32 rounded-full bg-white/80 blur-md rush-float" style={{ animationDelay: "0s" }} />
+        <div className="absolute left-[10%] top-[8%] h-16 w-32 rounded-full bg-white/80 blur-md rush-float" />
         <div className="absolute right-[15%] top-[15%] h-12 w-24 rounded-full bg-white/70 blur-md rush-float" style={{ animationDelay: "1s" }} />
         <div className="absolute left-[60%] top-[5%] h-20 w-40 rounded-full bg-white/60 blur-md rush-float" style={{ animationDelay: "2s" }} />
       </div>
@@ -78,8 +114,8 @@ export default function Landing() {
         </div>
       </header>
 
-      {/* Hero / world preview */}
-      <div className="relative z-10 px-4 pt-6 sm:px-6">
+      {/* Hero */}
+      <div className="relative z-10 px-4 pt-4 sm:px-6">
         <div className="mx-auto max-w-md text-center">
           <div className="mb-2 inline-block rounded-full bg-white/80 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-rush-green rush-pill">
             🟢 {onlineCount.toLocaleString()} riding now · free
@@ -88,163 +124,225 @@ export default function Landing() {
             Step into the<br />
             <span className="text-rush-green">streets of Africa</span>
           </h1>
-          <p className="mx-auto mt-3 max-w-sm text-sm text-rush-navy/70">
-            Walk, ride an okada, take missions, hang out with players, join a crew and race. A loud, alive 3D world is waiting.
+          <p className="mx-auto mt-2 max-w-xs text-xs text-rush-navy/60">
+            Walk, ride, race, build a crew. A loud, alive 3D world.
           </p>
         </div>
 
-        {/* Floating place pills (decorative preview of the city) */}
-        <div className="relative mx-auto mt-8 h-56 max-w-md">
-          {DISTRICTS.slice(0, 6).map((d, i) => {
-            const positions = [
-              { top: "0%", left: "5%" },
-              { top: "10%", left: "70%" },
-              { top: "40%", left: "0%" },
-              { top: "55%", left: "75%" },
-              { top: "75%", left: "20%" },
-              { top: "85%", left: "55%" },
-            ];
-            const p = positions[i];
-            return (
-              <div
-                key={d.id}
-                className="rush-pill rush-float absolute flex items-center gap-1.5 bg-white px-3 py-2 text-xs font-bold text-rush-navy"
-                style={{ top: p.top, left: p.left, animationDelay: `${i * 0.4}s` }}
+        {/* Main card with character preview + auth form (side by side on desktop, stacked on mobile) */}
+        <div className="mx-auto mt-5 max-w-md">
+          <div className="rush-card overflow-hidden p-5">
+
+            {/* Tab switch */}
+            <div className="mb-4 grid grid-cols-2 gap-1 rounded-full bg-rush-cream p-1">
+              <button
+                type="button"
+                onClick={() => setMode("signup")}
+                className={`rounded-full py-2 text-xs font-bold uppercase tracking-wider transition-all ${
+                  mode === "signup" ? "bg-rush-green text-white shadow" : "text-rush-navy/60"
+                }`}
               >
-                <span className="text-base">{d.emoji}</span>
-                <span style={{ color: d.color }}>{d.name}</span>
-              </div>
-            );
-          })}
-          {/* Center hub circle */}
-          <div className="absolute left-1/2 top-1/2 h-32 w-32 -translate-x-1/2 -translate-y-1/2 rounded-full bg-rush-green/20 backdrop-blur-sm" />
-          <div className="absolute left-1/2 top-1/2 flex h-20 w-20 -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center rounded-full bg-rush-green text-white rush-soft-shadow">
-            <span className="text-2xl">🛺</span>
-            <span className="text-[9px] font-bold uppercase tracking-wider">Motor Park</span>
-          </div>
-        </div>
-      </div>
+                Create Account
+              </button>
+              <button
+                type="button"
+                onClick={() => setMode("login")}
+                className={`rounded-full py-2 text-xs font-bold uppercase tracking-wider transition-all ${
+                  mode === "login" ? "bg-rush-navy text-white shadow" : "text-rush-navy/60"
+                }`}
+              >
+                Log In
+              </button>
+            </div>
 
-      {/* News banner */}
-      <div className="relative z-10 mx-auto mt-4 max-w-md px-4">
-        <div className="rush-card flex items-center gap-3 px-4 py-3">
-          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-rush-orange text-sm">🔥</span>
-          <div className="flex-1 text-xs">
-            <div className="font-bold text-rush-navy">Weekend Race: Double Rep!</div>
-            <div className="text-rush-navy/60">Saturday & Sunday — all race modes earn 2× rep</div>
-          </div>
-        </div>
-      </div>
+            {mode === "signup" ? (
+              <div className="space-y-3">
+                {/* Character preview + form layout (like phlifestyle) */}
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  {/* Left: 3D character preview */}
+                  <div className="relative">
+                    <div className="overflow-hidden rounded-2xl bg-gradient-to-b from-[#b3e5fc]/30 to-[#fff8e7]/30">
+                      <CharacterPreview3D avatar={previewAvatar} height={200} />
+                    </div>
+                    {/* Shuffle button */}
+                    <button
+                      onClick={shuffle}
+                      className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-sm rush-soft-shadow active:scale-90"
+                      aria-label="Shuffle look"
+                    >
+                      🎲
+                    </button>
+                    <div className="mt-1 text-center text-[9px] text-rush-navy/40">Drag to rotate</div>
+                  </div>
 
-      {/* Bottom sheet — Sign up / Log in */}
-      <div className="relative z-10 mt-6 px-4 pb-8 sm:px-6 safe-pb">
-        <div className="rush-card mx-auto max-w-md p-5">
-          {/* Online avatars row */}
-          <div className="mb-4 flex items-center gap-2">
-            <div className="flex -space-x-2">
-              {["#1fb86f", "#ff6a1a", "#ffc531", "#c026d3", "#16a3b1"].map((c, i) => (
-                <div
-                  key={i}
-                  className="flex h-7 w-7 items-center justify-center rounded-full border-2 border-white text-[10px] font-bold text-white"
-                  style={{ background: c }}
-                >
-                  {String.fromCharCode(65 + i)}
+                  {/* Right: Form fields */}
+                  <div className="space-y-2">
+                    <input
+                      type="text"
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value)}
+                      placeholder="Rider name"
+                      maxLength={20}
+                      className="w-full rounded-xl border-2 border-rush-cream bg-white px-3 py-2.5 text-sm text-rush-navy placeholder:text-rush-navy/40 focus:border-rush-green focus:outline-none"
+                    />
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="Email"
+                      required
+                      className="w-full rounded-xl border-2 border-rush-cream bg-white px-3 py-2.5 text-sm text-rush-navy placeholder:text-rush-navy/40 focus:border-rush-green focus:outline-none"
+                    />
+                    <input
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="Password"
+                      required
+                      minLength={6}
+                      className="w-full rounded-xl border-2 border-rush-cream bg-white px-3 py-2.5 text-sm text-rush-navy placeholder:text-rush-navy/40 focus:border-rush-green focus:outline-none"
+                    />
+                    {/* Gender toggle */}
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setGender("man")}
+                        className={`flex-1 rounded-xl py-2 text-xs font-bold uppercase tracking-wider ${
+                          gender === "man" ? "bg-rush-navy text-white" : "bg-rush-cream text-rush-navy/60"
+                        }`}
+                      >
+                        👨 Man
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setGender("woman")}
+                        className={`flex-1 rounded-xl py-2 text-xs font-bold uppercase tracking-wider ${
+                          gender === "woman" ? "bg-rush-purple text-white" : "bg-rush-cream text-rush-navy/60"
+                        }`}
+                      >
+                        👩 Woman
+                      </button>
+                    </div>
+                  </div>
                 </div>
-              ))}
-            </div>
-            <div className="text-xs text-rush-navy/70">
-              <span className="font-bold text-rush-navy">{onlineCount.toLocaleString()} riders</span> online now · free
-            </div>
-          </div>
 
-          {/* Tab switch */}
-          <div className="mb-4 grid grid-cols-2 gap-1 rounded-full bg-rush-cream p-1">
-            <button
-              type="button"
-              onClick={() => setMode("signup")}
-              className={`rounded-full py-2 text-xs font-bold uppercase tracking-wider transition-all ${
-                mode === "signup" ? "bg-rush-green text-white shadow" : "text-rush-navy/60"
-              }`}
-            >
-              Sign Up
-            </button>
-            <button
-              type="button"
-              onClick={() => setMode("login")}
-              className={`rounded-full py-2 text-xs font-bold uppercase tracking-wider transition-all ${
-                mode === "login" ? "bg-rush-navy text-white shadow" : "text-rush-navy/60"
-              }`}
-            >
-              Log In
-            </button>
-          </div>
+                {/* Color pickers (like phlifestyle) */}
+                <div>
+                  <label className="mb-1 block text-[9px] font-bold uppercase tracking-wider text-rush-navy/50">Shirt Color</label>
+                  <div className="flex flex-wrap gap-1.5">
+                    {SHIRT_COLORS.map((c) => (
+                      <button
+                        key={c}
+                        type="button"
+                        onClick={() => setShirtColor(c)}
+                        className={`h-7 w-7 rounded-full border-2 transition-all ${shirtColor === c ? "scale-110 border-rush-navy" : "border-white"}`}
+                        style={{ background: c }}
+                      />
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <label className="mb-1 block text-[9px] font-bold uppercase tracking-wider text-rush-navy/50">Skin Tone</label>
+                  <div className="flex flex-wrap gap-1.5">
+                    {SKIN_TONES.map((tone) => (
+                      <button
+                        key={tone}
+                        type="button"
+                        onClick={() => setAvatar({ ...avatar, skinTone: tone })}
+                        className={`h-7 w-7 rounded-full border-2 transition-all ${avatar.skinTone === tone ? "scale-110 border-rush-navy" : "border-white"}`}
+                        style={{ background: tone }}
+                      />
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <label className="mb-1 block text-[9px] font-bold uppercase tracking-wider text-rush-navy/50">Hair</label>
+                  <div className="flex flex-wrap gap-1">
+                    {HAIR_STYLES.map((h) => (
+                      <button
+                        key={h}
+                        type="button"
+                        onClick={() => setAvatar({ ...avatar, hair: h })}
+                        className={`rounded-lg border-2 px-2 py-1 text-[10px] font-bold uppercase tracking-wider ${
+                          avatar.hair === h ? "border-rush-green bg-rush-green/10 text-rush-green" : "border-rush-cream bg-white text-rush-navy/60"
+                        }`}
+                      >
+                        {h}
+                      </button>
+                    ))}
+                  </div>
+                </div>
 
-          <form onSubmit={submit} className="space-y-2">
-            {mode === "signup" && (
-              <input
-                type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                placeholder="Rider name"
-                maxLength={20}
-                className="w-full rounded-2xl border-2 border-rush-cream bg-white px-4 py-3 text-sm text-rush-navy placeholder:text-rush-navy/40 focus:border-rush-green focus:outline-none"
-              />
-            )}
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Email"
-              required
-              className="w-full rounded-2xl border-2 border-rush-cream bg-white px-4 py-3 text-sm text-rush-navy placeholder:text-rush-navy/40 focus:border-rush-green focus:outline-none"
-            />
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Password"
-              required
-              minLength={6}
-              className="w-full rounded-2xl border-2 border-rush-cream bg-white px-4 py-3 text-sm text-rush-navy placeholder:text-rush-navy/40 focus:border-rush-green focus:outline-none"
-            />
+                {state.error && (
+                  <div className="rounded-xl bg-red-50 px-3 py-2 text-xs text-red-600">{state.error}</div>
+                )}
 
-            {state.error && (
-              <div className="rounded-2xl bg-red-50 px-3 py-2 text-xs text-red-600">
-                {state.error}
+                <button
+                  type="submit"
+                  onClick={submit}
+                  disabled={busy}
+                  className="w-full rounded-2xl bg-rush-green px-4 py-3 text-sm font-bold uppercase tracking-wider text-white shadow-lg shadow-rush-green/30 transition-all hover:bg-rush-green-dark disabled:opacity-50"
+                >
+                  {busy ? "Please wait…" : "Sign up · it's free"}
+                </button>
+              </div>
+            ) : (
+              /* Login form */
+              <div className="space-y-2">
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Email"
+                  required
+                  className="w-full rounded-xl border-2 border-rush-cream bg-white px-3 py-3 text-sm text-rush-navy placeholder:text-rush-navy/40 focus:border-rush-green focus:outline-none"
+                />
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Password"
+                  required
+                  className="w-full rounded-xl border-2 border-rush-cream bg-white px-3 py-3 text-sm text-rush-navy placeholder:text-rush-navy/40 focus:border-rush-green focus:outline-none"
+                />
+                {state.error && (
+                  <div className="rounded-xl bg-red-50 px-3 py-2 text-xs text-red-600">{state.error}</div>
+                )}
+                <button
+                  type="submit"
+                  onClick={submit}
+                  disabled={busy}
+                  className="w-full rounded-2xl bg-rush-navy px-4 py-3 text-sm font-bold uppercase tracking-wider text-white shadow-lg disabled:opacity-50"
+                >
+                  {busy ? "Please wait…" : "Log in"}
+                </button>
               </div>
             )}
 
+            {/* Google */}
+            <div className="my-3 flex items-center gap-3">
+              <div className="h-px flex-1 bg-rush-cream" />
+              <span className="text-[10px] uppercase tracking-widest text-rush-navy/40">or</span>
+              <div className="h-px flex-1 bg-rush-cream" />
+            </div>
             <button
-              type="submit"
+              type="button"
+              onClick={google}
               disabled={busy}
-              className="w-full rounded-2xl bg-rush-green px-4 py-3 text-sm font-bold uppercase tracking-wider text-white shadow-lg shadow-rush-green/30 transition-all hover:bg-rush-green-dark disabled:opacity-50"
+              className="flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-rush-cream bg-white px-4 py-3 text-sm font-bold uppercase tracking-wider text-rush-navy transition-all hover:bg-rush-cream/30 disabled:opacity-50"
             >
-              {busy ? "Please wait…" : mode === "signup" ? "Sign up free" : "Log in"}
+              <GoogleIcon /> Continue with Google
             </button>
-          </form>
-
-          <div className="my-3 flex items-center gap-3">
-            <div className="h-px flex-1 bg-rush-cream" />
-            <span className="text-[10px] uppercase tracking-widest text-rush-navy/40">or</span>
-            <div className="h-px flex-1 bg-rush-cream" />
           </div>
 
-          <button
-            type="button"
-            onClick={google}
-            disabled={busy}
-            className="flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-rush-cream bg-white px-4 py-3 text-sm font-bold uppercase tracking-wider text-rush-navy transition-all hover:bg-rush-cream/30 disabled:opacity-50"
-          >
-            <GoogleIcon /> Continue with Google
-          </button>
+          {/* Terms */}
+          <p className="mt-3 text-center text-[10px] uppercase tracking-widest text-rush-navy/40">
+            By continuing you agree to our{" "}
+            <a href="/terms" className="underline hover:text-rush-navy">Terms</a>{" "}
+            and{" "}
+            <a href="/privacy" className="underline hover:text-rush-navy">Privacy Policy</a>
+          </p>
         </div>
-
-        <p className="mt-3 text-center text-[10px] uppercase tracking-widest text-rush-navy/40">
-          By continuing you agree to our{" "}
-          <a href="/terms" className="underline hover:text-rush-navy">Terms</a>{" "}
-          and{" "}
-          <a href="/privacy" className="underline hover:text-rush-navy">Privacy Policy</a>
-        </p>
       </div>
 
       {/* Footer */}
@@ -259,7 +357,7 @@ export default function Landing() {
         </div>
       </footer>
 
-      {/* Setup hint (only if auth not enabled yet) */}
+      {/* Setup hint (only if auth not enabled) */}
       {state.error && state.error.toLowerCase().includes("not enabled") && (
         <div className="mx-4 mb-6 max-w-md rounded-2xl border-2 border-rush-gold bg-rush-gold/10 p-4 text-xs text-rush-navy sm:mx-auto">
           <div className="mb-2 font-bold uppercase tracking-wider text-rush-gold">First-time setup</div>

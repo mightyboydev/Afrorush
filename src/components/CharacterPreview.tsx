@@ -19,7 +19,7 @@ export default function CharacterPreview({ avatar, height = 300 }: CharacterPrev
     <div style={{ height, width: "100%" }} className="overflow-hidden rounded-3xl bg-gradient-to-b from-[#b3e5fc]/40 to-[#fff8e7]/40">
       <Canvas
         shadows
-        dpr={1.5}
+        dpr={2.0}
         camera={{ position: [0, 1.2, 3], fov: 35 }}
         gl={{ antialias: true, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.1 }}
         onCreated={({ gl }) => gl.setClearColor(new THREE.Color("#00000000"))}

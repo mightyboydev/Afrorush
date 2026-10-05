@@ -54,34 +54,47 @@ export default function PhoneScreen({ profile }: { profile: PlayerProfile }) {
         <AppContent appId={openApp} profile={profile} onClose={() => setOpenApp(null)} />
       ) : (
         <>
-          {/* Wallet card */}
-          <div className="mb-4 overflow-hidden rounded-3xl rush-gradient rush-soft-shadow">
-            <div className="p-4">
-              <div className="mb-2 flex items-center justify-between">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-white/80">AfroRush Wallet</span>
-                <span className="rounded-full bg-white/20 px-2 py-0.5 text-[10px] font-bold text-white">PREMIUM</span>
+          {/* Wallet card — cleaner premium look */}
+          <div className="mb-4 overflow-hidden rounded-3xl bg-gradient-to-br from-rush-navy via-rush-purple to-rush-navy p-4 text-white shadow-xl">
+            <div className="mb-3 flex items-center justify-between">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-white/60">AfroRush Wallet</span>
+              <span className="rounded-full bg-rush-green/30 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-rush-green">Active</span>
+            </div>
+            <div className="flex items-end justify-between">
+              <div>
+                <div className="text-[9px] uppercase tracking-wider text-white/50">Cash Balance</div>
+                <div className="font-display text-3xl">{formatNaira(profile.cash)}</div>
               </div>
-              <div className="flex items-end justify-between">
-                <div>
-                  <div className="text-[10px] uppercase tracking-wider text-white/70">Balance</div>
-                  <div className="font-display text-2xl text-white">{formatNaira(profile.cash)}</div>
-                </div>
-                <div className="text-right">
-                  <div className="text-[10px] uppercase tracking-wider text-white/70">Gold</div>
-                  <div className="font-display text-xl text-white">🪙 {profile.gold}</div>
-                </div>
+              <div className="text-right">
+                <div className="text-[9px] uppercase tracking-wider text-white/50">Gold</div>
+                <div className="font-display text-xl text-rush-gold">🪙 {profile.gold}</div>
+              </div>
+            </div>
+            {/* Mini stat bar */}
+            <div className="mt-3 flex gap-2 border-t border-white/10 pt-2">
+              <div className="flex-1 text-center">
+                <div className="text-[8px] uppercase tracking-wider text-white/40">Rep</div>
+                <div className="text-xs font-bold text-rush-jade">{profile.rep.toLocaleString()}</div>
+              </div>
+              <div className="flex-1 text-center">
+                <div className="text-[8px] uppercase tracking-wider text-white/40">Runs</div>
+                <div className="text-xs font-bold text-white">{profile.totalRuns}</div>
+              </div>
+              <div className="flex-1 text-center">
+                <div className="text-[8px] uppercase tracking-wider text-white/40">Crew</div>
+                <div className="text-xs font-bold text-white">{profile.crewTag ?? "—"}</div>
               </div>
             </div>
           </div>
 
-          {/* App grid */}
+          {/* App grid — cleaner with labels */}
           <div className="mb-2 text-[10px] font-bold uppercase tracking-widest text-rush-navy/50">Apps</div>
           <div className="grid grid-cols-4 gap-3">
             {APPS.map((app) => (
               <button
                 key={app.id}
                 onClick={() => !app.locked && setOpenApp(app.id)}
-                className="flex flex-col items-center gap-1.5"
+                className="flex flex-col items-center gap-1.5 transition-all active:scale-90"
               >
                 <div className="relative">
                   <div
