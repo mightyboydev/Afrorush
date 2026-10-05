@@ -1,8 +1,10 @@
 "use client";
 
-// src/world/Environment.tsx — sky, lighting, ground plane, day/night cycle.
+// src/world/Environment.tsx — Hemisphere lighting, soft ambient, contact shadows,
+// day/night sky cycle. Designed for a bright, polished, isometric look.
 
-import { useRef, useMemo } from "react";
+import { useMemo } from "react";
+import { ContactShadows, Sky } from "@react-three/drei";
 import * as THREE from "three";
 
 export interface EnvironmentProps {
@@ -34,38 +36,54 @@ export default function Environment({ timeOfDay, quality }: EnvironmentProps) {
   const sunX = Math.cos(sunAngle);
   const isDay = sunHeight > -0.1;
   const skyHex = `#${skyColor.getHexString()}`;
-  const fogFar = quality === "low" ? 60 : quality === "medium" ? 100 : 200;
+  const fogFar = quality === "low" ? 80 : quality === "medium" ? 140 : 250;
+
+  // Sun position for the drei <Sky>
+  const sunPos: [number, number, number] = [sunX * 100, Math.max(5, sunHeight * 100), 30];
 
   return (
     <>
-      <color attach="background" args={[skyHex]} />
-      <fog attach="fog" args={[skyHex, 30, fogFar]} />
+      {/* Drei procedural sky (skip on low quality for perf) */}
+      {quality !== "low" && isDay && (
+        <Sky
+          distance={400}
+          sunPosition={sunPos}
+          inclination={0.5}
+          azimuth={0.25}
+          turbidity={3}
+          rayleigh={1.5}
+          mieCoefficient={0.005}
+          mieDirectionalG={0.8}
+        />
+      )}
+      {quality === "low" && (
+        <color attach="background" args={[skyHex]} />
+      )}
+      <fog attach="fog" args={[skyHex, 40, fogFar]} />
 
-      <ambientLight intensity={isDay ? 0.7 : 0.25} color={isDay ? "#ffffff" : "#3d4f8a"} />
+      {/* Hemisphere light — sky color from top, warm ground bounce from bottom.
+          This is the KEY to that soft, polished, "everything is evenly lit" look. */}
+      <hemisphereLight
+        args={["#b3e5fc", "#c2a875", isDay ? 0.8 : 0.25]}
+      />
 
+      {/* Soft ambient fill */}
+      <ambientLight intensity={isDay ? 0.3 : 0.1} color={isDay ? "#ffffff" : "#3d4f8a"} />
+
+      {/* Main directional "sun" light — no shadows (we use ContactShadows instead) */}
       <directionalLight
         position={[sunX * 50, Math.max(5, sunHeight * 60), 20]}
-        intensity={isDay ? 1.2 : 0.15}
+        intensity={isDay ? 1.0 : 0.1}
         color={isDay ? "#fff5e1" : "#9bb8ff"}
-        castShadow={quality === "high" && isDay}
-        shadow-mapSize-width={1024}
-        shadow-mapSize-height={1024}
-        shadow-camera-near={1}
-        shadow-camera-far={100}
-        shadow-camera-left={-40}
-        shadow-camera-right={40}
-        shadow-camera-top={40}
-        shadow-camera-bottom={-40}
       />
 
       {/* Ground */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
-        <planeGeometry args={[200, 200]} />
-        <meshStandardMaterial color="#c2a875" roughness={0.95} />
+        <planeGeometry args={[300, 300]} />
+        <meshStandardMaterial color="#8db965" roughness={0.95} />
       </mesh>
 
-      <RoadStrip />
-
+      {/* Sun sphere */}
       {isDay && (
         <mesh position={[sunX * 80, sunHeight * 80 + 10, -40]}>
           <sphereGeometry args={[6, 16, 16]} />
@@ -78,33 +96,20 @@ export default function Environment({ timeOfDay, quality }: EnvironmentProps) {
           <meshBasicMaterial color="#e8e8f0" />
         </mesh>
       )}
-    </>
-  );
-}
 
-function RoadStrip() {
-  return (
-    <group>
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 0]} receiveShadow>
-        <planeGeometry args={[120, 12]} />
-        <meshStandardMaterial color="#3a3a3a" roughness={0.9} />
-      </mesh>
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 0]} receiveShadow>
-        <planeGeometry args={[12, 120]} />
-        <meshStandardMaterial color="#3a3a3a" roughness={0.9} />
-      </mesh>
-      {Array.from({ length: 12 }).map((_, i) => (
-        <group key={`lane-${i}`}>
-          <mesh rotation={[-Math.PI / 2, 0, 0]} position={[(i - 6) * 10, 0.02, 0]}>
-            <planeGeometry args={[4, 0.4]} />
-            <meshBasicMaterial color="#ffc531" />
-          </mesh>
-          <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02, (i - 6) * 10]}>
-            <planeGeometry args={[0.4, 4]} />
-            <meshBasicMaterial color="#ffc531" />
-          </mesh>
-        </group>
-      ))}
-    </group>
+      {/* Contact shadows — soft blob shadows under everything.
+          This gives depth without the perf cost of real-time shadow maps. */}
+      {quality !== "low" && (
+        <ContactShadows
+          position={[0, 0.01, 0]}
+          scale={120}
+          far={20}
+          blur={2.5}
+          opacity={0.35}
+          color="#1a2a1a"
+          resolution={quality === "high" ? 1024 : 512}
+        />
+      )}
+    </>
   );
 }

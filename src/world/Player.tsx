@@ -36,10 +36,10 @@ const Player = forwardRef<PlayerHandle, PlayerProps>(function Player(
 
   // Cached vectors to avoid allocations in the frame loop.
   // Using refs (not useMemo) so the linter doesn't flag in-place mutation.
-  const tmpForward = useRef(new THREE.Vector3()).current;
-  const tmpRight = useRef(new THREE.Vector3()).current;
+  const tmpForward = useRef(new THREE.Vector3(0, 0, -1)).current; // forward = -Z (isometric)
+  const tmpRight = useRef(new THREE.Vector3(1, 0, 0)).current;
   const tmpVel = useRef(new THREE.Vector3()).current;
-  const camOffset = useRef(new THREE.Vector3(0, 8, 12)).current;
+  const camOffset = useRef(new THREE.Vector3(0, 35, 35)).current; // isometric camera offset
   const camTarget = useRef(new THREE.Vector3()).current;
   const camLookAt = useRef(new THREE.Vector3()).current;
   const velocity = useRef(new THREE.Vector3()).current;
@@ -59,14 +59,10 @@ const Player = forwardRef<PlayerHandle, PlayerProps>(function Player(
     const speed = riding ? RIDE_SPEED : WALK_SPEED;
     const boost = input.boost ? BOOST_MULT : 1;
 
-    // Camera-relative movement (third-person follow).
-    camera.getWorldDirection(tmpForward);
-    tmpForward.y = 0;
-    tmpForward.normalize();
-    tmpRight.crossVectors(tmpForward, upVec).normalize();
-
+    // World-space movement (isometric camera, so directions are fixed).
+    // forward = -Z (away from camera), right = +X
     tmpVel.set(0, 0, 0);
-    tmpVel.addScaledVector(tmpForward, -input.y); // forward when joystick up (y negative)
+    tmpVel.addScaledVector(tmpForward, -input.y); // forward when joystick up
     tmpVel.addScaledVector(tmpRight, input.x);
     if (tmpVel.lengthSq() > 0) {
       tmpVel.normalize().multiplyScalar(speed * boost * dt);
@@ -99,7 +95,7 @@ const Player = forwardRef<PlayerHandle, PlayerProps>(function Player(
       legSwing.current = 0;
     }
 
-    // Camera follow (smoothed)
+    // Isometric camera follow — stays at fixed angle, tracks player XZ position
     camTarget.copy(g.position).add(camOffset);
     camera.position.lerp(camTarget, Math.min(1, dt * 4));
     camLookAt.copy(g.position);

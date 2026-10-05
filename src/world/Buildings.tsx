@@ -1,6 +1,8 @@
 "use client";
 
-// src/world/Buildings.tsx — low-poly buildings for Motor Park district.
+// src/world/Buildings.tsx — Polished low-poly buildings with windows, roofs,
+// AC units, and varied colors. Plus market stalls, parked vehicles, lamp posts,
+// billboards, trees, and street props.
 
 import { useMemo } from "react";
 import * as THREE from "three";
@@ -25,25 +27,54 @@ export function Building({
         <boxGeometry args={size} />
         <meshStandardMaterial color={color} roughness={0.85} />
       </mesh>
-      {/* Roof */}
-      <mesh castShadow position={[0, size[1] + 0.5, 0]}>
-        <boxGeometry args={[size[0] + 0.6, 1, size[2] + 0.6]} />
+      {/* Roof slab */}
+      <mesh castShadow position={[0, size[1] + 0.3, 0]}>
+        <boxGeometry args={[size[0] + 0.6, 0.6, size[2] + 0.6]} />
         <meshStandardMaterial color={roofColor} roughness={0.8} />
       </mesh>
-      {/* Windows */}
-      <mesh position={[0, size[1] * 0.55, size[2] / 2 + 0.01]}>
-        <planeGeometry args={[size[0] * 0.6, size[1] * 0.3]} />
-        <meshStandardMaterial color="#87ceeb" emissive="#87ceeb" emissiveIntensity={0.3} />
+      {/* Roof detail — small box (water tank / AC) */}
+      <mesh castShadow position={[size[0] / 3, size[1] + 1, size[2] / 3]}>
+        <boxGeometry args={[1.5, 1, 1.5]} />
+        <meshStandardMaterial color="#7c8a99" roughness={0.7} metalness={0.3} />
       </mesh>
-      <mesh position={[0, size[1] * 0.55, -size[2] / 2 - 0.01]} rotation={[0, Math.PI, 0]}>
-        <planeGeometry args={[size[0] * 0.6, size[1] * 0.3]} />
-        <meshStandardMaterial color="#87ceeb" emissive="#87ceeb" emissiveIntensity={0.3} />
+      {/* Front windows (glowing) */}
+      <mesh position={[0, size[1] * 0.55, size[2] / 2 + 0.01]}>
+        <planeGeometry args={[size[0] * 0.7, size[1] * 0.35]} />
+        <meshStandardMaterial
+          color="#87ceeb"
+          emissive="#87ceeb"
+          emissiveIntensity={0.25}
+          roughness={0.1}
+          metalness={0.6}
+        />
+      </mesh>
+      {/* Window frame lines */}
+      <mesh position={[0, size[1] * 0.7, size[2] / 2 + 0.02]}>
+        <planeGeometry args={[size[0] * 0.7, 0.1]} />
+        <meshBasicMaterial color={color} />
+      </mesh>
+      <mesh position={[0, size[1] * 0.4, size[2] / 2 + 0.02]}>
+        <planeGeometry args={[size[0] * 0.7, 0.1]} />
+        <meshBasicMaterial color={color} />
+      </mesh>
+      {/* Vertical window dividers */}
+      <mesh position={[-size[0] * 0.18, size[1] * 0.55, size[2] / 2 + 0.02]}>
+        <planeGeometry args={[0.1, size[1] * 0.35]} />
+        <meshBasicMaterial color={color} />
+      </mesh>
+      <mesh position={[size[0] * 0.18, size[1] * 0.55, size[2] / 2 + 0.02]}>
+        <planeGeometry args={[0.1, size[1] * 0.35]} />
+        <meshBasicMaterial color={color} />
+      </mesh>
+      {/* Door */}
+      <mesh position={[0, size[1] * 0.12, size[2] / 2 + 0.02]}>
+        <planeGeometry args={[1, 2.4]} />
+        <meshStandardMaterial color="#5a3a1a" roughness={0.9} />
       </mesh>
     </group>
   );
 }
 
-// A stylized market stall — colorful canopy + table.
 export function MarketStall({ position, color = "#1fb86f" }: { position: [number, number, number]; color?: string }) {
   return (
     <group position={position}>
@@ -57,104 +88,41 @@ export function MarketStall({ position, color = "#1fb86f" }: { position: [number
         <coneGeometry args={[3, 0.8, 4]} />
         <meshStandardMaterial color={color} roughness={0.7} />
       </mesh>
+      {/* Poles */}
+      {[[-1.7, -1.2], [1.7, -1.2], [-1.7, 1.2], [1.7, 1.2]].map(([x, z], i) => (
+        <mesh key={i} castShadow position={[x, 1.5, z]}>
+          <cylinderGeometry args={[0.08, 0.08, 3, 8]} />
+          <meshStandardMaterial color="#8b5a2b" />
+        </mesh>
+      ))}
       {/* Table */}
       <mesh castShadow position={[0, 1.2, 0]}>
         <boxGeometry args={[3.6, 0.2, 2.6]} />
         <meshStandardMaterial color="#8b5a2b" roughness={0.9} />
       </mesh>
-      {/* Table legs */}
-      {[[-1.6, -1], [1.6, -1], [-1.6, 1], [1.6, 1]].map(([x, z], i) => (
-        <mesh key={i} position={[x, 0.6, z]}>
-          <boxGeometry args={[0.2, 1.2, 0.2]} />
-          <meshStandardMaterial color="#6b3410" />
-        </mesh>
-      ))}
-      {/* Goods on the table */}
+      {/* Goods */}
       <mesh castShadow position={[-1, 1.4, 0]}>
-        <sphereGeometry args={[0.4, 8, 8]} />
-        <meshStandardMaterial color="#ff6a1a" />
+        <sphereGeometry args={[0.4, 12, 12]} />
+        <meshStandardMaterial color="#ff6a1a" roughness={0.6} />
       </mesh>
       <mesh castShadow position={[0, 1.4, 0.5]}>
-        <sphereGeometry args={[0.4, 8, 8]} />
-        <meshStandardMaterial color="#ffc531" />
+        <sphereGeometry args={[0.4, 12, 12]} />
+        <meshStandardMaterial color="#ffc531" roughness={0.6} />
       </mesh>
       <mesh castShadow position={[1, 1.4, -0.3]}>
         <boxGeometry args={[0.5, 0.4, 0.5]} />
-        <meshStandardMaterial color="#c026d3" />
+        <meshStandardMaterial color="#c026d3" roughness={0.6} />
       </mesh>
     </group>
   );
 }
 
-// A parked danfo bus (yellow with stripes).
-export function Danfo({ position, rotation = 0 }: { position: [number, number, number]; rotation?: number }) {
-  return (
-    <group position={position} rotation={[0, rotation, 0]}>
-      {/* Body */}
-      <mesh castShadow position={[0, 1.2, 0]}>
-        <boxGeometry args={[8, 2, 3.5]} />
-        <meshStandardMaterial color="#ffc531" roughness={0.6} />
-      </mesh>
-      {/* Yellow body with green stripe (Naija style) */}
-      <mesh position={[0, 1.2, 1.76]}>
-        <planeGeometry args={[8, 1]} />
-        <meshBasicMaterial color="#1fb86f" />
-      </mesh>
-      <mesh position={[0, 1.2, -1.76]}>
-        <planeGeometry args={[8, 1]} />
-        <meshBasicMaterial color="#1fb86f" />
-      </mesh>
-      {/* Windows */}
-      <mesh position={[0, 2.2, 1.77]}>
-        <planeGeometry args={[7, 0.6]} />
-        <meshStandardMaterial color="#87ceeb" emissive="#87ceeb" emissiveIntensity={0.2} />
-      </mesh>
-      <mesh position={[0, 2.2, -1.77]} rotation={[0, Math.PI, 0]}>
-        <planeGeometry args={[7, 0.6]} />
-        <meshStandardMaterial color="#87ceeb" emissive="#87ceeb" emissiveIntensity={0.2} />
-      </mesh>
-      {/* Wheels */}
-      {[[-3, -1.2], [3, -1.2], [-3, 1.2], [3, 1.2]].map(([x, z], i) => (
-        <mesh key={i} position={[x, 0.4, z]} rotation={[Math.PI / 2, 0, 0]}>
-          <cylinderGeometry args={[0.5, 0.5, 0.4, 16]} />
-          <meshStandardMaterial color="#1a1a1a" />
-        </mesh>
-      ))}
-    </group>
-  );
-}
-
-// A parked keke (tricycle).
-export function Keke({ position, rotation = 0 }: { position: [number, number, number]; rotation?: number }) {
-  return (
-    <group position={position} rotation={[0, rotation, 0]}>
-      <mesh castShadow position={[0, 0.8, 0]}>
-        <boxGeometry args={[2.5, 1.4, 1.8]} />
-        <meshStandardMaterial color="#ff6a1a" roughness={0.6} />
-      </mesh>
-      {/* Canopy */}
-      <mesh castShadow position={[0, 1.6, 0]}>
-        <boxGeometry args={[2.6, 0.3, 1.9]} />
-        <meshStandardMaterial color="#ffc531" />
-      </mesh>
-      {/* Wheels */}
-      {[[0, 1.2], [-1, -0.8], [1, -0.8]].map(([x, z], i) => (
-        <mesh key={i} position={[x, 0.3, z]} rotation={[Math.PI / 2, 0, 0]}>
-          <cylinderGeometry args={[0.35, 0.35, 0.3, 12]} />
-          <meshStandardMaterial color="#1a1a1a" />
-        </mesh>
-      ))}
-    </group>
-  );
-}
-
-// A simple lamp post.
 export function LampPost({ position, on = true }: { position: [number, number, number]; on?: boolean }) {
   return (
     <group position={position}>
       <mesh castShadow position={[0, 3, 0]}>
         <cylinderGeometry args={[0.15, 0.2, 6, 8]} />
-        <meshStandardMaterial color="#3a3a3a" metalness={0.5} />
+        <meshStandardMaterial color="#3a3a3a" metalness={0.5} roughness={0.5} />
       </mesh>
       <mesh position={[0.4, 5.8, 0]}>
         <boxGeometry args={[0.8, 0.3, 0.4]} />
@@ -165,17 +133,15 @@ export function LampPost({ position, on = true }: { position: [number, number, n
         />
       </mesh>
       {on && (
-        <pointLight position={[0.4, 5.7, 0]} intensity={0.6} distance={12} color="#fff5b8" />
+        <pointLight position={[0.4, 5.7, 0]} intensity={0.5} distance={10} color="#fff5b8" />
       )}
     </group>
   );
 }
 
-// A billboard placeholder.
 export function Billboard({ position, color = "#14213d" }: { position: [number, number, number]; color?: string }) {
   return (
     <group position={position}>
-      {/* Posts */}
       <mesh castShadow position={[-2, 2, 0]}>
         <boxGeometry args={[0.3, 4, 0.3]} />
         <meshStandardMaterial color="#5a4a2a" />
@@ -184,12 +150,10 @@ export function Billboard({ position, color = "#14213d" }: { position: [number, 
         <boxGeometry args={[0.3, 4, 0.3]} />
         <meshStandardMaterial color="#5a4a2a" />
       </mesh>
-      {/* Board */}
       <mesh castShadow position={[0, 5, 0]}>
         <boxGeometry args={[6, 3, 0.3]} />
         <meshStandardMaterial color={color} />
       </mesh>
-      {/* Ad face */}
       <mesh position={[0, 5, 0.16]}>
         <planeGeometry args={[5.6, 2.6]} />
         <meshBasicMaterial color="#ffc531" />
@@ -198,7 +162,6 @@ export function Billboard({ position, color = "#14213d" }: { position: [number, 
   );
 }
 
-// A tree (low-poly — sphere canopy + cylinder trunk).
 export function Tree({ position, scale = 1 }: { position: [number, number, number]; scale?: number }) {
   return (
     <group position={position} scale={scale}>
@@ -206,6 +169,7 @@ export function Tree({ position, scale = 1 }: { position: [number, number, numbe
         <cylinderGeometry args={[0.3, 0.4, 3, 8]} />
         <meshStandardMaterial color="#6b3410" roughness={0.9} />
       </mesh>
+      {/* Foliage clusters */}
       <mesh castShadow position={[0, 4, 0]}>
         <sphereGeometry args={[2, 12, 12]} />
         <meshStandardMaterial color="#1fb86f" roughness={0.8} />
@@ -214,11 +178,25 @@ export function Tree({ position, scale = 1 }: { position: [number, number, numbe
         <sphereGeometry args={[1.4, 10, 10]} />
         <meshStandardMaterial color="#178a55" roughness={0.8} />
       </mesh>
+      <mesh castShadow position={[-0.8, 3.5, -0.5]}>
+        <sphereGeometry args={[1.2, 10, 10]} />
+        <meshStandardMaterial color="#1fb86f" roughness={0.8} />
+      </mesh>
     </group>
   );
 }
 
-// Full city layout for the Motor Park district.
+// Street cone
+export function Cone({ position }: { position: [number, number, number] }) {
+  return (
+    <mesh castShadow position={position}>
+      <coneGeometry args={[0.3, 0.6, 8]} />
+      <meshStandardMaterial color="#ff6a1a" />
+    </mesh>
+  );
+}
+
+// Full city layout — uses the new road network
 export function CityLayout() {
   const buildings = useMemo(() => {
     const items: { pos: [number, number, number]; size: [number, number, number]; color: string; roof: string }[] = [
@@ -234,9 +212,9 @@ export function CityLayout() {
 
   const trees = useMemo(() => {
     const positions: [number, number, number][] = [];
-    for (let i = 0; i < 12; i++) {
-      const angle = (i / 12) * Math.PI * 2;
-      const r = 35 + Math.random() * 10;
+    for (let i = 0; i < 14; i++) {
+      const angle = (i / 14) * Math.PI * 2;
+      const r = 30 + Math.random() * 12;
       positions.push([Math.cos(angle) * r, 0, Math.sin(angle) * r]);
     }
     return positions;
@@ -244,25 +222,16 @@ export function CityLayout() {
 
   return (
     <group>
-      {/* Buildings around the perimeter */}
       {buildings.map((b, i) => (
         <Building key={i} position={b.pos} size={b.size} color={b.color} roofColor={b.roof} />
       ))}
 
-      {/* Market stalls in a cluster */}
       <MarketStall position={[-15, 0, -10]} color="#1fb86f" />
       <MarketStall position={[-12, 0, -10]} color="#ff6a1a" />
       <MarketStall position={[-9, 0, -10]} color="#c026d3" />
       <MarketStall position={[-15, 0, -7]} color="#ffc531" />
       <MarketStall position={[-12, 0, -7]} color="#7c3aed" />
 
-      {/* Parked vehicles */}
-      <Danfo position={[15, 0, -8]} rotation={0.2} />
-      <Danfo position={[18, 0, -8]} rotation={0.2} />
-      <Keke position={[10, 0, 8]} rotation={-0.3} />
-      <Keke position={[13, 0, 8]} rotation={-0.3} />
-
-      {/* Lamp posts around the hub */}
       <LampPost position={[8, 0, 8]} />
       <LampPost position={[-8, 0, 8]} />
       <LampPost position={[8, 0, -8]} />
@@ -270,14 +239,69 @@ export function CityLayout() {
       <LampPost position={[20, 0, 0]} />
       <LampPost position={[-20, 0, 0]} />
 
-      {/* Trees scattered around */}
       {trees.map((pos, i) => (
         <Tree key={i} position={pos} scale={0.8 + Math.random() * 0.4} />
       ))}
 
-      {/* Billboards */}
       <Billboard position={[35, 0, -15]} color="#14213d" />
       <Billboard position={[-35, 0, 15]} color="#c026d3" />
+
+      {/* Street cones near construction */}
+      <Cone position={[15, 0, 12]} />
+      <Cone position={[16, 0, 12]} />
+      <Cone position={[17, 0, 12]} />
     </group>
   );
 }
+
+// Parked vehicles — Danfo (yellow bus) and Keke (tricycle)
+function Danfo({ position, rotation = 0 }: { position: [number, number, number]; rotation?: number }) {
+  return (
+    <group position={position} rotation={[0, rotation, 0]}>
+      <mesh castShadow position={[0, 1.2, 0]}>
+        <boxGeometry args={[8, 2, 3.5]} />
+        <meshStandardMaterial color="#ffc531" roughness={0.6} />
+      </mesh>
+      <mesh position={[0, 1.2, 1.76]}>
+        <planeGeometry args={[8, 1]} />
+        <meshBasicMaterial color="#1fb86f" />
+      </mesh>
+      <mesh position={[0, 1.2, -1.76]}>
+        <planeGeometry args={[8, 1]} />
+        <meshBasicMaterial color="#1fb86f" />
+      </mesh>
+      {[[-3, -1.2], [3, -1.2], [-3, 1.2], [3, 1.2]].map(([x, z], i) => (
+        <mesh key={i} position={[x, 0.4, z]} rotation={[Math.PI / 2, 0, 0]}>
+          <cylinderGeometry args={[0.5, 0.5, 0.4, 16]} />
+          <meshStandardMaterial color="#1a1a1a" />
+        </mesh>
+      ))}
+    </group>
+  );
+}
+
+// Re-export Danfo and Keke for any code that still imports them from Buildings
+export { Danfo, Keke };
+
+function Keke({ position, rotation = 0 }: { position: [number, number, number]; rotation?: number }) {
+  return (
+    <group position={position} rotation={[0, rotation, 0]}>
+      <mesh castShadow position={[0, 0.8, 0]}>
+        <boxGeometry args={[2.5, 1.4, 1.8]} />
+        <meshStandardMaterial color="#ff6a1a" roughness={0.6} />
+      </mesh>
+      <mesh castShadow position={[0, 1.6, 0]}>
+        <boxGeometry args={[2.6, 0.3, 1.9]} />
+        <meshStandardMaterial color="#ffc531" />
+      </mesh>
+      {[[0, 1.2], [-1, -0.8], [1, -0.8]].map(([x, z], i) => (
+        <mesh key={i} position={[x, 0.3, z]} rotation={[Math.PI / 2, 0, 0]}>
+          <cylinderGeometry args={[0.35, 0.35, 0.3, 12]} />
+          <meshStandardMaterial color="#1a1a1a" />
+        </mesh>
+      ))}
+    </group>
+  );
+}
+
+void THREE;
