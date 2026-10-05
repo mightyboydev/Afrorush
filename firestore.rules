@@ -1,106 +1,115 @@
-// AfroRush — Firestore Security Rules (Phase 4 — locked down)
-// =============================================================================
-// Copy this entire file's contents into:
-//   Firebase Console → Firestore Database → Rules → Publish
+// AfroRush — Firestore Security Rules (client-side admin panel version)
+// Paste into: Firebase Console → Firestore Database → Rules → Publish
 //
-// CRITICAL: Players can NOT edit their own cash, gold, rep, role, bans or
-// warnings from the browser. All money/reward/purchase/ban changes must go
-// through server routes (src/app/api/admin/*) using the Firebase Admin SDK.
-// =============================================================================
+// Players can only edit safe profile fields. Money, rep, bans, warnings and
+// roles can only be changed by staff (the owner, users whose profile role is
+// admin/moderator, or anyone with a document in /admins). Only the owner can
+// change roles.
 
 rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // ---------- Users (public profile) ----------
-    // Anyone can read public fields. Only the owner can write,
-    // and only the SAFE fields (avatar, username, city, loadout, soundOn,
-    // graphicsQuality, lastSeen, onboardingComplete).
-    // Money, rep, banned, warnings, etc. are server-written only.
+    // ---------- Helpers ----------
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    function isOwner() {
+      return isSignedIn() && request.auth.uid == '1rf7yswl35QuUyfdQehMs1qdlIy2';
+    }
+    function isStaff() {
+      return isSignedIn() && (
+        isOwner()
+        || exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+        || (exists(/databases/$(database)/documents/users/$(request.auth.uid))
+            && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('role', 'player')
+               in ['admin', 'moderator', 'owner'])
+      );
+    }
+
+    // ---------- Users ----------
     match /users/{uid} {
       allow read: if true;
-      allow create: if request.auth != null && request.auth.uid == uid
+
+      // New profile: fixed starting balances, never a privileged role.
+      allow create: if isSignedIn() && request.auth.uid == uid
         && request.resource.data.cash == 500
         && request.resource.data.gold == 50
         && request.resource.data.rep == 0
-        && request.resource.data.banned == false;
-      allow update: if request.auth != null && request.auth.uid == uid
-        && request.resource.data.diff(resource.data).affectedKeys()
-          .hasOnly([
-            'username', 'avatar', 'city', 'loadout', 'soundOn',
-            'graphicsQuality', 'lastSeen', 'onboardingComplete', 'photoURL'
-          ]);
+        && request.resource.data.banned == false
+        && (!('role' in request.resource.data) || request.resource.data.role == 'player');
 
-      // Private subcollection (email, device info, etc.)
+      allow update: if
+        // Player: safe fields only
+        (isSignedIn() && request.auth.uid == uid
+          && request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly([
+              'username', 'avatar', 'city', 'loadout', 'soundOn',
+              'graphicsQuality', 'lastSeen', 'onboardingComplete', 'photoURL'
+            ]))
+        // Owner: anything (including roles)
+        || isOwner()
+        // Other staff: anything except the role field
+        || (isStaff() && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role']));
+
+      allow delete: if false;
+
       match /private/{docId} {
-        allow read: if request.auth != null && (request.auth.uid == uid || isAdmin());
-        allow write: if request.auth != null && request.auth.uid == uid;
+        allow read: if isSignedIn() && (request.auth.uid == uid || isStaff());
+        allow write: if isSignedIn() && request.auth.uid == uid;
       }
 
-      // Notifications — owner can read & mark as read. Server writes only.
+      // Notifications: staff create (warnings), owner of the inbox reads/marks read.
       match /notifications/{notifId} {
-        allow read: if request.auth != null && request.auth.uid == uid;
-        allow update: if request.auth != null && request.auth.uid == uid
+        allow read: if isSignedIn() && request.auth.uid == uid;
+        allow create: if isStaff();
+        allow update: if isSignedIn() && request.auth.uid == uid
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read']);
-        allow create, delete: if false;
+        allow delete: if false;
       }
 
-      // Meta subcollection (unlocked items) — owner can read.
-      // Writes go through server (purchaseItem API).
+      // Unlocked items: owner seeds defaults once; staff manage after that.
       match /meta/{docId} {
-        allow read: if request.auth != null && request.auth.uid == uid;
-        // Owner may only seed the default unlocks once; later changes are server-only.
-        allow create: if request.auth != null && request.auth.uid == uid
-          && request.resource.data.ids == ['bike-spark', 'outfit-street', 'stk-none', 'horn-beep', 'exh-stock'];
-        allow update, delete: if false;
+        allow read: if isSignedIn() && (request.auth.uid == uid || isStaff());
+        allow create: if (isSignedIn() && request.auth.uid == uid
+            && request.resource.data.ids == ['bike-spark', 'outfit-street', 'stk-none', 'horn-beep', 'exh-stock'])
+          || isStaff();
+        allow update, delete: if isStaff();
       }
     }
 
     // ---------- Crews ----------
-    // Anyone can read crews. Crew owner can update/delete.
-    // Any signed-in user can create a crew.
     match /crews/{crewId} {
       allow read: if true;
-      allow create: if request.auth != null;
-      allow update, delete: if request.auth != null
-        && (resource.data.ownerId == request.auth.uid || isAdmin());
+      allow create: if isSignedIn();
+      allow update, delete: if isSignedIn()
+        && (resource.data.ownerId == request.auth.uid || isStaff());
     }
 
     // ---------- Presence ----------
-    // Anyone can read presence. Owner can write only their own doc.
     match /presence/{uid} {
       allow read: if true;
-      allow write: if request.auth != null && request.auth.uid == uid;
+      allow write: if isSignedIn() && request.auth.uid == uid;
     }
 
     // ---------- Admins ----------
-    // Only admins can read the admins collection. Only owners can write.
     match /admins/{uid} {
-      allow read: if request.auth != null && isAdmin();
-      allow write: if request.auth != null && isOwner();
+      allow read: if isSignedIn() && (request.auth.uid == uid || isStaff());
+      allow write: if isOwner();
     }
 
-    // ---------- Admin Logs (immutable) ----------
-    // Admins can read. No one can write or delete (server SDK bypasses rules).
+    // ---------- Admin logs (append-only) ----------
     match /adminLogs/{logId} {
-      allow read: if request.auth != null && isAdmin();
-      allow write, delete: if false;
+      allow read: if isStaff();
+      allow create: if isStaff();
+      allow update, delete: if false;
     }
 
     // ---------- Global settings ----------
-    // Anyone can read. Only admins can write.
     match /settings/{docId} {
       allow read: if true;
-      allow write: if request.auth != null && isAdmin();
-    }
-
-    // ---------- Helper functions ----------
-    function isAdmin() {
-      return request.auth != null && request.auth.token.admin == true;
-    }
-    function isOwner() {
-      return request.auth != null && request.auth.token.role == "owner";
+      allow write: if isStaff();
     }
   }
 }
