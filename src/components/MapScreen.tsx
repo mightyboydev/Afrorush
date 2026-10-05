@@ -1,15 +1,18 @@
 "use client";
 
 // src/components/MapScreen.tsx — City map with tappable locations.
-// Replaces the 3D world view when in Map tab.
+// Shows your House, your Garage, other players' houses (with Challenge to Race),
+// and the city locations.
 
 import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/auth";
-import { DISTRICTS, formatNaira, type PlayerProfile } from "@/lib/storage";
+import { type PlayerProfile } from "@/lib/storage";
+import { subscribeToOnlinePlayers } from "@/lib/firestore";
 
 export interface MapScreenProps {
   profile: PlayerProfile;
   onVisitLocation?: (id: string) => void;
+  onChallengePlayer?: (uid: string, username: string) => void;
   onlineCount?: number;
 }
 
@@ -22,12 +25,14 @@ interface LocationInfo {
   x: number; // % position on map
   y: number;
   locked?: boolean;
+  isHouse?: boolean;
+  isGarage?: boolean;
 }
 
 // City map layout — locations positioned on a grid
 const LOCATIONS: LocationInfo[] = [
   { id: "motor-park", name: "Motor Park", emoji: "🛺", color: "#1fb86f", desc: "Social hub. Find crews, okadas, danfos.", x: 50, y: 50 },
-  { id: "garage", name: "Garage", emoji: "🏍️", color: "#ff6a1a", desc: "Customize your bike & outfit.", x: 25, y: 30 },
+  { id: "my-garage", name: "My Garage", emoji: "🔧", color: "#ff6a1a", desc: "Your personal garage. Customize your bike & outfit.", x: 25, y: 30, isGarage: true },
   { id: "race-track", name: "Race Track", emoji: "🏁", color: "#ffc531", desc: "Street, Delivery, Police Chase, Freestyle.", x: 75, y: 30 },
   { id: "market", name: "Market", emoji: "🛍️", color: "#c026d3", desc: "Buy items with Naira and gold.", x: 25, y: 70 },
   { id: "suya-spot", name: "Suya Spot", emoji: "🍢", color: "#ff6a1a", desc: "Daily free reward + food buffs.", x: 75, y: 70 },
@@ -39,13 +44,45 @@ const LOCATIONS: LocationInfo[] = [
   { id: "airport", name: "Airport", emoji: "✈️", color: "#14213d", desc: "Coming soon — fly to other cities.", x: 12, y: 85, locked: true },
 ];
 
-export default function MapScreen({ profile, onVisitLocation, onlineCount = 0 }: MapScreenProps) {
+// Player house positions on the map (scattered around the city)
+const HOUSE_POSITIONS = [
+  { x: 18, y: 12 }, { x: 82, y: 12 }, { x: 38, y: 42 }, { x: 62, y: 42 },
+  { x: 8, y: 30 }, { x: 92, y: 30 }, { x: 8, y: 70 }, { x: 92, y: 70 },
+];
+
+interface PlayerHouse {
+  uid: string;
+  username: string;
+  crewTag: string | null;
+  crewColor: string | null;
+  photoURL: string | null;
+  x: number;
+  y: number;
+}
+
+export default function MapScreen({ profile, onVisitLocation, onChallengePlayer, onlineCount = 0 }: MapScreenProps) {
   const [selected, setSelected] = useState<LocationInfo | null>(null);
+  const [selectedHouse, setSelectedHouse] = useState<PlayerHouse | null>(null);
   const [animatedOnline, setAnimatedOnline] = useState(onlineCount);
+  const [onlinePlayers, setOnlinePlayers] = useState<PlayerHouse[]>([]);
+
+  // Subscribe to online players (for houses on the map)
+  useEffect(() => {
+    return subscribeToOnlinePlayers((players) => {
+      const houses: PlayerHouse[] = players
+        .filter((p) => p.uid !== profile.uid)
+        .slice(0, 8)
+        .map((p, i) => ({
+          ...p,
+          x: HOUSE_POSITIONS[i % HOUSE_POSITIONS.length].x,
+          y: HOUSE_POSITIONS[i % HOUSE_POSITIONS.length].y,
+        }));
+      setOnlinePlayers(houses);
+    });
+  }, [profile.uid]);
 
   useEffect(() => {
     if (onlineCount > 0) { setAnimatedOnline(onlineCount); return; }
-    // Demo: animate fake online count
     const n = 1247 + Math.floor(Math.random() * 50);
     setAnimatedOnline(n);
     const id = setInterval(() => {
@@ -53,6 +90,15 @@ export default function MapScreen({ profile, onVisitLocation, onlineCount = 0 }:
     }, 3000);
     return () => clearInterval(id);
   }, [onlineCount]);
+
+  const handleVisit = (id: string) => {
+    // Your garage opens the Buy tab for bike customization
+    if (id === "my-garage") {
+      onVisitLocation?.("garage");
+      return;
+    }
+    onVisitLocation?.(id);
+  };
 
   return (
     <div className="rush-slide-up min-h-screen pb-4">
@@ -76,15 +122,12 @@ export default function MapScreen({ profile, onVisitLocation, onlineCount = 0 }:
         <div className="absolute bottom-0 left-0 right-0 h-[18%] bg-gradient-to-b from-[#0ea5e9]/80 to-[#0284c7]" />
         {/* Roads — grid pattern */}
         <svg className="absolute inset-0 h-full w-full" viewBox="0 0 100 100" preserveAspectRatio="none">
-          {/* Horizontal roads */}
           <rect x="0" y="48" width="100" height="4" fill="#2a2a2e" />
           <rect x="0" y="48" width="100" height="0.5" fill="#ffc531" />
           <rect x="0" y="51.5" width="100" height="0.5" fill="#ffc531" />
-          {/* Vertical road */}
           <rect x="48" y="0" width="4" height="100" fill="#2a2a2e" />
           <rect x="48" y="0" width="0.5" height="100" fill="#ffc531" />
           <rect x="51.5" y="0" width="0.5" height="100" fill="#ffc531" />
-          {/* Secondary roads */}
           <rect x="0" y="28" width="100" height="2" fill="#3a3a3e" />
           <rect x="0" y="68" width="100" height="2" fill="#3a3a3e" />
           <rect x="28" y="0" width="2" height="100" fill="#3a3a3e" />
@@ -99,21 +142,57 @@ export default function MapScreen({ profile, onVisitLocation, onlineCount = 0 }:
             className="absolute flex -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-0.5"
             style={{ left: `${loc.x}%`, top: `${loc.y}%` }}
           >
-            {/* Pin */}
             <div
               className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-white text-base shadow-lg transition-transform active:scale-110"
               style={{ background: loc.locked ? "#6b7280" : loc.color }}
             >
               {loc.locked ? "🔒" : loc.emoji}
             </div>
-            {/* Label */}
             <span className="rounded-full bg-white/95 px-1.5 py-0.5 text-[8px] font-bold text-rush-navy shadow-sm backdrop-blur">
               {loc.name}
             </span>
-            {/* Online indicator */}
             {!loc.locked && (
               <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full border border-white bg-rush-green" />
             )}
+          </button>
+        ))}
+
+        {/* My House — special pin at center */}
+        <button
+          onClick={() => setSelected({ id: "my-house", name: "My House", emoji: "🏠", color: "#1fb86f", desc: "Your apartment. Rest to restore energy.", x: 50, y: 50, isHouse: true })}
+          className="absolute left-[42%] top-[42%] flex -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-0.5"
+        >
+          <div className="flex h-11 w-11 items-center justify-center rounded-full border-2 border-rush-gold bg-rush-green text-lg shadow-lg shadow-rush-green/40">
+            🏠
+          </div>
+          <span className="rounded-full bg-rush-gold px-1.5 py-0.5 text-[8px] font-bold text-rush-navy shadow-sm">
+            My House
+          </span>
+        </button>
+
+        {/* Other players' houses */}
+        {onlinePlayers.map((p) => (
+          <button
+            key={p.uid}
+            onClick={() => setSelectedHouse(p)}
+            className="absolute flex -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-0.5"
+            style={{ left: `${p.x}%`, top: `${p.y}%` }}
+          >
+            <div className="relative">
+              <div
+                className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-white text-sm shadow-lg"
+                style={{ background: p.crewColor ?? "#7c3aed" }}
+              >
+                🏠
+              </div>
+              {/* Player avatar bubble */}
+              <div className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full border-2 border-white bg-rush-green text-[8px] font-bold text-white">
+                {p.username.charAt(0).toUpperCase()}
+              </div>
+            </div>
+            <span className="max-w-[50px] truncate rounded-full bg-white/90 px-1 py-0.5 text-[7px] font-bold text-rush-navy shadow-sm">
+              {p.username}
+            </span>
           </button>
         ))}
 
@@ -128,7 +207,7 @@ export default function MapScreen({ profile, onVisitLocation, onlineCount = 0 }:
 
       {/* Selected location detail */}
       {selected && (
-        <div className="rush-bounce-in rush-glass rounded-3xl p-4">
+        <div className="rush-bounce-in rush-glass mb-3 rounded-3xl p-4">
           <div className="flex items-center gap-3">
             <div
               className="flex h-14 w-14 items-center justify-center rounded-2xl text-2xl"
@@ -140,10 +219,11 @@ export default function MapScreen({ profile, onVisitLocation, onlineCount = 0 }:
               <div className="font-display text-lg text-rush-navy">{selected.name}</div>
               <p className="text-xs text-rush-navy/60">{selected.desc}</p>
             </div>
+            <button onClick={() => setSelected(null)} className="flex h-8 w-8 items-center justify-center rounded-full bg-rush-cream text-rush-navy">✕</button>
           </div>
           {!selected.locked && (
             <button
-              onClick={() => onVisitLocation?.(selected.id)}
+              onClick={() => { handleVisit(selected.id); setSelected(null); }}
               className="mt-3 w-full rounded-2xl bg-rush-green px-4 py-3 text-sm font-bold uppercase tracking-wider text-white shadow-lg shadow-rush-green/30 active:scale-95"
             >
               Visit {selected.name} →
@@ -156,6 +236,47 @@ export default function MapScreen({ profile, onVisitLocation, onlineCount = 0 }:
           )}
         </div>
       )}
+
+      {/* Selected player house detail */}
+      {selectedHouse && (
+        <div className="rush-bounce-in rush-glass mb-3 rounded-3xl p-4">
+          <div className="flex items-center gap-3">
+            <div
+              className="flex h-14 w-14 items-center justify-center rounded-2xl text-2xl text-white"
+              style={{ background: selectedHouse.crewColor ?? "#7c3aed" }}
+            >
+              {selectedHouse.username.charAt(0).toUpperCase()}
+            </div>
+            <div className="flex-1">
+              <div className="font-display text-lg text-rush-navy">{selectedHouse.username}&apos;s House</div>
+              <p className="text-xs text-rush-navy/60">
+                {selectedHouse.crewTag ? `Crew [${selectedHouse.crewTag}]` : "No crew"} · Tap to challenge
+              </p>
+            </div>
+            <button onClick={() => setSelectedHouse(null)} className="flex h-8 w-8 items-center justify-center rounded-full bg-rush-cream text-rush-navy">✕</button>
+          </div>
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            <button
+              onClick={() => { onVisitLocation?.("motor-park"); setSelectedHouse(null); }}
+              className="rounded-2xl bg-rush-navy px-4 py-3 text-sm font-bold uppercase tracking-wider text-white active:scale-95"
+            >
+              🚪 Visit
+            </button>
+            <button
+              onClick={() => { onChallengePlayer?.(selectedHouse.uid, selectedHouse.username); setSelectedHouse(null); }}
+              className="rounded-2xl bg-rush-orange px-4 py-3 text-sm font-bold uppercase tracking-wider text-white shadow-lg shadow-rush-orange/30 active:scale-95"
+            >
+              🏁 Challenge
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Online players count + legend */}
+      <div className="flex items-center justify-between text-[10px] text-rush-navy/50">
+        <span>🟢 {onlinePlayers.length} riders nearby</span>
+        <span>🏠 = player house</span>
+      </div>
     </div>
   );
 }

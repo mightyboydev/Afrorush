@@ -6,6 +6,7 @@
 import { useState } from "react";
 import { useAuth } from "@/lib/auth";
 import { formatNaira, type PlayerProfile } from "@/lib/storage";
+import { updateProfile } from "@/lib/firestore";
 
 interface App {
   id: string;
@@ -116,6 +117,12 @@ export default function PhoneScreen({ profile }: { profile: PlayerProfile }) {
 function AppContent({ appId, profile, onClose }: { appId: string; profile: PlayerProfile; onClose: () => void }) {
   const app = APPS.find((a) => a.id === appId);
   if (!app) return null;
+
+  // Settings app gets a real UI with logout
+  if (appId === "settings") {
+    return <SettingsApp profile={profile} onClose={onClose} app={app} />;
+  }
+
   return (
     <div className="rush-bounce-in">
       {/* App header */}
@@ -146,12 +153,130 @@ function AppContent({ appId, profile, onClose }: { appId: string; profile: Playe
           {appId === "health" && "Energy 85% · Mood 72% · Hunger 58%"}
           {appId === "camera" && "Take photos in the world to earn rep."}
           {appId === "games" && "Mini-games: Suya Dice, Ludo, Ayo. Coming soon!"}
-          {appId === "settings" && "Sound, graphics, account, log out."}
           {appId === "more" && "More apps coming soon."}
         </p>
         <button className="mt-4 w-full rounded-2xl bg-rush-green px-4 py-3 text-sm font-bold uppercase tracking-wider text-white">
           Open
         </button>
+      </div>
+    </div>
+  );
+}
+
+function SettingsApp({ profile, onClose, app }: { profile: PlayerProfile; onClose: () => void; app: App }) {
+  const { signOutUser, refreshProfile } = useAuth();
+  const [confirmLogout, setConfirmLogout] = useState(false);
+  const [busy, setBusy] = useState(false);
+
+  const toggleSound = async () => {
+    setBusy(true);
+    try {
+      await updateProfile(profile.uid, { soundOn: !profile.soundOn });
+      await refreshProfile();
+    } finally { setBusy(false); }
+  };
+
+  const cycleGraphics = async () => {
+    setBusy(true);
+    try {
+      const next = profile.graphicsQuality === "low" ? "medium" : profile.graphicsQuality === "medium" ? "high" : "low";
+      await updateProfile(profile.uid, { graphicsQuality: next });
+      await refreshProfile();
+    } finally { setBusy(false); }
+  };
+
+  return (
+    <div className="rush-bounce-in">
+      <div className="mb-4 flex items-center gap-3">
+        <button onClick={onClose} className="flex h-9 w-9 items-center justify-center rounded-full bg-white/80 text-rush-navy backdrop-blur">←</button>
+        <div className="flex h-10 w-10 items-center justify-center rounded-2xl text-xl" style={{ background: `linear-gradient(135deg, ${app.from}, ${app.to})` }}>
+          {app.icon}
+        </div>
+        <h2 className="font-display text-xl text-rush-navy">{app.label}</h2>
+      </div>
+
+      <div className="space-y-3">
+        {/* Profile card */}
+        <div className="rush-card p-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl text-2xl font-bold text-white" style={{ background: profile.avatar?.skinTone ?? "#c68642" }}>
+              {profile.username.charAt(0).toUpperCase()}
+            </div>
+            <div>
+              <div className="font-display text-lg text-rush-navy">{profile.username}</div>
+              <div className="text-[10px] uppercase tracking-wider text-rush-navy/50">{profile.email ?? "No email"}</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Sound toggle */}
+        <button onClick={toggleSound} disabled={busy} className="rush-card flex w-full items-center justify-between p-4">
+          <div className="flex items-center gap-3">
+            <span className="text-xl">{profile.soundOn ? "🔊" : "🔇"}</span>
+            <div className="text-left">
+              <div className="text-sm font-bold text-rush-navy">Sound & Music</div>
+              <div className="text-[10px] text-rush-navy/50">{profile.soundOn ? "On" : "Off"}</div>
+            </div>
+          </div>
+          <div className={`relative h-7 w-12 rounded-full transition-colors ${profile.soundOn ? "bg-rush-green" : "bg-rush-navy/20"}`}>
+            <div className={`absolute top-1 h-5 w-5 rounded-full bg-white transition-all ${profile.soundOn ? "left-6" : "left-1"}`} />
+          </div>
+        </button>
+
+        {/* Graphics quality */}
+        <button onClick={cycleGraphics} disabled={busy} className="rush-card flex w-full items-center justify-between p-4">
+          <div className="flex items-center gap-3">
+            <span className="text-xl">🎨</span>
+            <div className="text-left">
+              <div className="text-sm font-bold text-rush-navy">Graphics Quality</div>
+              <div className="text-[10px] uppercase tracking-wider text-rush-navy/50">{profile.graphicsQuality}</div>
+            </div>
+          </div>
+          <span className="text-xs text-rush-navy/40">Tap to change →</span>
+        </button>
+
+        {/* Admin link (only for owner) */}
+        {profile.uid === "1rf7yswl35QuUyfdQehMs1qdlIy2" && (
+          <a href="/admin" className="rush-card flex w-full items-center justify-between p-4">
+            <div className="flex items-center gap-3">
+              <span className="text-xl">🛠️</span>
+              <div className="text-left">
+                <div className="text-sm font-bold text-rush-navy">Admin Dashboard</div>
+                <div className="text-[10px] text-rush-navy/50">Manage users, crews, economy</div>
+              </div>
+            </div>
+            <span className="text-xs text-rush-navy/40">→</span>
+          </a>
+        )}
+
+        {/* Logout */}
+        <div className="rush-card overflow-hidden">
+          {!confirmLogout ? (
+            <button onClick={() => setConfirmLogout(true)} className="flex w-full items-center gap-3 p-4 text-left">
+              <span className="text-xl">🚪</span>
+              <div>
+                <div className="text-sm font-bold text-red-500">Log Out</div>
+                <div className="text-[10px] text-rush-navy/50">Sign out of your account</div>
+              </div>
+            </button>
+          ) : (
+            <div className="p-4">
+              <div className="mb-3 text-sm font-bold text-rush-navy">Are you sure you want to log out?</div>
+              <div className="flex gap-2">
+                <button onClick={() => setConfirmLogout(false)} className="flex-1 rounded-xl bg-rush-cream px-4 py-3 text-sm font-bold uppercase tracking-wider text-rush-navy">
+                  Cancel
+                </button>
+                <button onClick={() => signOutUser()} className="flex-1 rounded-xl bg-red-500 px-4 py-3 text-sm font-bold uppercase tracking-wider text-white">
+                  Log Out
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="px-4 pt-2 text-center text-[10px] uppercase tracking-widest text-rush-navy/30">
+          AfroRush v1.0 · Built with ❤️
+        </div>
       </div>
     </div>
   );
