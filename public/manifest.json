@@ -1,0 +1,14 @@
+{
+  "name": "AfroRush — 3D African Street World",
+  "short_name": "AfroRush",
+  "description": "Explore a loud, alive African city. Ride okada, race, build a crew, become a Street Legend.",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#fff8e7",
+  "theme_color": "#1fb86f",
+  "icons": [
+    { "src": "/afrorush-logo.jpg", "sizes": "192x192", "type": "image/jpeg", "purpose": "any maskable" },
+    { "src": "/afrorush-logo.jpg", "sizes": "512x512", "type": "image/jpeg", "purpose": "any maskable" }
+  ]
+}
