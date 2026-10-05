@@ -20,10 +20,13 @@ export interface PlayerProps {
   onMove?: (pos: THREE.Vector3, riding: boolean) => void;
 }
 
-const WALK_SPEED = 6;
-const RIDE_SPEED = 14;
-const BOOST_MULT = 1.8;
-const WORLD_RADIUS = 80; // soft boundary
+const WALK_SPEED = 7;     // slightly faster walk
+const RIDE_SPEED = 16;    // slightly faster ride
+const BOOST_MULT = 1.7;
+const WORLD_RADIUS = 80;
+const ACCEL = 18;         // high = snappy (no slippery lerp)
+const DECEL = 20;         // high = stops fast when released
+const ROT_SPEED = 14;     // rotation smoothing
 
 const Player = forwardRef<PlayerHandle, PlayerProps>(function Player(
   { avatar, riding, inputRef, quality, onMove },
@@ -58,21 +61,41 @@ const Player = forwardRef<PlayerHandle, PlayerProps>(function Player(
     const input = inputRef.current;
     const speed = riding ? RIDE_SPEED : WALK_SPEED;
     const boost = input.boost ? BOOST_MULT : 1;
+    const maxSpeed = speed * boost;
 
-    // World-space movement (isometric camera, so directions are fixed).
-    // forward = -Z (away from camera), right = +X
+    // Desired velocity from input (world-space, isometric)
     tmpVel.set(0, 0, 0);
     tmpVel.addScaledVector(tmpForward, -input.y); // forward when joystick up
     tmpVel.addScaledVector(tmpRight, input.x);
     if (tmpVel.lengthSq() > 0) {
-      tmpVel.normalize().multiplyScalar(speed * boost * dt);
-      velocity.lerp(tmpVel, 0.25);
+      tmpVel.normalize().multiplyScalar(maxSpeed);
       targetRot.current = Math.atan2(tmpVel.x, tmpVel.z);
-    } else {
-      velocity.multiplyScalar(0.85);
     }
 
-    g.position.add(velocity);
+    // Snappy acceleration / deceleration — no slippery lerp.
+    // Accelerate toward desired velocity at ACCEL rate, decelerate at DECEL.
+    const currentSpeed = velocity.length();
+    if (tmpVel.lengthSq() > 0) {
+      // Moving — accelerate toward desired velocity
+      const desiredX = tmpVel.x;
+      const desiredZ = tmpVel.z;
+      const ax = (desiredX - velocity.x) * Math.min(1, dt * ACCEL);
+      const az = (desiredZ - velocity.z) * Math.min(1, dt * ACCEL);
+      velocity.x += ax;
+      velocity.z += az;
+    } else {
+      // No input — decelerate to zero fast
+      const decel = Math.min(1, dt * DECEL);
+      velocity.x -= velocity.x * decel;
+      velocity.z -= velocity.z * decel;
+      // Snap to zero if very slow (prevents infinite tiny drift)
+      if (Math.abs(velocity.x) < 0.01) velocity.x = 0;
+      if (Math.abs(velocity.z) < 0.01) velocity.z = 0;
+    }
+
+    g.position.x += velocity.x * dt;
+    g.position.z += velocity.z * dt;
+
     // Soft world boundary
     const dist = Math.sqrt(g.position.x * g.position.x + g.position.z * g.position.z);
     if (dist > WORLD_RADIUS) {
@@ -81,23 +104,23 @@ const Player = forwardRef<PlayerHandle, PlayerProps>(function Player(
       g.position.z *= scale;
     }
 
-    // Smooth rotation
+    // Smooth rotation — fast snap
     let dr = targetRot.current - g.rotation.y;
     while (dr > Math.PI) dr -= Math.PI * 2;
     while (dr < -Math.PI) dr += Math.PI * 2;
-    g.rotation.y += dr * Math.min(1, dt * 10);
+    g.rotation.y += dr * Math.min(1, dt * ROT_SPEED);
 
     // Leg swing animation when moving
-    const moving = velocity.lengthSq() > 0.0001;
+    const moving = currentSpeed > 0.05;
     if (moving) {
-      legSwing.current += dt * (riding ? 12 : 8);
+      legSwing.current += dt * (riding ? 14 : 10);
     } else {
-      legSwing.current = 0;
+      legSwing.current *= 0.85; // ease back to zero
     }
 
-    // Isometric camera follow — stays at fixed angle, tracks player XZ position
+    // Isometric camera follow — tight tracking, no lag
     camTarget.copy(g.position).add(camOffset);
-    camera.position.lerp(camTarget, Math.min(1, dt * 4));
+    camera.position.lerp(camTarget, Math.min(1, dt * 6));
     camLookAt.copy(g.position);
     camLookAt.y += 2;
     camera.lookAt(camLookAt);
