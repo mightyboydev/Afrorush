@@ -1,11 +1,11 @@
-// AfroRush — Firestore Security Rules (Phase 4 — locked down)
+// AfroRush — Firestore Security Rules (no env vars needed)
 // =============================================================================
 // Copy this entire file's contents into:
 //   Firebase Console → Firestore Database → Rules → Publish
 //
-// CRITICAL: Players can NOT edit their own cash, gold, rep, role, bans or
-// warnings from the browser. All money/reward/purchase/ban changes must go
-// through server routes (src/app/api/admin/*) using the Firebase Admin SDK.
+// This version works WITHOUT the Firebase Admin SDK. Admin actions go through
+// client-side Firestore writes, and these rules allow admin users to modify
+// any user document. The owner UID is hard-coded below.
 // =============================================================================
 
 rules_version = '2';
@@ -13,94 +13,102 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    // ---------- Hard-coded owner (full access to everything) ----------
+    // This UID is the project owner. They can read/write ANY document.
+    function isOwner() {
+      return request.auth != null && request.auth.uid == '1rf7yswl35QuUyfdQehMs1qdlIy2';
+    }
+
+    // Check if the current user has an admin doc with a valid role.
+    // Uses get() — costs 1 read per check but enables no-env-var admin.
+    function isAdmin() {
+      return isOwner()
+        || (
+          request.auth != null
+          && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.role in ['owner', 'admin', 'moderator']
+        );
+    }
+    function isOwnerRole() {
+      return isOwner()
+        || (
+          request.auth != null
+          && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.role == 'owner'
+        );
+    }
+
     // ---------- Users (public profile) ----------
-    // Anyone can read public fields. Only the owner can write,
-    // and only the SAFE fields (avatar, username, city, loadout, soundOn,
-    // graphicsQuality, lastSeen, onboardingComplete).
-    // Money, rep, banned, warnings, etc. are server-written only.
+    // Anyone can read public fields. The owner can edit safe fields on their
+    // own doc. Admins can edit ANY field on ANY user doc (cash, rep, bans, etc.).
     match /users/{uid} {
       allow read: if true;
-      allow create: if request.auth != null && request.auth.uid == uid
-        && request.resource.data.cash == 500
-        && request.resource.data.gold == 50
-        && request.resource.data.rep == 0
-        && request.resource.data.banned == false;
-      allow update: if request.auth != null && request.auth.uid == uid
-        && request.resource.data.diff(resource.data).affectedKeys()
-          .hasOnly([
-            'username', 'avatar', 'city', 'loadout', 'soundOn',
-            'graphicsQuality', 'lastSeen', 'onboardingComplete', 'photoURL'
-          ]);
+      allow create: if request.auth != null && request.auth.uid == uid;
+      allow update: if isAdmin()
+        || (
+          request.auth != null && request.auth.uid == uid
+          && request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly([
+              'username', 'avatar', 'city', 'loadout', 'soundOn',
+              'graphicsQuality', 'lastSeen', 'onboardingComplete', 'photoURL'
+            ])
+        );
+      allow delete: if isAdmin();
 
       // Private subcollection (email, device info, etc.)
       match /private/{docId} {
         allow read: if request.auth != null && (request.auth.uid == uid || isAdmin());
-        allow write: if request.auth != null && request.auth.uid == uid;
+        allow write: if request.auth != null && (request.auth.uid == uid || isAdmin());
       }
 
-      // Notifications — owner can read & mark as read. Server writes only.
+      // Notifications — owner can read & mark as read. Admins can create.
       match /notifications/{notifId} {
         allow read: if request.auth != null && request.auth.uid == uid;
-        allow update: if request.auth != null && request.auth.uid == uid
+        allow update: if request.auth != null && (request.auth.uid == uid || isAdmin())
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read']);
-        allow create, delete: if false;
+        allow create: if isAdmin();
+        allow delete: if isAdmin();
       }
 
-      // Meta subcollection (unlocked items) — owner can read.
-      // Writes go through server (purchaseItem API).
+      // Meta subcollection (unlocked items)
       match /meta/{docId} {
         allow read: if request.auth != null && request.auth.uid == uid;
-        // Owner may only seed the default unlocks once; later changes are server-only.
-        allow create: if request.auth != null && request.auth.uid == uid
-          && request.resource.data.ids == ['bike-spark', 'outfit-street', 'stk-none', 'horn-beep', 'exh-stock'];
-        allow update, delete: if false;
+        allow write: if request.auth != null && (request.auth.uid == uid || isAdmin());
       }
     }
 
     // ---------- Crews ----------
-    // Anyone can read crews. Crew owner can update/delete.
-    // Any signed-in user can create a crew.
     match /crews/{crewId} {
       allow read: if true;
       allow create: if request.auth != null;
-      allow update, delete: if request.auth != null
-        && (resource.data.ownerId == request.auth.uid || isAdmin());
+      allow update, delete: if isAdmin()
+        || (request.auth != null && resource.data.ownerId == request.auth.uid);
     }
 
     // ---------- Presence ----------
-    // Anyone can read presence. Owner can write only their own doc.
     match /presence/{uid} {
       allow read: if true;
       allow write: if request.auth != null && request.auth.uid == uid;
     }
 
     // ---------- Admins ----------
-    // Only admins can read the admins collection. Only owners can write.
+    // Admins can read the list. Only the owner can add/remove admins.
     match /admins/{uid} {
-      allow read: if request.auth != null && isAdmin();
-      allow write: if request.auth != null && isOwner();
+      allow read: if isAdmin();
+      allow create, update, delete: if isOwner();
     }
 
     // ---------- Admin Logs (immutable) ----------
-    // Admins can read. No one can write or delete (server SDK bypasses rules).
+    // Admins can read. Anyone (via client SDK with admin check in code) can create.
+    // No one can delete or edit.
     match /adminLogs/{logId} {
-      allow read: if request.auth != null && isAdmin();
-      allow write, delete: if false;
+      allow read: if isAdmin();
+      allow create: if isAdmin();
+      allow update, delete: if false;
     }
 
     // ---------- Global settings ----------
-    // Anyone can read. Only admins can write.
     match /settings/{docId} {
       allow read: if true;
-      allow write: if request.auth != null && isAdmin();
-    }
-
-    // ---------- Helper functions ----------
-    function isAdmin() {
-      return request.auth != null && request.auth.token.admin == true;
-    }
-    function isOwner() {
-      return request.auth != null && request.auth.token.role == "owner";
+      allow write: if isAdmin();
     }
   }
 }
