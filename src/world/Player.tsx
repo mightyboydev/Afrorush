@@ -252,20 +252,20 @@ function WalkingModel({
 
       {/* Face — eyes */}
       <mesh position={[-0.1, 2.05, 0.29]}>
-        <sphereGeometry args={[0.12, 12, 12]} />
+        <sphereGeometry args={[0.025, 12, 12]} />
         <meshStandardMaterial color="#1a1a1a" />
       </mesh>
       <mesh position={[0.1, 2.05, 0.29]}>
-        <sphereGeometry args={[0.12, 12, 12]} />
+        <sphereGeometry args={[0.025, 12, 12]} />
         <meshStandardMaterial color="#1a1a1a" />
       </mesh>
       {/* Eye whites */}
       <mesh position={[-0.1, 2.05, 0.28]}>
-        <sphereGeometry args={[0.12, 12, 12]} />
+        <sphereGeometry args={[0.025, 12, 12]} />
         <meshStandardMaterial color="#ffffff" />
       </mesh>
       <mesh position={[0.1, 2.05, 0.28]}>
-        <sphereGeometry args={[0.12, 12, 12]} />
+        <sphereGeometry args={[0.025, 12, 12]} />
         <meshStandardMaterial color="#ffffff" />
       </mesh>
 
@@ -366,7 +366,7 @@ function RidingModel({ avatar }: { avatar: AvatarConfig }) {
         </mesh>
         {/* Headlight */}
         <mesh position={[0, 0.9, -0.7]}>
-          <sphereGeometry args={[0.12, 12, 12]} />
+          <sphereGeometry args={[0.025, 12, 12]} />
           <meshStandardMaterial color="#fff5b8" emissive="#fff5b8" emissiveIntensity={0.8} />
         </mesh>
       </group>

@@ -253,11 +253,11 @@ function SedanModel({ color }: { color: string }) {
       ))}
       {/* Headlights */}
       <mesh position={[0.5, 0.3, 1.6]}>
-        <sphereGeometry args={[0.12, 8, 8]} />
+        <sphereGeometry args={[0.02, 8, 8]} />
         <meshBasicMaterial color="#fff5b8" />
       </mesh>
       <mesh position={[-0.5, 0.3, 1.6]}>
-        <sphereGeometry args={[0.12, 8, 8]} />
+        <sphereGeometry args={[0.02, 8, 8]} />
         <meshBasicMaterial color="#fff5b8" />
       </mesh>
     </group>

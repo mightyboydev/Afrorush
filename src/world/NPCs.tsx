@@ -91,11 +91,11 @@ export function NPC({ data, onClick }: { data: NPCData; onClick: (npc: NPCData) 
         </mesh>
         {/* Eyes */}
         <mesh position={[-0.1, 2.0, 0.28]}>
-          <sphereGeometry args={[0.09, 12, 12]} />
+          <sphereGeometry args={[0.02, 12, 12]} />
           <meshStandardMaterial color="#1a1a1a" />
         </mesh>
         <mesh position={[0.1, 2.0, 0.28]}>
-          <sphereGeometry args={[0.09, 12, 12]} />
+          <sphereGeometry args={[0.02, 12, 12]} />
           <meshStandardMaterial color="#1a1a1a" />
         </mesh>
         {/* Smile */}
