@@ -32,13 +32,25 @@ export interface HighScores {
 }
 
 // PlayerProfile is the Firestore document shape for users/{uid}.
+// Public fields are readable by anyone. Private fields (email, etc.) live
+// in a private subcollection readable only by owner + admins (Phase 4).
+export interface AvatarConfig {
+  skinTone: string;   // hex color
+  hair: "short" | "afro" | "cap" | "bald" | "locs";
+  hairColor: string;
+  outfit: string;    // outfit id from catalog
+}
+
 export interface PlayerProfile {
   uid: string;
   username: string;
   email: string | null;
   photoURL: string | null;
+  avatar: AvatarConfig;
+  city: string;        // "lagos" | "kano" | "accra" | "nairobi"
   loadout: Loadout;
   cash: number;
+  gold: number;        // premium currency
   rep: number;
   totalRuns: number;
   highScores: HighScores;
@@ -49,6 +61,14 @@ export interface PlayerProfile {
   createdAt: number;
   lastSeen: number;
   soundOn: boolean;
+  graphicsQuality: "low" | "medium" | "high";
+  onboardingComplete: boolean;
+  // Moderation fields (server-written only, enforced by rules in Phase 4)
+  banned: boolean;
+  banReason: string | null;
+  banExpires: number | null;
+  mutedUntil: number | null;
+  warnings: number;
 }
 
 export interface CatalogItem {
@@ -136,14 +156,34 @@ export function nextRepTarget(rep: number): number {
   const lvl = levelFromRep(rep);
   return Math.pow(lvl, 2) * 100;
 }
+// Rank titles by level — African street-culture themed.
 export function levelTitle(lvl: number): string {
   if (lvl >= 25) return "Street Legend";
-  if (lvl >= 18) return "City Boss";
-  if (lvl >= 12) return "Crew Captain";
-  if (lvl >= 7)  return "Road Veteran";
+  if (lvl >= 18) return "Oga";
+  if (lvl >= 12) return "Road Boss";
+  if (lvl >= 7)  return "Area Boy";
   if (lvl >= 4)  return "Hustler";
-  return "Rookie";
+  return "Pikin";
 }
+
+// Cities selectable during onboarding.
+export const CITIES = [
+  { id: "lagos",   name: "Lagos",   country: "Nigeria",   accent: "#1fb86f" },
+  { id: "kano",    name: "Kano",    country: "Nigeria",   accent: "#ff6a1a" },
+  { id: "accra",   name: "Accra",   country: "Ghana",     accent: "#ffc531" },
+  { id: "nairobi", name: "Nairobi", country: "Kenya",     accent: "#c026d3" },
+] as const;
+
+// Avatar options shown in onboarding.
+export const SKIN_TONES = ["#8d5524", "#c68642", "#e0ac69", "#f1c27d", "#ffdbac"];
+export const HAIR_STYLES: AvatarConfig["hair"][] = ["short", "afro", "cap", "bald", "locs"];
+export const HAIR_COLORS = ["#1a1a1a", "#3d2817", "#6b3410", "#8b5a2b"];
+export const DEFAULT_AVATAR: AvatarConfig = {
+  skinTone: "#c68642",
+  hair: "short",
+  hairColor: "#1a1a1a",
+  outfit: "outfit-street",
+};
 
 // A profile with the unlocked items (computed client-side from cash purchases).
 // We store unlocked ids alongside the profile in Firestore for cross-device.
@@ -181,8 +221,11 @@ export function makeDefaultProfile(
     username,
     email,
     photoURL,
+    avatar: { ...DEFAULT_AVATAR },
+    city: "lagos",
     loadout: { ...DEFAULT_LOADOUT },
     cash: 500,
+    gold: 50,
     rep: 0,
     totalRuns: 0,
     highScores: { ...DEFAULT_HIGH_SCORES },
@@ -193,5 +236,33 @@ export function makeDefaultProfile(
     createdAt: now,
     lastSeen: now,
     soundOn: true,
+    graphicsQuality: "medium",
+    onboardingComplete: false,
+    banned: false,
+    banReason: null,
+    banExpires: null,
+    mutedUntil: null,
+    warnings: 0,
   };
 }
+
+// Graphics quality presets — used by the 3D world.
+export const GRAPHICS_PRESETS = {
+  low:    { pixelRatio: 0.75, shadows: false, fps: 30, drawDistance: 60 },
+  medium: { pixelRatio: 1.0,  shadows: false, fps: 30, drawDistance: 100 },
+  high:   { pixelRatio: 1.5,  shadows: true,  fps: 60, drawDistance: 200 },
+} as const;
+
+// Districts (3D world places) — used for the place pills on the city map.
+export const DISTRICTS = [
+  { id: "motor-park",   name: "Motor Park",        emoji: "🛺", color: "#1fb86f", desc: "The main social hub. Okadas, danfo, keke everywhere." },
+  { id: "garage",      name: "Garage",           emoji: "🏍️", color: "#ff6a1a", desc: "Customize your bike, outfit, sticker, horn and exhaust." },
+  { id: "race-track",  name: "Race Track",       emoji: "🏁", color: "#ffc531", desc: "Start a Phaser race: Street, Delivery, Police Chase, Freestyle." },
+  { id: "market",      name: "Market",           emoji: "🛍️", color: "#c026d3", desc: "Shop with Naira and gold. Stalls, bargaining NPCs." },
+  { id: "suya-spot",   name: "Suya Spot",        emoji: "🍢", color: "#ff6a1a", desc: "Daily free reward, food buffs, mini challenges." },
+  { id: "crew-hq",    name: "Crew HQ",          emoji: "👥", color: "#7c3aed", desc: "Crew room, members, chat, wars board." },
+  { id: "radio",       name: "Radio Tower",      emoji: "📻", color: "#16a3b1", desc: "Naija radio with news ticker and music." },
+  { id: "billboards", name: "Billboard Blvd",   emoji: "📋", color: "#14213d", desc: "Brand ad slots (admin controlled)." },
+  { id: "lagoon",     name: "Lagoon",           emoji: "🌊", color: "#0ea5e9", desc: "Boats, relaxed area, hidden collectibles." },
+  { id: "highway",    name: "Highway",          emoji: "🛣️", color: "#1fb86f", desc: "Open road for free riding, stunts and missions." },
+] as const;
