@@ -189,10 +189,8 @@ function HubContent() {
             <a href="/privacy" className="hover:text-rush-navy">Privacy</a>
             <span>·</span>
             <a href="/terms" className="hover:text-rush-navy">Terms</a>
-            <span>·</span>
-            <a href="/admin" className="hover:text-rush-navy">Admin</a>
           </div>
-          <div className="text-[10px] uppercase tracking-widest text-rush-navy/30">AfroRush · Built with ❤️ in Lagos</div>
+          <div className="text-[10px] uppercase tracking-widest text-rush-navy/30">AfroRush</div>
         </footer>
       </div>
 
