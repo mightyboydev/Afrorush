@@ -62,7 +62,7 @@ export default function WorldUI({
         {/* Avatar + level + rep bar */}
         <button
           onClick={onOpenMenu}
-          className="flex items-center gap-2 rounded-full bg-white/95 px-2 py-1.5 rush-soft-shadow"
+          className="flex items-center gap-2 rounded-full rush-glass-pill px-2 py-1.5"
         >
           <div
             className="flex h-9 w-9 items-center justify-center rounded-full text-sm font-bold text-white"
@@ -80,7 +80,7 @@ export default function WorldUI({
 
         {/* Rep progress (center, expands on desktop) */}
         <div className="hidden flex-1 max-w-[200px] sm:block">
-          <div className="rounded-full bg-white/95 px-3 py-1.5 rush-soft-shadow">
+          <div className="rounded-full rush-glass-pill px-3 py-1.5">
             <div className="mb-0.5 flex items-center justify-between text-[9px] font-bold uppercase tracking-wider text-rush-navy/60">
               <span>Rep</span>
               <span>{profile.rep.toLocaleString()} / {next.toLocaleString()}</span>
@@ -93,17 +93,17 @@ export default function WorldUI({
 
         {/* Naira + Gold */}
         <div className="flex items-center gap-1.5">
-          <div className="flex items-center gap-1 rounded-full bg-white/95 px-3 py-1.5 rush-soft-shadow">
+          <div className="flex items-center gap-1 rounded-full rush-glass-pill px-3 py-1.5">
             <span className="text-xs">💵</span>
             <span className="text-xs font-bold text-rush-navy">{formatNaira(profile.cash)}</span>
           </div>
-          <div className="flex items-center gap-1 rounded-full bg-white/95 px-3 py-1.5 rush-soft-shadow">
+          <div className="flex items-center gap-1 rounded-full rush-glass-pill px-3 py-1.5">
             <span className="text-xs">🪙</span>
             <span className="text-xs font-bold text-rush-navy">{profile.gold}</span>
           </div>
           <button
             onClick={onOpenNotifications}
-            className="relative flex h-9 w-9 items-center justify-center rounded-full bg-white/95 rush-soft-shadow"
+            className="relative flex h-9 w-9 items-center justify-center rounded-full rush-glass-pill"
             aria-label="Notifications"
           >
             <span className="text-base">🔔</span>
@@ -128,7 +128,7 @@ export default function WorldUI({
               <button
                 key={d.id}
                 onClick={() => onOpenPlace(d.id)}
-                className="rush-pill rush-float pointer-events-auto absolute flex items-center gap-1.5 bg-white px-3 py-2 text-xs font-bold text-rush-navy"
+                className="rush-glass-pill rush-float pointer-events-auto absolute flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-rush-navy"
                 style={{ ...p, animationDelay: `${i * 0.5}s` }}
               >
                 <span className="text-base">{d.emoji}</span>
