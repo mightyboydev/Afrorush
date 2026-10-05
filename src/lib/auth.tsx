@@ -280,6 +280,33 @@ export function migrateProfile(existing: Partial<PlayerProfile>): PlayerProfile 
   if (existing.uid === "1rf7yswl35QuUyfdQehMs1qdlIy2" && merged.role !== "admin") {
     merged.role = "admin"; changed = true;
   }
+  // Needs + daily loop migration
+  if (!existing.needs) { merged.needs = { food: 80, energy: 80, fun: 80, social: 80, hygiene: 80, toilet: 80 }; changed = true; }
+  if (existing.needsUpdatedAt === undefined) { merged.needsUpdatedAt = Date.now(); changed = true; }
+  if (existing.loginStreak === undefined) { merged.loginStreak = 0; changed = true; }
+  if (existing.lastLoginDate === undefined) { merged.lastLoginDate = null; changed = true; }
+  if (existing.dailyTasks === undefined) { merged.dailyTasks = []; changed = true; }
+  if (existing.gemsFound === undefined) { merged.gemsFound = []; changed = true; }
+  if (existing.homeType === undefined) { merged.homeType = "room"; changed = true; }
+  if (existing.homeLayout === undefined) { merged.homeLayout = []; changed = true; }
+
+  // Decay needs based on real time elapsed
+  if (merged.needs && merged.needsUpdatedAt) {
+    const now = Date.now();
+    const elapsedMin = Math.max(0, (now - merged.needsUpdatedAt) / 60000);
+    const decayPerMin = 0.15; // ~1 point per 6.6 min
+    const decay = elapsedMin * decayPerMin;
+    merged.needs.food = Math.max(0, Math.min(100, (merged.needs.food ?? 80) - decay));
+    merged.needs.energy = Math.max(0, Math.min(100, (merged.needs.energy ?? 80) - decay * 0.8));
+    merged.needs.fun = Math.max(0, Math.min(100, (merged.needs.fun ?? 80) - decay * 0.6));
+    merged.needs.social = Math.max(0, Math.min(100, (merged.needs.social ?? 80) - decay * 0.5));
+    merged.needs.hygiene = Math.max(0, Math.min(100, (merged.needs.hygiene ?? 80) - decay * 0.7));
+    merged.needs.toilet = Math.max(0, Math.min(100, (merged.needs.toilet ?? 80) - decay * 0.4));
+    if (elapsedMin > 1) {
+      merged.needsUpdatedAt = now;
+      changed = true;
+    }
+  }
 
   return changed ? merged : (existing as PlayerProfile);
 }

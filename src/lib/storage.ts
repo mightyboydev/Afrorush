@@ -70,6 +70,39 @@ export interface PlayerProfile {
   banExpires: number | null;
   mutedUntil: number | null;
   warnings: number;
+  // Life-sim needs (0-100, decay with real time)
+  needs: {
+    food: number;
+    energy: number;
+    fun: number;
+    social: number;
+    hygiene: number;
+    toilet: number;
+  };
+  needsUpdatedAt: number; // timestamp of last needs calc
+  // Daily loop
+  loginStreak: number;
+  lastLoginDate: string | null; // YYYY-MM-DD
+  dailyTasks: DailyTask[];
+  gemsFound: string[]; // ids of gems found today
+  // Housing
+  homeType: "room" | "selfcon" | "flat" | "duplex" | "seaplot";
+  homeLayout: HomeItem[]; // placed furniture items
+}
+
+export interface DailyTask {
+  id: string;
+  title: string;
+  desc: string;
+  reward: number; // naira
+  completed: boolean;
+}
+
+export interface HomeItem {
+  id: string;       // catalog item id
+  x: number;        // grid position
+  y: number;
+  rotation: number; // 0/90/180/270
 }
 
 export interface CatalogItem {
@@ -245,6 +278,14 @@ export function makeDefaultProfile(
     banExpires: null,
     mutedUntil: null,
     warnings: 0,
+    needs: { food: 80, energy: 80, fun: 80, social: 80, hygiene: 80, toilet: 80 },
+    needsUpdatedAt: now,
+    loginStreak: 0,
+    lastLoginDate: null,
+    dailyTasks: [],
+    gemsFound: [],
+    homeType: "room",
+    homeLayout: [],
   };
 }
 
