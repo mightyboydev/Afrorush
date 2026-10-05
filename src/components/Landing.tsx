@@ -240,9 +240,26 @@ export default function Landing() {
         </div>
 
         <p className="mt-3 text-center text-[10px] uppercase tracking-widest text-rush-navy/40">
-          By continuing you agree to ride hard, race fair, and rep your city
+          By continuing you agree to our{" "}
+          <a href="/terms" className="underline hover:text-rush-navy">Terms</a>{" "}
+          and{" "}
+          <a href="/privacy" className="underline hover:text-rush-navy">Privacy Policy</a>
         </p>
       </div>
+
+      {/* Footer */}
+      <footer className="relative z-10 mt-4 px-4 pb-4 text-center sm:px-6 safe-pb">
+        <div className="mb-1 flex items-center justify-center gap-3 text-[10px] text-rush-navy/40">
+          <a href="/privacy" className="hover:text-rush-navy">Privacy</a>
+          <span>·</span>
+          <a href="/terms" className="hover:text-rush-navy">Terms</a>
+          <span>·</span>
+          <a href="/admin" className="hover:text-rush-navy">Admin</a>
+        </div>
+        <div className="text-[10px] uppercase tracking-widest text-rush-navy/30">
+          AfroRush · Built with ❤️ in Lagos
+        </div>
+      </footer>
 
       {/* Setup hint (only if auth not enabled yet) */}
       {state.error && state.error.toLowerCase().includes("not enabled") && (
