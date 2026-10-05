@@ -122,6 +122,14 @@ function AppContent({ appId, profile, onClose }: { appId: string; profile: Playe
   if (appId === "settings") {
     return <SettingsApp profile={profile} onClose={onClose} app={app} />;
   }
+  // Bank app — send money to other players
+  if (appId === "bank") {
+    return <BankApp profile={profile} onClose={onClose} app={app} />;
+  }
+  // Messages app — texting
+  if (appId === "messages") {
+    return <MessagesApp profile={profile} onClose={onClose} app={app} />;
+  }
 
   return (
     <div className="rush-bounce-in">
@@ -291,6 +299,184 @@ function ActivityItem({ icon, text, sub, time }: { icon: string; text: string; s
         <div className="truncate text-[10px] text-rush-navy/50">{sub}</div>
       </div>
       <span className="text-[10px] text-rush-navy/40">{time}</span>
+    </div>
+  );
+}
+
+// ---------- Bank App — Send Money ----------
+
+function BankApp({ profile, onClose, app }: { profile: PlayerProfile; onClose: () => void; app: App }) {
+  const { refreshProfile } = useAuth();
+  const [recipient, setRecipient] = useState("");
+  const [amount, setAmount] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const sendMoney = async () => {
+    setError(null); setMessage(null);
+    const amt = parseInt(amount);
+    if (!recipient.trim() || !amt || amt <= 0) { setError("Enter a name and amount"); return; }
+    if (amt > profile.cash) { setError("Not enough cash"); return; }
+    setBusy(true);
+    try {
+      // Deduct from sender
+      await updateProfile(profile.uid, { cash: profile.cash - amt });
+      await refreshProfile();
+      setMessage(`Sent ₦${amt.toLocaleString()} to ${recipient.trim()}!`);
+      setRecipient(""); setAmount("");
+    } catch (e) { setError((e as Error).message); }
+    finally { setBusy(false); }
+  };
+
+  return (
+    <div className="rush-bounce-in">
+      <div className="mb-4 flex items-center gap-3">
+        <button onClick={onClose} className="flex h-9 w-9 items-center justify-center rounded-full bg-white/80 text-rush-navy backdrop-blur">←</button>
+        <div className="flex h-10 w-10 items-center justify-center rounded-2xl text-xl" style={{ background: `linear-gradient(135deg, ${app.from}, ${app.to})` }}>{app.icon}</div>
+        <h2 className="font-display text-xl text-rush-navy">Bank</h2>
+      </div>
+
+      {/* Balance card */}
+      <div className="rush-gradient mb-4 overflow-hidden rounded-3xl p-4 text-white shadow-lg">
+        <div className="text-[10px] uppercase tracking-widest text-white/70">Balance</div>
+        <div className="font-display text-2xl">{formatNaira(profile.cash)}</div>
+        <div className="mt-1 text-xs text-white/60">🪙 {profile.gold} gold</div>
+      </div>
+
+      {/* Send money */}
+      <div className="rush-glass rounded-3xl p-4">
+        <div className="mb-3 text-[10px] font-bold uppercase tracking-wider text-rush-navy/60">Send Money</div>
+        <input type="text" value={recipient} onChange={(e) => setRecipient(e.target.value)} placeholder="Recipient name" className="mb-2 w-full rounded-xl border border-rush-cream bg-white px-3 py-2.5 text-sm text-rush-navy" />
+        <input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="Amount (₦)" className="mb-2 w-full rounded-xl border border-rush-cream bg-white px-3 py-2.5 text-sm text-rush-navy" />
+        <button onClick={sendMoney} disabled={busy} className="w-full rounded-xl bg-rush-green px-4 py-3 text-sm font-bold uppercase tracking-wider text-white disabled:opacity-50">
+          {busy ? "Sending…" : "Send Money"}
+        </button>
+        {message && <div className="mt-2 rounded-xl bg-rush-green/10 px-3 py-2 text-xs text-rush-green">{message}</div>}
+        {error && <div className="mt-2 rounded-xl bg-red-50 px-3 py-2 text-xs text-red-600">{error}</div>}
+      </div>
+
+      {/* Quick actions */}
+      <div className="mt-3 grid grid-cols-3 gap-2">
+        <div className="rounded-2xl bg-white/80 p-3 text-center">
+          <div className="text-lg">📥</div>
+          <div className="text-[9px] font-bold uppercase text-rush-navy/60">Request</div>
+        </div>
+        <div className="rounded-2xl bg-white/80 p-3 text-center">
+          <div className="text-lg">📊</div>
+          <div className="text-[9px] font-bold uppercase text-rush-navy/60">History</div>
+        </div>
+        <div className="rounded-2xl bg-white/80 p-3 text-center">
+          <div className="text-lg">💵</div>
+          <div className="text-[9px] font-bold uppercase text-rush-navy/60">Top Up</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ---------- Messages App — Texting ----------
+
+interface ChatMsg { from: string; text: string; time: string; }
+
+function MessagesApp({ profile, onClose, app }: { profile: PlayerProfile; onClose: () => void; app: App }) {
+  const [view, setView] = useState<"list" | "chat">("list");
+  const [selectedChat, setSelectedChat] = useState<string | null>(null);
+  const [messages, setMessages] = useState<ChatMsg[]>([]);
+  const [input, setInput] = useState("");
+
+  // Mock contacts
+  const contacts = [
+    { name: "Crew Chat", emoji: "👥", last: "Yo, who's racing tonight?", time: "2m", unread: 3 },
+    { name: "Baba Tunde", emoji: "🧑", last: "Suya spot is open!", time: "5m", unread: 1 },
+    { name: "Kelechi", emoji: "🧑", last: "Challenge accepted! 🏁", time: "1h", unread: 0 },
+    { name: "Mama Chichi", emoji: "👩", last: "New Ankara just arrived", time: "3h", unread: 0 },
+    { name: "Street Radio", emoji: "📻", last: "Now playing: Afrobeats mix", time: "1d", unread: 0 },
+  ];
+
+  const openChat = (name: string) => {
+    setSelectedChat(name);
+    setView("chat");
+    setMessages([
+      { from: name, text: contacts.find(c => c.name === name)?.last ?? "Hello!", time: "now" },
+    ]);
+  };
+
+  const send = () => {
+    if (!input.trim()) return;
+    setMessages(prev => [...prev, { from: "me", text: input.trim(), time: "now" }]);
+    setInput("");
+    // Auto-reply
+    setTimeout(() => {
+      setMessages(prev => [...prev, { from: selectedChat ?? "Unknown", text: "Got it! 👍", time: "now" }]);
+    }, 1500);
+  };
+
+  if (view === "chat" && selectedChat) {
+    return (
+      <div className="rush-bounce-in">
+        <div className="mb-4 flex items-center gap-3">
+          <button onClick={() => setView("list")} className="flex h-9 w-9 items-center justify-center rounded-full bg-white/80 text-rush-navy backdrop-blur">←</button>
+          <div className="flex h-10 w-10 items-center justify-center rounded-2xl text-xl bg-rush-jade/20">{contacts.find(c => c.name === selectedChat)?.emoji ?? "💬"}</div>
+          <h2 className="font-display text-lg text-rush-navy">{selectedChat}</h2>
+        </div>
+
+        {/* Chat messages */}
+        <div className="min-h-[300px] space-y-2 rounded-3xl bg-white/60 p-4">
+          {messages.map((msg, i) => (
+            <div key={i} className={`flex ${msg.from === "me" ? "justify-end" : "justify-start"}`}>
+              <div className={`max-w-[75%] rounded-2xl px-3 py-2 text-sm ${msg.from === "me" ? "bg-rush-green text-white" : "bg-white text-rush-navy"}`}>
+                {msg.text}
+                <div className={`mt-0.5 text-[8px] ${msg.from === "me" ? "text-white/60" : "text-rush-navy/40"}`}>{msg.time}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Input */}
+        <div className="mt-3 flex gap-2">
+          <input
+            type="text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && send()}
+            placeholder="Type a message…"
+            className="flex-1 rounded-full border border-rush-cream bg-white px-4 py-2.5 text-sm text-rush-navy"
+          />
+          <button onClick={send} className="flex h-10 w-10 items-center justify-center rounded-full bg-rush-green text-white active:scale-95">
+            ➤
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="rush-bounce-in">
+      <div className="mb-4 flex items-center gap-3">
+        <button onClick={onClose} className="flex h-9 w-9 items-center justify-center rounded-full bg-white/80 text-rush-navy backdrop-blur">←</button>
+        <div className="flex h-10 w-10 items-center justify-center rounded-2xl text-xl" style={{ background: `linear-gradient(135deg, ${app.from}, ${app.to})` }}>{app.icon}</div>
+        <h2 className="font-display text-xl text-rush-navy">Messages</h2>
+      </div>
+
+      {/* Chat list */}
+      <div className="space-y-2">
+        {contacts.map((c) => (
+          <button key={c.name} onClick={() => openChat(c.name)} className="flex w-full items-center gap-3 rounded-2xl bg-white/80 p-3 backdrop-blur active:scale-95">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-rush-cream text-xl">{c.emoji}</div>
+            <div className="flex-1 text-left">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-bold text-rush-navy">{c.name}</span>
+                <span className="text-[10px] text-rush-navy/40">{c.time}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="truncate text-xs text-rush-navy/60">{c.last}</span>
+                {c.unread > 0 && <span className="ml-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-rush-green px-1 text-[10px] font-bold text-white">{c.unread}</span>}
+              </div>
+            </div>
+          </button>
+        ))}
+      </div>
     </div>
   );
 }

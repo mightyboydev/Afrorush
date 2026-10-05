@@ -31,17 +31,24 @@ interface LocationInfo {
 
 // City map layout — locations positioned on a grid
 const LOCATIONS: LocationInfo[] = [
-  { id: "motor-park", name: "Motor Park", emoji: "🛺", color: "#1fb86f", desc: "Social hub. Find crews, okadas, danfos.", x: 50, y: 50 },
-  { id: "my-garage", name: "My Garage", emoji: "🔧", color: "#ff6a1a", desc: "Your personal garage. Customize your bike & outfit.", x: 25, y: 30, isGarage: true },
+  // Core game locations
+  { id: "motor-park", name: "Motor Park", emoji: "🛺", color: "#1fb86f", desc: "Social hub. Okadas, danfos, keke.", x: 50, y: 50 },
+  { id: "my-house", name: "My House", emoji: "🏠", color: "#1fb86f", desc: "Your apartment. Rest, change outfits.", x: 42, y: 42, isHouse: true },
+  { id: "my-garage", name: "My Garage", emoji: "🔧", color: "#ff6a1a", desc: "Customize your bike & outfit.", x: 25, y: 30, isGarage: true },
   { id: "race-track", name: "Race Track", emoji: "🏁", color: "#ffc531", desc: "Street, Delivery, Police Chase, Freestyle.", x: 75, y: 30 },
-  { id: "market", name: "Market", emoji: "🛍️", color: "#c026d3", desc: "Buy items with Naira and gold.", x: 25, y: 70 },
+  { id: "market", name: "Balogun Market", emoji: "🛍️", color: "#c026d3", desc: "Buy items with Naira and gold.", x: 25, y: 70 },
   { id: "suya-spot", name: "Suya Spot", emoji: "🍢", color: "#ff6a1a", desc: "Daily free reward + food buffs.", x: 75, y: 70 },
-  { id: "crew-hq", name: "Crew HQ", emoji: "👥", color: "#7c3aed", desc: "Manage crew, crew wars.", x: 50, y: 18 },
-  { id: "radio", name: "Radio Tower", emoji: "📻", color: "#16a3b1", desc: "Naija radio + news ticker.", x: 12, y: 50 },
-  { id: "billboards", name: "Billboard Blvd", emoji: "📋", color: "#14213d", desc: "Brand ad slots.", x: 88, y: 50 },
-  { id: "lagoon", name: "Lagoon", emoji: "🌊", color: "#0ea5e9", desc: "Relaxed area, hidden collectibles.", x: 50, y: 85 },
-  { id: "highway", name: "Highway", emoji: "🛣️", color: "#1fb86f", desc: "Open road for free riding.", x: 88, y: 85, locked: true },
-  { id: "airport", name: "Airport", emoji: "✈️", color: "#14213d", desc: "Coming soon — fly to other cities.", x: 12, y: 85, locked: true },
+  { id: "crew-hq", name: "Crew HQ", emoji: "👥", color: "#7c3aed", desc: "Manage crew, crew wars.", x: 50, y: 15 },
+  // Nigerian real places
+  { id: "stadium", name: "National Stadium", emoji: "🏟️", color: "#1fb86f", desc: "Lagos National Stadium, Surulere.", x: 15, y: 25 },
+  { id: "quilox", name: "Quilox Club", emoji: "🎉", color: "#ff6a1a", desc: "Lagos hottest nightclub. Victoria Island.", x: 85, y: 20 },
+  { id: "church", name: "Cathedral", emoji: "⛪", color: "#16a3b1", desc: "Holy Cross Cathedral, Lagos.", x: 12, y: 40 },
+  { id: "mosque", name: "Central Mosque", emoji: "🕌", color: "#16a3b1", desc: "Lagos Central Mosque, Lagos Island.", x: 88, y: 40 },
+  { id: "lagoon", name: "Lagos Lagoon", emoji: "🌊", color: "#0ea5e9", desc: "Relaxed waterfront, hidden collectibles.", x: 50, y: 88 },
+  { id: "airport", name: "Murtala Airport", emoji: "✈️", color: "#14213d", desc: "Murtala Muhammed Airport, Ikeja.", x: 12, y: 88 },
+  { id: "lekki", name: "Lekki Bridge", emoji: "🌉", color: "#7c3aed", desc: "Lekki-Ikoyi Link Bridge.", x: 88, y: 88 },
+  { id: "unilag", name: "UNILAG", emoji: "🎓", color: "#ffc531", desc: "University of Lagos, Akoka.", x: 65, y: 15 },
+  { id: "eaton", name: "Eko Hotel", emoji: "🏨", color: "#c026d3", desc: "Eko Hotel & Suites, Victoria Island.", x: 35, y: 15 },
 ];
 
 // Player house positions on the map (scattered around the city)

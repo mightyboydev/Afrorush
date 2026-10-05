@@ -40,6 +40,12 @@ const SHOP: Record<Category, ShopItem[]> = {
     { id: "keke", name: "Keke Napep", desc: "Compact ride for short trips", price: 3000, currency: "naira", emoji: "🛺", color: "#ff6a1a" },
     { id: "cab", name: "Yellow Cab", desc: "Luxury ride with AC", price: 12000, currency: "naira", emoji: "🚕", color: "#ffc531" },
     { id: "sports", name: "Sports Bike", desc: "Top speed, low grip", price: 50, currency: "gold", emoji: "🏍️", color: "#7c3aed" },
+    { id: "sedan", name: "Toyota Sedan", desc: "Reliable car for the city", price: 25000, currency: "naira", emoji: "🚗", color: "#1e3a5f" },
+    { id: "suv", name: "Lexus SUV", desc: "Big, bold, Lagos style", price: 80000, currency: "naira", emoji: "🚙", color: "#14213d" },
+    { id: "sportscar", name: "Range Rover Sport", desc: "Lekki big boy special", price: 150, currency: "gold", emoji: "🏎️", color: "#e94f37" },
+    { id: "privatejet", name: "Private Jet", desc: "Fly to Abuja, PH, Kano", price: 2000, currency: "gold", emoji: "✈️", color: "#ffffff" },
+    { id: "helicopter", name: "Helicopter", desc: "Land anywhere in the city", price: 5000, currency: "gold", emoji: "🚁", color: "#16a3b1" },
+    { id: "yacht", name: "Lagos Yacht", desc: "Cruise the lagoon in style", price: 8000, currency: "gold", emoji: "🛥️", color: "#0ea5e9" },
   ],
   homes: [
     { id: "studio", name: "Studio Flat", desc: "Cozy starter home", price: 0, currency: "naira", emoji: "🏠", color: "#1fb86f" },
