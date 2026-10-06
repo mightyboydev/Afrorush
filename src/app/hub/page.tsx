@@ -19,6 +19,7 @@ import BuyScreen from "@/components/BuyScreen";
 import Joystick from "@/components/Joystick";
 import PhoneScreen from "@/components/PhoneScreen";
 import MapScreen from "@/components/MapScreen";
+import { ShareHandleButton } from "@/components/PhoneScreen";
 
 // 3D Home Room — heavy, ssr:false
 const HomeRoom = lazy(() => import("@/world/HomeRoom"));
@@ -169,17 +170,27 @@ function HubContent() {
               </div>
             </button>
 
-            {/* Right — money pill + add button */}
+            {/* Right — money pill + add button + share handle */}
             <div className="flex items-center gap-1 rounded-full rush-glass-pill py-1 pl-2.5 pr-1">
               <span className="text-[11px]">💵</span>
               <span className="text-[11px] font-bold text-rush-gold">{formatNaira(profile.cash)}</span>
               <button
+                onClick={() => setTab("phone")}
                 className="flex h-6 w-6 items-center justify-center rounded-full bg-rush-green text-xs font-bold text-white active:scale-90"
-                aria-label="Add cash"
-                title="Get more cash"
+                aria-label="Open Bank to send or top up"
+                title="Open Bank"
               >
                 +
               </button>
+            </div>
+          </div>
+
+          {/* Share handle row — the Lagos Life viral hook */}
+          <div className="mx-auto flex max-w-md items-center justify-end px-2.5 pt-1">
+            <div className="flex items-center gap-1.5 rounded-full bg-white/80 px-2 py-0.5 backdrop-blur-md">
+              <span className="text-[8px] font-bold uppercase tracking-wider text-rush-navy/50">Handle</span>
+              <span className="text-[9px] font-bold text-rush-navy">@{profile.username}</span>
+              <ShareHandleButton username={profile.username} cash={profile.cash} />
             </div>
           </div>
 
@@ -202,7 +213,7 @@ function HubContent() {
       {/* Tab content — pushed below the fixed top status bar.
           Home tab: only needs + small task/gem cards (locations live in Map tab).
           Other tabs scroll normally. */}
-      <div className={`relative z-10 overflow-y-auto px-3 pb-24 pt-[88px] transition-opacity ${cleanScreen ? "opacity-0 pointer-events-none" : ""}`}>
+      <div className={`relative z-10 overflow-y-auto px-3 pb-24 pt-[124px] transition-opacity ${cleanScreen ? "opacity-0 pointer-events-none" : ""}`}>
         {tab === "home" && (
           <div className="mx-auto max-w-md space-y-2">
             {/* Needs — compact circular ring row */}
@@ -597,6 +608,17 @@ function MotorParkOverlay({ profile, unlocked, onClose, onNavigate }: { profile:
 
 function RaceResultOverlay({ result, profile, onClose }: { result: import("@/game/AfroRushScene").RaceResult; profile: PlayerProfile; onClose: () => void }) {
   const won = result.finished;
+  const modeLabel = result.mode === "street-race" ? "Street Race"
+    : result.mode === "delivery-rush" ? "Delivery Rush"
+    : result.mode === "police-chase" ? "Police Chase"
+    : "Freestyle Run";
+  const shareText = won
+    ? `🏆 I just win ${modeLabel} for AfroRush! ${result.distance}m, ${result.score.toLocaleString()} pts, +₦${result.cashEarned}. My handle na @${profile.username} — beat me if you sabi! 🏍️💨`
+    : `😅 I done crash for ${modeLabel} for AfroRush — but I still stack ${result.score.toLocaleString()} pts and ₦${result.cashEarned}. Try beat my score, my handle na @${profile.username} 🏍️`;
+  const shareUrl = typeof window !== "undefined" ? window.location.origin : "https://afrorush.vercel.app";
+  const shareToWhatsApp = () => window.open(`https://wa.me/?text=${encodeURIComponent(shareText + " " + shareUrl)}`, "_blank");
+  const shareToX = () => window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`, "_blank");
+
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4">
       <div className="rush-bounce-in rush-card w-full max-w-sm p-6 text-center">
@@ -607,7 +629,18 @@ function RaceResultOverlay({ result, profile, onClose }: { result: import("@/gam
           <Stat label="Cash" value={`+₦${result.cashEarned}`} />
           <Stat label="Rep" value={`+${result.repEarned}`} />
         </div>
-        <button onClick={onClose} className="mt-4 w-full rounded-2xl bg-rush-green px-4 py-3 text-sm font-bold uppercase tracking-wider text-white">Back to Home</button>
+
+        {/* Share score — viral loop */}
+        <div className="mt-3 grid grid-cols-2 gap-2">
+          <button onClick={shareToWhatsApp} className="flex items-center justify-center gap-1.5 rounded-2xl bg-rush-green px-4 py-3 text-xs font-bold uppercase tracking-wider text-white active:scale-95">
+            💬 Share
+          </button>
+          <button onClick={shareToX} className="flex items-center justify-center gap-1.5 rounded-2xl bg-rush-navy px-4 py-3 text-xs font-bold uppercase tracking-wider text-white active:scale-95">
+            𝕏 Tweet
+          </button>
+        </div>
+
+        <button onClick={onClose} className="mt-2 w-full rounded-2xl bg-rush-cream px-4 py-3 text-sm font-bold uppercase tracking-wider text-rush-navy">Back to Home</button>
       </div>
     </div>
   );
