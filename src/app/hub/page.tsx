@@ -178,45 +178,44 @@ function HubContent() {
         </div>
       )}
 
-      {/* Tab content */}
-      <div className={`relative z-10 overflow-y-auto px-3 pb-24 pt-2 ${cleanScreen ? "opacity-0" : ""}`}>
+      {/* Tab content — semi-transparent so 3D shows through */}
+      <div className={`relative z-10 overflow-y-auto px-3 pb-24 pt-1 transition-opacity ${cleanScreen ? "opacity-0 pointer-events-none" : ""}`}>
         {tab === "home" && (
-          <div className="mx-auto max-w-md space-y-3">
-            {/* Needs bars */}
+          <div className="mx-auto max-w-md space-y-2">
+            {/* Needs bars — compact */}
             <NeedsBar profile={profile} />
 
-            {/* Today's task */}
-            <div className="rounded-3xl rush-glass p-3">
-              <div className="mb-1 flex items-center justify-between">
-                <span className="text-[9px] font-bold uppercase tracking-widest text-rush-navy/50">Today's Task</span>
-                <span className="text-[9px] text-rush-gold">+₦500</span>
+            {/* Today's task + Gem hunt — side by side, compact */}
+            <div className="grid grid-cols-2 gap-2">
+              <div className="rounded-2xl bg-white/60 p-2.5 backdrop-blur-md">
+                <div className="mb-1 flex items-center justify-between">
+                  <span className="text-[8px] font-bold uppercase tracking-wider text-rush-navy/50">Task</span>
+                  <span className="text-[8px] text-rush-gold">+₦500</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-base">🍢</span>
+                  <span className="text-[10px] font-bold text-rush-navy">Visit Suya Spot</span>
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="text-lg">🍢</span>
-                <span className="text-xs font-bold text-rush-navy">Visit the Suya Spot</span>
+              <div className="rounded-2xl bg-white/60 p-2.5 backdrop-blur-md">
+                <div className="mb-1 flex items-center justify-between">
+                  <span className="text-[8px] font-bold uppercase tracking-wider text-rush-navy/50">Gems</span>
+                  <span className="text-[8px] text-rush-purple">💎 {profile.gemsFound?.length || 0}/5</span>
+                </div>
+                <p className="text-[9px] text-rush-navy/50">Find hidden gems in the city!</p>
               </div>
             </div>
 
-            {/* Daily gem hunt */}
-            <div className="rounded-3xl rush-glass p-3">
-              <div className="mb-1 flex items-center justify-between">
-                <span className="text-[9px] font-bold uppercase tracking-widest text-rush-navy/50">Daily Gem Hunt</span>
-                <span className="text-[9px] text-rush-purple">💎 {profile.gemsFound?.length || 0}/5 found</span>
-              </div>
-              <p className="text-[10px] text-rush-navy/50">Find 5 hidden gems around the city for bonus rep!</p>
-            </div>
-
-            {/* Quick location cards (compact row) */}
-            <div className="flex gap-2 overflow-x-auto pb-1">
-              {LOCATIONS.slice(0, 6).map((loc) => (
+            {/* Quick locations — horizontal scroll, compact */}
+            <div className="flex gap-1.5 overflow-x-auto pb-1">
+              {LOCATIONS.slice(0, 8).map((loc) => (
                 <button
                   key={loc.id}
                   onClick={() => handleLocation(loc.id)}
-                  className="flex shrink-0 flex-col items-center gap-1 rounded-2xl border-2 bg-white/80 p-2 active:scale-95"
-                  style={{ borderColor: `${loc.color}33` }}
+                  className="flex shrink-0 flex-col items-center gap-0.5 rounded-xl bg-white/60 p-1.5 backdrop-blur-md active:scale-95"
                 >
-                  <div className="flex h-9 w-9 items-center justify-center rounded-xl text-lg" style={{ background: `${loc.color}22` }}>{loc.emoji}</div>
-                  <span className="text-[8px] font-bold text-rush-navy">{loc.name}</span>
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg text-base" style={{ background: `${loc.color}22` }}>{loc.emoji}</div>
+                  <span className="text-[7px] font-bold text-rush-navy">{loc.name}</span>
                 </button>
               ))}
             </div>
@@ -285,7 +284,7 @@ function HubContent() {
         <CrewOverlay profile={profile} onClose={() => setOverlay(null)} />
       )}
       {overlay === "motor-park" && (
-        <MotorParkOverlay profile={profile} onClose={() => setOverlay(null)} />
+        <MotorParkOverlay profile={profile} unlocked={unlocked} onClose={() => setOverlay(null)} />
       )}
 
       {/* 3D Race game */}
@@ -445,7 +444,7 @@ function CrewOverlay({ profile, onClose }: { profile: PlayerProfile; onClose: ()
   );
 }
 
-function MotorParkOverlay({ profile, onClose }: { profile: PlayerProfile; onClose: () => void }) {
+function MotorParkOverlay({ profile, unlocked, onClose }: { profile: PlayerProfile; unlocked: string[]; onClose: () => void }) {
   const inputRef = useRef({ x: 0, y: 0, boost: false });
   const [riding, setRiding] = useState(false);
   const [showVehiclePicker, setShowVehiclePicker] = useState(false);
@@ -455,15 +454,15 @@ function MotorParkOverlay({ profile, onClose }: { profile: PlayerProfile; onClos
   // Vehicles the player owns (from unlocked items)
   const ownedVehicles = [
     { id: "okada", name: "Okada", emoji: "🏍️", color: "#ff6a1a" },
-    ...(profile.unlocked ?? []).includes("danfo") ? [{ id: "danfo", name: "Danfo", emoji: "🚌", color: "#ffc531" }] : [],
-    ...(profile.unlocked ?? []).includes("keke") ? [{ id: "keke", name: "Keke", emoji: "🛺", color: "#ff6a1a" }] : [],
-    ...(profile.unlocked ?? []).includes("cab") ? [{ id: "cab", name: "Cab", emoji: "🚕", color: "#ffc531" }] : [],
-    ...(profile.unlocked ?? []).includes("sedan") ? [{ id: "sedan", name: "Sedan", emoji: "🚗", color: "#1e3a5f" }] : [],
-    ...(profile.unlocked ?? []).includes("suv") ? [{ id: "suv", name: "SUV", emoji: "🚙", color: "#14213d" }] : [],
+    ...unlocked.includes("danfo") ? [{ id: "danfo", name: "Danfo", emoji: "🚌", color: "#ffc531" }] : [],
+    ...unlocked.includes("keke") ? [{ id: "keke", name: "Keke", emoji: "🛺", color: "#ff6a1a" }] : [],
+    ...unlocked.includes("cab") ? [{ id: "cab", name: "Cab", emoji: "🚕", color: "#ffc531" }] : [],
+    ...unlocked.includes("sedan") ? [{ id: "sedan", name: "Sedan", emoji: "🚗", color: "#1e3a5f" }] : [],
+    ...unlocked.includes("suv") ? [{ id: "suv", name: "SUV", emoji: "🚙", color: "#14213d" }] : [],
   ];
 
   return (
-    <div className="fixed inset-0 z-50 bg-rush-sky">
+    <div className="fixed inset-0 z-50 bg-rush-sky" style={{ width: "100vw", height: "100vh" }}>
       <Suspense fallback={<div className="flex h-full items-center justify-center text-rush-navy">Loading the streets…</div>}>
         <City avatar={profile.avatar} quality={profile.graphicsQuality} riding={riding} inputRef={inputRef} />
       </Suspense>
