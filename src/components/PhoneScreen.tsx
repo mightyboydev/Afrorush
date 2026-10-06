@@ -6,7 +6,14 @@
 import { useState, useEffect, useMemo } from "react";
 import { useAuth } from "@/lib/auth";
 import { formatNaira, type PlayerProfile } from "@/lib/storage";
-import { updateProfile, sendDm, searchPlayersByUsername, subscribeToDms, type DmMessage } from "@/lib/firestore";
+import {
+  updateProfile,
+  sendDm,
+  searchPlayersByUsername,
+  subscribeToDms,
+  transferCash,
+  type DmMessage,
+} from "@/lib/firestore";
 
 interface App {
   id: string;
@@ -328,31 +335,49 @@ function ActivityItem({ icon, text, sub, time }: { icon: string; text: string; s
   );
 }
 
-// ---------- Bank App — Send Money ----------
+// ---------- Bank App — Real Peer-to-Peer Transfer ----------
 
 function BankApp({ profile, onClose, app }: { profile: PlayerProfile; onClose: () => void; app: App }) {
   const { refreshProfile } = useAuth();
   const [recipient, setRecipient] = useState("");
   const [amount, setAmount] = useState("");
+  const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [allDms, setAllDms] = useState<DmMessage[]>([]);
+
+  // Live DM subscription so we can show transfer history
+  useEffect(() => {
+    const unsub = subscribeToDms(profile.uid, (msgs) => setAllDms(msgs));
+    return () => unsub();
+  }, [profile.uid]);
+
+  // Extract money-transfer DMs as transaction history
+  const transactions = useMemo(() => {
+    return allDms
+      .filter((m) => m.text.startsWith("💸") || m.text.includes("transfer"))
+      .slice(-10)
+      .reverse();
+  }, [allDms]);
 
   const sendMoney = async () => {
     setError(null); setMessage(null);
     const amt = parseInt(amount);
-    if (!recipient.trim() || !amt || amt <= 0) { setError("Enter a name and amount"); return; }
-    if (amt > profile.cash) { setError("Not enough cash"); return; }
+    if (!recipient.trim() || !amt || amt <= 0) { setError("Enter username and amount"); return; }
+    if (amt > profile.cash) { setError("You no get enough cash for this transfer"); return; }
     setBusy(true);
     try {
-      // Deduct from sender
-      await updateProfile(profile.uid, { cash: profile.cash - amt });
+      const { recipientName } = await transferCash(profile, recipient.trim(), amt, note.trim() || undefined);
       await refreshProfile();
-      setMessage(`Sent ₦${amt.toLocaleString()} to ${recipient.trim()}!`);
-      setRecipient(""); setAmount("");
+      setMessage(`✓ Sent ₦${amt.toLocaleString()} to @${recipientName}! Dem go see am for Messages.`);
+      setRecipient(""); setAmount(""); setNote("");
     } catch (e) { setError((e as Error).message); }
     finally { setBusy(false); }
   };
+
+  // Quick "Bless" presets — the Lagos Life viral hook
+  const quickAmounts = [100, 500, 1000, 5000];
 
   return (
     <div className="rush-bounce-in">
@@ -369,36 +394,125 @@ function BankApp({ profile, onClose, app }: { profile: PlayerProfile; onClose: (
         <div className="mt-1 text-xs text-white/60">🪙 {profile.gold} gold</div>
       </div>
 
-      {/* Send money */}
+      {/* Send money — REAL peer-to-peer */}
       <div className="rush-glass rounded-3xl p-4">
-        <div className="mb-3 text-[10px] font-bold uppercase tracking-wider text-rush-navy/60">Send Money</div>
-        <input type="text" value={recipient} onChange={(e) => setRecipient(e.target.value)} placeholder="Recipient name" className="mb-2 w-full rounded-xl border border-rush-cream bg-white px-3 py-2.5 text-sm text-rush-navy" />
-        <input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="Amount (₦)" className="mb-2 w-full rounded-xl border border-rush-cream bg-white px-3 py-2.5 text-sm text-rush-navy" />
-        <button onClick={sendMoney} disabled={busy} className="w-full rounded-xl bg-rush-green px-4 py-3 text-sm font-bold uppercase tracking-wider text-white disabled:opacity-50">
-          {busy ? "Sending…" : "Send Money"}
+        <div className="mb-3 flex items-center justify-between">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-rush-navy/60">Send Money (Real P2P)</span>
+          <span className="text-[9px] text-rush-green">● Live</span>
+        </div>
+        <input
+          type="text"
+          value={recipient}
+          onChange={(e) => setRecipient(e.target.value)}
+          placeholder="Recipient username (e.g. Tunde)"
+          className="mb-2 w-full rounded-xl border border-rush-cream bg-white px-3 py-2.5 text-sm text-rush-navy"
+        />
+        <div className="mb-2 flex gap-1.5">
+          {quickAmounts.map((a) => (
+            <button
+              key={a}
+              onClick={() => setAmount(String(a))}
+              className="flex-1 rounded-lg bg-rush-cream/60 py-1.5 text-[10px] font-bold text-rush-navy active:scale-95"
+            >
+              ₦{a >= 1000 ? `${a / 1000}k` : a}
+            </button>
+          ))}
+        </div>
+        <input
+          type="number"
+          value={amount}
+          onChange={(e) => setAmount(e.target.value)}
+          placeholder="Amount (₦)"
+          className="mb-2 w-full rounded-xl border border-rush-cream bg-white px-3 py-2.5 text-sm text-rush-navy"
+        />
+        <input
+          type="text"
+          value={note}
+          onChange={(e) => setNote(e.target.value)}
+          maxLength={80}
+          placeholder="Note (optional) — e.g. 'For the suya 🍢'"
+          className="mb-2 w-full rounded-xl border border-rush-cream bg-white px-3 py-2.5 text-sm text-rush-navy"
+        />
+        <button
+          onClick={sendMoney}
+          disabled={busy}
+          className="w-full rounded-xl bg-rush-green px-4 py-3 text-sm font-bold uppercase tracking-wider text-white disabled:opacity-50"
+        >
+          {busy ? "Sending…" : `Send ₦${amount ? parseInt(amount).toLocaleString() : 0}`}
         </button>
         {message && <div className="mt-2 rounded-xl bg-rush-green/10 px-3 py-2 text-xs text-rush-green">{message}</div>}
         {error && <div className="mt-2 rounded-xl bg-red-50 px-3 py-2 text-xs text-red-600">{error}</div>}
       </div>
 
-      {/* Quick actions */}
-      <div className="mt-3 grid grid-cols-3 gap-2">
-        <div className="rounded-2xl bg-white/80 p-3 text-center">
-          <div className="text-lg">📥</div>
-          <div className="text-[9px] font-bold uppercase text-rush-navy/60">Request</div>
+      {/* Your handle — the viral share loop */}
+      <div className="mt-3 rush-glass rounded-3xl p-4">
+        <div className="mb-1 text-[10px] font-bold uppercase tracking-wider text-rush-navy/60">Your Handle</div>
+        <div className="flex items-center justify-between gap-2">
+          <span className="font-display text-lg text-rush-navy">@{profile.username}</span>
+          <ShareHandleButton username={profile.username} cash={profile.cash} />
         </div>
-        <div className="rounded-2xl bg-white/80 p-3 text-center">
-          <div className="text-lg">📊</div>
-          <div className="text-[9px] font-bold uppercase text-rush-navy/60">History</div>
-        </div>
-        <div className="rounded-2xl bg-white/80 p-3 text-center">
-          <div className="text-lg">💵</div>
-          <div className="text-[9px] font-bold uppercase text-rush-navy/60">Top Up</div>
-        </div>
+        <p className="mt-1 text-[10px] text-rush-navy/50">Drop your handle for Twitter/WhatsApp make people bless you with cash 🤑</p>
+      </div>
+
+      {/* Transaction history (from DMs) */}
+      <div className="mt-3">
+        <div className="mb-2 text-[10px] font-bold uppercase tracking-widest text-rush-navy/50">Recent Transfers</div>
+        {transactions.length === 0 ? (
+          <div className="rounded-2xl bg-white/70 p-4 text-center text-xs text-rush-navy/50">
+            No transfers yet. Send money to a friend to start the chain!
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {transactions.map((t) => (
+              <div key={t.id} className="flex items-center gap-2 rounded-2xl bg-white/80 p-2.5 backdrop-blur">
+                <span className="text-base">💸</span>
+                <div className="flex-1 text-left">
+                  <div className="text-[11px] font-bold text-rush-navy">{t.text.split("\n")[0]}</div>
+                  <div className="text-[9px] text-rush-navy/50">{formatTimeAgo(t.createdAt)} ago</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
 }
+
+// Share handle button — used by BankApp and hub top bar
+function ShareHandleButton({ username, cash }: { username: string; cash: number }) {
+  const [copied, setCopied] = useState(false);
+  const shareText = `Yo! I dey play AfroRush 🏍️💨 My handle na @${username} and I get ₦${cash.toLocaleString()} cash. Bless me with transfer abeg — open AfroRush!`;
+  const shareUrl = typeof window !== "undefined" ? window.location.origin : "https://afrorush.vercel.app";
+
+  const shareToWhatsApp = () => {
+    const url = `https://wa.me/?text=${encodeURIComponent(shareText + " " + shareUrl)}`;
+    window.open(url, "_blank");
+  };
+  const shareToX = () => {
+    const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`;
+    window.open(url, "_blank");
+  };
+  const copyHandle = async () => {
+    try {
+      await navigator.clipboard.writeText(`@${username}`);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch { /* ignore */ }
+  };
+
+  return (
+    <div className="flex gap-1">
+      <button onClick={shareToWhatsApp} className="flex h-8 w-8 items-center justify-center rounded-lg bg-rush-green/20 text-base active:scale-90" aria-label="Share to WhatsApp">💬</button>
+      <button onClick={shareToX} className="flex h-8 w-8 items-center justify-center rounded-lg bg-rush-purple/20 text-base active:scale-90" aria-label="Share to X">𝕏</button>
+      <button onClick={copyHandle} className="flex h-8 w-8 items-center justify-center rounded-lg bg-rush-cream text-base active:scale-90" aria-label="Copy handle">
+        {copied ? "✓" : "📋"}
+      </button>
+    </div>
+  );
+}
+
+export { ShareHandleButton };
 
 // ---------- Messages App — Real DMs ----------
 
