@@ -27,7 +27,7 @@ export interface CityProps {
 }
 
 const MIN_ZOOM = 8;   // very close
-const MAX_ZOOM = 55;  // far out
+const MAX_ZOOM = 45;  // far out
 
 export default function City({ avatar, quality, riding, inputRef, weather = "clear", onTalkToNPC, onReady }: CityProps) {
   const playerRef = useRef<PlayerHandle>(null);
@@ -97,9 +97,9 @@ export default function City({ avatar, quality, riding, inputRef, weather = "cle
 
 function CameraControls({ playerPosRef }: { playerPosRef: React.MutableRefObject<THREE.Vector3> }) {
   const { camera, gl } = useThree();
-  const zoomRef = useRef(25);
+  const zoomRef = useRef(15);
   const panRef = useRef({ x: 0, z: 0 });
-  const targetZoom = useRef(25);
+  const targetZoom = useRef(15);
   const targetPan = useRef({ x: 0, z: 0 });
 
   useEffect(() => {
