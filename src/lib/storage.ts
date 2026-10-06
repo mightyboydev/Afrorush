@@ -226,10 +226,12 @@ export function levelTitle(lvl: number): string {
 
 // Cities selectable during onboarding.
 export const CITIES = [
-  { id: "lagos",   name: "Lagos",   country: "Nigeria",   accent: "#1fb86f" },
-  { id: "kano",    name: "Kano",    country: "Nigeria",   accent: "#ff6a1a" },
-  { id: "accra",   name: "Accra",   country: "Ghana",     accent: "#ffc531" },
-  { id: "nairobi", name: "Nairobi", country: "Kenya",     accent: "#c026d3" },
+  { id: "lagos",   name: "Lagos",   country: "Nigeria",   accent: "#1fb86f", desc: "Centre of Excellence · okadas, danfos, suya" },
+  { id: "kaduna",  name: "Kaduna",  country: "Nigeria",   accent: "#7c3aed", desc: "Crocodile City · sun, gyara, north flavour" },
+  { id: "abuja",   name: "Abuja",   country: "Nigeria",   accent: "#16a3b1", desc: "Capital · clean roads, big money" },
+  { id: "kano",    name: "Kano",    country: "Nigeria",   accent: "#ff6a1a", desc: "Ancient city · commerce + durbar" },
+  { id: "accra",   name: "Accra",   country: "Ghana",     accent: "#ffc531", desc: "Gold Coast · trotros + jollof" },
+  { id: "nairobi", name: "Nairobi", country: "Kenya",     accent: "#c026d3", desc: "Green City in the Sun · matatus" },
 ] as const;
 
 // Avatar options shown in onboarding.
