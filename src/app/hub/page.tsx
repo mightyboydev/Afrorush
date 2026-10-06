@@ -448,6 +448,20 @@ function CrewOverlay({ profile, onClose }: { profile: PlayerProfile; onClose: ()
 function MotorParkOverlay({ profile, onClose }: { profile: PlayerProfile; onClose: () => void }) {
   const inputRef = useRef({ x: 0, y: 0, boost: false });
   const [riding, setRiding] = useState(false);
+  const [showVehiclePicker, setShowVehiclePicker] = useState(false);
+  const [selectedVehicle, setSelectedVehicle] = useState("🏍️");
+  const [showPhoneInWorld, setShowPhoneInWorld] = useState(false);
+
+  // Vehicles the player owns (from unlocked items)
+  const ownedVehicles = [
+    { id: "okada", name: "Okada", emoji: "🏍️", color: "#ff6a1a" },
+    ...(profile.unlocked ?? []).includes("danfo") ? [{ id: "danfo", name: "Danfo", emoji: "🚌", color: "#ffc531" }] : [],
+    ...(profile.unlocked ?? []).includes("keke") ? [{ id: "keke", name: "Keke", emoji: "🛺", color: "#ff6a1a" }] : [],
+    ...(profile.unlocked ?? []).includes("cab") ? [{ id: "cab", name: "Cab", emoji: "🚕", color: "#ffc531" }] : [],
+    ...(profile.unlocked ?? []).includes("sedan") ? [{ id: "sedan", name: "Sedan", emoji: "🚗", color: "#1e3a5f" }] : [],
+    ...(profile.unlocked ?? []).includes("suv") ? [{ id: "suv", name: "SUV", emoji: "🚙", color: "#14213d" }] : [],
+  ];
+
   return (
     <div className="fixed inset-0 z-50 bg-rush-sky">
       <Suspense fallback={<div className="flex h-full items-center justify-center text-rush-navy">Loading the streets…</div>}>
@@ -458,13 +472,53 @@ function MotorParkOverlay({ profile, onClose }: { profile: PlayerProfile; onClos
       <div className="absolute left-3 top-3 z-30 flex items-center gap-2">
         <button onClick={onClose} className="rush-glass-pill flex items-center gap-1 px-3 py-2 text-xs font-bold uppercase tracking-wider text-rush-navy active:scale-95">← Home</button>
         <div className="rush-glass-pill px-3 py-2 text-xs font-bold text-rush-navy">🛺 Motor Park</div>
+        <div className="rush-glass-pill px-3 py-2 text-xs font-bold text-rush-navy">{selectedVehicle} {riding ? "Riding" : "Walking"}</div>
       </div>
+
+      {/* Floating phone button — top right */}
+      <button
+        onClick={() => setShowPhoneInWorld((s) => !s)}
+        className="absolute right-3 top-3 z-30 flex h-10 w-10 items-center justify-center rounded-full rush-glass-pill text-lg active:scale-90"
+      >
+        📱
+      </button>
+
+      {/* Phone overlay in world */}
+      {showPhoneInWorld && (
+        <div className="absolute right-3 top-16 z-40 w-72 rush-bounce-in">
+          <div className="rush-card max-h-[60vh] overflow-y-auto p-3">
+            <div className="mb-2 flex items-center justify-between">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-rush-navy/60">Quick Phone</span>
+              <button onClick={() => setShowPhoneInWorld(false)} className="text-rush-navy/40">✕</button>
+            </div>
+            <div className="space-y-2">
+              <button onClick={() => { setShowPhoneInWorld(false); setTab("phone"); onClose(); }} className="flex w-full items-center gap-2 rounded-xl bg-rush-cream/50 p-2 text-left active:scale-95">
+                <span className="text-lg">💬</span>
+                <span className="text-xs font-bold text-rush-navy">Messages</span>
+              </button>
+              <button onClick={() => { setShowPhoneInWorld(false); setTab("phone"); onClose(); }} className="flex w-full items-center gap-2 rounded-xl bg-rush-cream/50 p-2 text-left active:scale-95">
+                <span className="text-lg">🏦</span>
+                <span className="text-xs font-bold text-rush-navy">Bank</span>
+              </button>
+              <button onClick={() => { setShowPhoneInWorld(false); setTab("map"); onClose(); }} className="flex w-full items-center gap-2 rounded-xl bg-rush-cream/50 p-2 text-left active:scale-95">
+                <span className="text-lg">🗺️</span>
+                <span className="text-xs font-bold text-rush-navy">Map / Ask Location</span>
+              </button>
+              <button onClick={() => { setShowPhoneInWorld(false); setTab("phone"); onClose(); }} className="flex w-full items-center gap-2 rounded-xl bg-rush-cream/50 p-2 text-left active:scale-95">
+                <span className="text-lg">🛺</span>
+                <span className="text-xs font-bold text-rush-navy">Ride — Call Okada</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* FIXED joystick — bottom-left, always visible */}
       <Joystick inputRef={inputRef} />
 
       {/* Action buttons — bottom-right */}
       <div className="absolute bottom-6 right-4 z-30 flex flex-col gap-2">
+        {/* Boost */}
         <button
           onPointerDown={(e) => { e.preventDefault(); inputRef.current.boost = true; }}
           onPointerUp={() => { inputRef.current.boost = false; }}
@@ -474,10 +528,40 @@ function MotorParkOverlay({ profile, onClose }: { profile: PlayerProfile; onClos
         >
           ⚡
         </button>
+        {/* Ride / vehicle toggle */}
         <button onClick={() => setRiding((r) => !r)} className={`flex h-14 w-14 items-center justify-center rounded-full text-2xl shadow-lg active:scale-95 ${riding ? "bg-rush-orange text-white" : "rush-glass-pill"}`}>
-          {riding ? "🛑" : "🏍️"}
+          {riding ? "🛑" : selectedVehicle}
+        </button>
+        {/* Vehicle picker */}
+        <button onClick={() => setShowVehiclePicker((s) => !s)} className="flex h-12 w-12 items-center justify-center rounded-full rush-glass-pill text-lg active:scale-95">
+          🚗
         </button>
       </div>
+
+      {/* Vehicle picker sheet */}
+      {showVehiclePicker && (
+        <div className="absolute inset-x-0 bottom-20 z-40 mx-auto max-w-md px-4">
+          <div className="rush-bounce-in rush-card p-4">
+            <div className="mb-3 flex items-center justify-between">
+              <span className="text-xs font-bold uppercase tracking-wider text-rush-navy/60">Select Vehicle</span>
+              <button onClick={() => setShowVehiclePicker(false)} className="text-rush-navy/40">✕</button>
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              {ownedVehicles.map((v) => (
+                <button
+                  key={v.id}
+                  onClick={() => { setSelectedVehicle(v.emoji); setShowVehiclePicker(false); setRiding(true); }}
+                  className={`flex flex-col items-center gap-1 rounded-2xl border-2 p-2 active:scale-95 ${selectedVehicle === v.emoji ? "border-rush-green bg-rush-green/10" : "border-transparent bg-white/80"}`}
+                >
+                  <span className="text-2xl">{v.emoji}</span>
+                  <span className="text-[9px] font-bold text-rush-navy">{v.name}</span>
+                </button>
+              ))}
+            </div>
+            <p className="mt-2 text-center text-[9px] text-rush-navy/40">Buy more vehicles in the Market!</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
