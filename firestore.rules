@@ -111,5 +111,22 @@ service cloud.firestore {
       allow read: if true;
       allow write: if isStaff();
     }
+
+    // ---------- Direct Messages (DMs) ----------
+    // Players can read messages they sent or received, and create new ones
+    // where they are the sender. Editing/deleting is blocked.
+    match /dm_chats/{msgId} {
+      allow read: if isSignedIn()
+        && (resource.data.fromUid == request.auth.uid || resource.data.toUid == request.auth.uid);
+      allow create: if isSignedIn()
+        && request.resource.data.fromUid == request.auth.uid
+        && request.resource.data.text is string
+        && request.resource.data.text.size() > 0
+        && request.resource.data.text.size() <= 1000;
+      allow update: if isSignedIn()
+        && request.auth.uid == resource.data.toUid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read']);
+      allow delete: if false;
+    }
   }
 }
