@@ -143,6 +143,14 @@ function AppContent({ appId, profile, onClose }: { appId: string; profile: Playe
   if (appId === "messages") {
     return <MessagesApp profile={profile} onClose={onClose} app={app} />;
   }
+  // Jobs app — earn Naira
+  if (appId === "jobs") {
+    return <JobsApp profile={profile} onClose={onClose} app={app} />;
+  }
+  // Ride app — fast travel
+  if (appId === "ride") {
+    return <RideApp profile={profile} onClose={onClose} app={app} />;
+  }
 
   return (
     <div className="rush-bounce-in">
@@ -487,6 +495,125 @@ function MessagesApp({ profile, onClose, app }: { profile: PlayerProfile; onClos
                 {c.unread > 0 && <span className="ml-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-rush-green px-1 text-[10px] font-bold text-white">{c.unread}</span>}
               </div>
             </div>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ---------- Jobs App ----------
+
+function JobsApp({ profile, onClose, app }: { profile: PlayerProfile; onClose: () => void; app: App }) {
+  const { refreshProfile } = useAuth();
+  const [busy, setBusy] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
+
+  const jobs = [
+    { id: "okada-rider", title: "Okada Rider", pay: 500, time: "5 min", emoji: "🏍️", desc: "Carry passengers across the city" },
+    { id: "delivery", title: "Delivery Boy", pay: 800, time: "10 min", emoji: "📦", desc: "Deliver packages on time" },
+    { id: "suya-seller", title: "Suya Seller", pay: 300, time: "3 min", emoji: "🍢", desc: "Sell suya at the junction" },
+    { id: "danfo-driver", title: "Danfo Driver", pay: 1200, time: "15 min", emoji: "🚌", desc: "Drive the yellow bus route" },
+    { id: "phone-repair", title: "Phone Repairer", pay: 1000, time: "8 min", emoji: "📱", desc: "Fix screens and chargers" },
+    { id: "event-promoter", title: "Event Promoter", pay: 2000, time: "20 min", emoji: "📢", desc: "Promote owambe parties" },
+  ];
+
+  const claimJob = async (job: typeof jobs[0]) => {
+    if (busy) return;
+    setBusy(job.id);
+    setMessage(null);
+    try {
+      const { updateProfile } = await import("@/lib/firestore");
+      await updateProfile(profile.uid, { cash: profile.cash + job.pay });
+      await refreshProfile();
+      setMessage(`You earned ₦${job.pay.toLocaleString()} as a ${job.title}!`);
+    } catch (e) {
+      setMessage((e as Error).message);
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  return (
+    <div className="rush-bounce-in">
+      <div className="mb-4 flex items-center gap-3">
+        <button onClick={onClose} className="flex h-9 w-9 items-center justify-center rounded-full bg-white/80 text-rush-navy backdrop-blur">←</button>
+        <div className="flex h-10 w-10 items-center justify-center rounded-2xl text-xl" style={{ background: `linear-gradient(135deg, ${app.from}, ${app.to})` }}>{app.icon}</div>
+        <h2 className="font-display text-xl text-rush-navy">Jobs</h2>
+      </div>
+
+      {message && <div className="mb-3 rounded-xl bg-rush-green/10 px-3 py-2 text-xs text-rush-green">{message}</div>}
+
+      <div className="space-y-2">
+        {jobs.map((job) => (
+          <div key={job.id} className="flex items-center gap-3 rounded-2xl bg-white/80 p-3 backdrop-blur">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-rush-cream text-xl">{job.emoji}</div>
+            <div className="flex-1">
+              <div className="text-sm font-bold text-rush-navy">{job.title}</div>
+              <div className="text-[10px] text-rush-navy/50">{job.desc}</div>
+              <div className="mt-0.5 flex items-center gap-2 text-[10px]">
+                <span className="font-bold text-rush-gold">₦{job.pay.toLocaleString()}</span>
+                <span className="text-rush-navy/40">⏱ {job.time}</span>
+              </div>
+            </div>
+            <button
+              onClick={() => claimJob(job)}
+              disabled={busy !== null}
+              className="rounded-lg bg-rush-green px-4 py-2 text-[10px] font-bold uppercase tracking-wider text-white active:scale-95 disabled:opacity-50"
+            >
+              {busy === job.id ? "Working…" : "Start"}
+            </button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ---------- Ride App ----------
+
+function RideApp({ profile, onClose, app }: { profile: PlayerProfile; onClose: () => void; app: App }) {
+  const [message, setMessage] = useState<string | null>(null);
+
+  const rides = [
+    { id: "trek", name: "Trek", emoji: "🚶", fare: 0, time: "Slow but free" },
+    { id: "okada", name: "Okada", emoji: "🏍️", fare: 250, time: "Fastest in traffic" },
+    { id: "keke", name: "Keke", emoji: "🛺", fare: 100, time: "Good for short trips" },
+    { id: "danfo", name: "Danfo", emoji: "🚌", fare: 100, time: "Cheapest ride" },
+    { id: "cab", name: "Cab", emoji: "🚕", fare: 500, time: "Comfortable + AC" },
+  ];
+
+  const travel = async (ride: typeof rides[0]) => {
+    setMessage(null);
+    if (ride.fare > profile.cash) { setMessage("Not enough cash for this ride"); return; }
+    try {
+      const { updateProfile } = await import("@/lib/firestore");
+      await updateProfile(profile.uid, { cash: profile.cash - ride.fare });
+      setMessage(`You hopped on a ${ride.name}! Travelled across the city.`);
+    } catch (e) {
+      setMessage((e as Error).message);
+    }
+  };
+
+  return (
+    <div className="rush-bounce-in">
+      <div className="mb-4 flex items-center gap-3">
+        <button onClick={onClose} className="flex h-9 w-9 items-center justify-center rounded-full bg-white/80 text-rush-navy backdrop-blur">←</button>
+        <div className="flex h-10 w-10 items-center justify-center rounded-2xl text-xl" style={{ background: `linear-gradient(135deg, ${app.from}, ${app.to})` }}>{app.icon}</div>
+        <h2 className="font-display text-xl text-rush-navy">Ride</h2>
+      </div>
+
+      {message && <div className="mb-3 rounded-xl bg-rush-green/10 px-3 py-2 text-xs text-rush-green">{message}</div>}
+
+      <div className="space-y-2">
+        {rides.map((ride) => (
+          <button key={ride.id} onClick={() => travel(ride)} className="flex w-full items-center gap-3 rounded-2xl bg-white/80 p-3 backdrop-blur active:scale-95">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-rush-cream text-xl">{ride.emoji}</div>
+            <div className="flex-1 text-left">
+              <div className="text-sm font-bold text-rush-navy">{ride.name}</div>
+              <div className="text-[10px] text-rush-navy/50">{ride.time}</div>
+            </div>
+            <div className="text-xs font-bold text-rush-gold">{ride.fare === 0 ? "FREE" : `₦${ride.fare}`}</div>
           </button>
         ))}
       </div>

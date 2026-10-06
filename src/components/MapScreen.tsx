@@ -99,13 +99,19 @@ export default function MapScreen({ profile, onVisitLocation, onChallengePlayer,
   }, [onlineCount]);
 
   const handleVisit = (id: string) => {
-    // Your garage opens the Buy tab for bike customization
-    if (id === "my-garage") {
-      onVisitLocation?.("garage");
-      return;
-    }
+    if (id === "my-garage") { onVisitLocation?.("garage"); return; }
     onVisitLocation?.(id);
   };
+
+  // Filter chips (like Lagos Life)
+  const FILTERS = [
+    { id: "all", label: "All", icon: "📍" },
+    { id: "social", label: "Social", icon: "🎉" },
+    { id: "homes", label: "Homes", icon: "🏠" },
+    { id: "food", label: "Food", icon: "🍢" },
+    { id: "religion", label: "Faith", icon: "⛪" },
+  ];
+  const [activeFilter, setActiveFilter] = useState("all");
 
   return (
     <div className="rush-slide-up min-h-screen pb-4">
@@ -117,8 +123,24 @@ export default function MapScreen({ profile, onVisitLocation, onChallengePlayer,
         </div>
         <div className="flex items-center gap-1.5 rounded-full rush-glass-pill px-3 py-1.5">
           <span className="h-2 w-2 rounded-full bg-rush-green rush-pulse" />
-          <span className="text-xs font-bold text-rush-navy">{animatedOnline.toLocaleString()} online</span>
+          <span className="text-xs font-bold text-rush-navy">{animatedOnline > 0 ? animatedOnline.toLocaleString() : "—"} online</span>
         </div>
+      </div>
+
+      {/* Filter chips (like Lagos Life) */}
+      <div className="no-scrollbar mb-3 flex gap-2 overflow-x-auto pb-1">
+        {FILTERS.map((f) => (
+          <button
+            key={f.id}
+            onClick={() => setActiveFilter(f.id)}
+            className={`flex shrink-0 items-center gap-1 rounded-full px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider transition-all ${
+              activeFilter === f.id ? "bg-rush-navy text-white" : "bg-white/80 text-rush-navy/60"
+            }`}
+          >
+            <span>{f.icon}</span>
+            {f.label}
+          </button>
+        ))}
       </div>
 
       {/* Map */}
