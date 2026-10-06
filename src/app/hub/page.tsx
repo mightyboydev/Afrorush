@@ -26,6 +26,7 @@ const HomeRoom = lazy(() => import("@/world/HomeRoom"));
 const Race3D = lazy(() => import("@/components/Race3D"));
 const City = lazy(() => import("@/world/City"));
 const CharacterPreview3D = lazy(() => import("@/components/CharacterPreview"));
+const MultiplayerRace = lazy(() => import("@/components/MultiplayerRace"));
 
 const LOCATIONS = [
   { id: "motor-park", name: "Motor Park", emoji: "🛺", color: "#1fb86f", desc: "Social hub. Okadas, danfos, keke." },
@@ -42,7 +43,7 @@ const LOCATIONS = [
   { id: "lekki", name: "Lekki Bridge", emoji: "🌉", color: "#7c3aed", desc: "Lekki-Ikoyi Link Bridge." },
 ];
 
-type Overlay = "race-mode" | "shop" | "suya" | "crew" | "motor-park" | null;
+type Overlay = "race-mode" | "shop" | "suya" | "crew" | "motor-park" | "mp-lobby" | null;
 
 export default function HubPage() {
   return (
@@ -65,6 +66,7 @@ function HubContent() {
   const [raceMode, setRaceMode] = useState<null | "street-race" | "delivery-rush" | "police-chase" | "freestyle-run">(null);
   const [raceResult, setRaceResult] = useState<import("@/game/AfroRushScene").RaceResult | null>(null);
   const [selectedLocation, setSelectedLocation] = useState<{ id: string; name: string; emoji: string; color: string; desc: string } | null>(null);
+  const [mpRoomCode, setMpRoomCode] = useState<string | null>(null);
 
   // Real online count from presence
   useEffect(() => {
@@ -311,7 +313,7 @@ function HubContent() {
 
       {/* Overlays */}
       {overlay === "race-mode" && (
-        <RaceModePicker onClose={() => setOverlay(null)} onPick={(mode) => { setRaceMode(mode); setOverlay(null); }} />
+        <RaceModePicker onClose={() => setOverlay(null)} onPick={(mode) => { setRaceMode(mode); setOverlay(null); }} onMultiplayer={() => { setOverlay("mp-lobby"); }} />
       )}
       {overlay === "shop" && (
         <OverlaySheet title="Garage & Market" onClose={() => setOverlay(null)}>
@@ -326,6 +328,24 @@ function HubContent() {
       )}
       {overlay === "motor-park" && (
         <MotorParkOverlay profile={profile} unlocked={unlocked} onClose={() => setOverlay(null)} onNavigate={(t) => { setOverlay(null); setTab(t); }} />
+      )}
+      {overlay === "mp-lobby" && (
+        <MultiplayerLobby
+          profile={profile}
+          onClose={() => setOverlay(null)}
+          onJoinRoom={(code) => { setOverlay(null); setMpRoomCode(code); }}
+        />
+      )}
+
+      {/* Multiplayer Race — canvas + Firestore room sync */}
+      {mpRoomCode && (
+        <Suspense fallback={<div className="fixed inset-0 z-[60] flex items-center justify-center text-white">Loading multiplayer…</div>}>
+          <MultiplayerRace
+            roomCode={mpRoomCode}
+            profile={profile}
+            onExit={() => setMpRoomCode(null)}
+          />
+        </Suspense>
       )}
 
       {/* 3D Race game */}
@@ -390,7 +410,7 @@ function OverlaySheet({ title, onClose, children }: { title: string; onClose: ()
   );
 }
 
-function RaceModePicker({ onClose, onPick }: { onClose: () => void; onPick: (mode: "street-race" | "delivery-rush" | "police-chase" | "freestyle-run") => void }) {
+function RaceModePicker({ onClose, onPick, onMultiplayer }: { onClose: () => void; onPick: (mode: "street-race" | "delivery-rush" | "police-chase" | "freestyle-run") => void; onMultiplayer: () => void }) {
   const modes = [
     { id: "street-race" as const, name: "Street Race", emoji: "🏁", desc: "Hit top speed. Beat the clock.", color: "#ffc531" },
     { id: "delivery-rush" as const, name: "Delivery Rush", emoji: "📦", desc: "Pick up & drop off parcels.", color: "#1fb86f" },
@@ -405,6 +425,15 @@ function RaceModePicker({ onClose, onPick }: { onClose: () => void; onPick: (mod
           <button onClick={onClose} className="flex h-9 w-9 items-center justify-center rounded-full bg-rush-cream text-rush-navy">✕</button>
         </div>
         <div className="space-y-2">
+          {/* Multiplayer — featured at top */}
+          <button onClick={onMultiplayer} className="flex w-full items-center gap-3 rounded-2xl bg-gradient-to-r from-rush-green/20 to-rush-jade/20 p-3 ring-2 ring-rush-green/40 active:scale-95">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl text-2xl" style={{ background: "#1fb86f22" }}>👥</div>
+            <div className="flex-1 text-left">
+              <div className="text-sm font-bold text-rush-navy">Multiplayer Race</div>
+              <div className="text-[10px] text-rush-navy/60">Race friends live · room code · serverless</div>
+            </div>
+            <span className="rounded-full bg-rush-green px-2 py-0.5 text-[8px] font-bold uppercase text-white">New</span>
+          </button>
           {modes.map((m) => (
             <button key={m.id} onClick={() => onPick(m.id)} className="flex w-full items-center gap-3 rounded-2xl bg-white p-3 active:scale-95">
               <div className="flex h-12 w-12 items-center justify-center rounded-2xl text-2xl" style={{ background: `${m.color}22` }}>{m.emoji}</div>
@@ -413,6 +442,101 @@ function RaceModePicker({ onClose, onPick }: { onClose: () => void; onPick: (mod
             </button>
           ))}
         </div>
+      </div>
+    </div>
+  );
+}
+
+// ---------- Multiplayer Lobby — create or join a room ----------
+function MultiplayerLobby({ profile, onClose, onJoinRoom }: { profile: PlayerProfile; onClose: () => void; onJoinRoom: (code: string) => void }) {
+  const [joinCode, setJoinCode] = useState("");
+  const [track, setTrack] = useState<"third_mainland" | "ikeja_traffic" | "vi_beach">("third_mainland");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const createRoom = async () => {
+    setBusy(true); setError(null);
+    try {
+      const { createRaceRoom } = await import("@/lib/firestore");
+      const code = await createRaceRoom(profile, track);
+      onJoinRoom(code);
+    } catch (e) { setError((e as Error).message); }
+    finally { setBusy(false); }
+  };
+  const joinRoom = async () => {
+    if (!joinCode.trim()) { setError("Enter room code"); return; }
+    setBusy(true); setError(null);
+    try {
+      const { joinRaceRoom } = await import("@/lib/firestore");
+      await joinRaceRoom(profile, joinCode.trim());
+      onJoinRoom(joinCode.trim().toUpperCase());
+    } catch (e) { setError((e as Error).message); }
+    finally { setBusy(false); }
+  };
+
+  const tracks: Array<{ id: typeof track; name: string; emoji: string; desc: string }> = [
+    { id: "third_mainland", name: "Third Mainland Bridge", emoji: "🌉", desc: "Longest bridge · fast straight" },
+    { id: "ikeja_traffic", name: "Ikeja Traffic", emoji: "🚦", desc: "Tight lanes · more obstacles" },
+    { id: "vi_beach", name: "V/I Beach Road", emoji: "🏖️", desc: "Coastal cruise · smooth" },
+  ];
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
+      <div className="rush-bounce-in rush-card w-full max-w-sm p-5" onClick={(e) => e.stopPropagation()}>
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="font-display text-xl text-rush-navy">Multiplayer Race</h2>
+          <button onClick={onClose} className="flex h-9 w-9 items-center justify-center rounded-full bg-rush-cream text-rush-navy">✕</button>
+        </div>
+
+        {/* Create room */}
+        <div className="mb-4">
+          <div className="mb-2 text-[10px] font-bold uppercase tracking-wider text-rush-navy/60">Create New Room</div>
+          <div className="mb-2 grid grid-cols-3 gap-1.5">
+            {tracks.map((t) => (
+              <button
+                key={t.id}
+                onClick={() => setTrack(t.id)}
+                className={`rounded-xl p-2 text-center transition-all ${track === t.id ? "bg-rush-green/15 ring-2 ring-rush-green" : "bg-white"}`}
+              >
+                <div className="text-lg">{t.emoji}</div>
+                <div className="text-[8px] font-bold text-rush-navy">{t.name.split(" ")[0]}</div>
+              </button>
+            ))}
+          </div>
+          <button onClick={createRoom} disabled={busy} className="w-full rounded-2xl bg-rush-green px-4 py-3 text-sm font-bold uppercase tracking-wider text-white disabled:opacity-50">
+            {busy ? "Creating…" : "🏁 Create Room"}
+          </button>
+        </div>
+
+        {/* Divider */}
+        <div className="my-3 flex items-center gap-2">
+          <div className="h-px flex-1 bg-rush-cream" />
+          <span className="text-[9px] uppercase tracking-wider text-rush-navy/40">or</span>
+          <div className="h-px flex-1 bg-rush-cream" />
+        </div>
+
+        {/* Join room */}
+        <div>
+          <div className="mb-2 text-[10px] font-bold uppercase tracking-wider text-rush-navy/60">Join with Code</div>
+          <input
+            type="text"
+            value={joinCode}
+            onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
+            maxLength={6}
+            placeholder="ENTER 6-CHAR CODE"
+            className="mb-2 w-full rounded-xl border-2 border-rush-cream bg-white px-3 py-2.5 text-center font-mono text-lg tracking-widest text-rush-navy placeholder:text-rush-navy/30 focus:border-rush-green focus:outline-none"
+          />
+          <button onClick={joinRoom} disabled={busy} className="w-full rounded-2xl bg-rush-navy px-4 py-3 text-sm font-bold uppercase tracking-wider text-white disabled:opacity-50">
+            {busy ? "Joining…" : "→ Join Room"}
+          </button>
+        </div>
+
+        {error && <div className="mt-3 rounded-xl bg-red-50 px-3 py-2 text-xs text-red-600">{error}</div>}
+
+        {/* How to share */}
+        <p className="mt-3 text-center text-[9px] text-rush-navy/40">
+          After creating, share the room code with your friends on WhatsApp/X. Dem go open AfroRush, tap Multiplayer, enter code, race! 🏍️💨
+        </p>
       </div>
     </div>
   );
