@@ -473,6 +473,8 @@ function HubContent() {
       {/* Footer */}
       <footer className="relative z-10 px-4 pb-2 text-center safe-pb">
         <div className="flex items-center justify-center gap-3 text-[10px] text-rush-navy/40">
+          <a href="/about" className="hover:text-rush-navy">About</a>
+          <span>·</span>
           <a href="/privacy" className="hover:text-rush-navy">Privacy</a>
           <span>·</span>
           <a href="/terms" className="hover:text-rush-navy">Terms</a>
