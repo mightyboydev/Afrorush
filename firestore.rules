@@ -33,9 +33,11 @@ service cloud.firestore {
       allow read: if true;
 
       // New profile: fixed starting balances, never a privileged role.
+      // Cash is now either 0 (Lapo Baby) or 5,000,000 (Nepo Baby) — the
+      // socio-economic birth roll done client-side in makeDefaultProfile.
       allow create: if isSignedIn() && request.auth.uid == uid
-        && request.resource.data.cash == 500
-        && request.resource.data.gold == 50
+        && (request.resource.data.cash == 0 || request.resource.data.cash == 5000000)
+        && request.resource.data.gold == (request.resource.data.cash == 5000000 ? 100 : 10)
         && request.resource.data.rep == 0
         && request.resource.data.banned == false
         && (!('role' in request.resource.data) || request.resource.data.role == 'player');
@@ -46,7 +48,18 @@ service cloud.firestore {
           && request.resource.data.diff(resource.data).affectedKeys()
             .hasOnly([
               'username', 'avatar', 'city', 'loadout', 'soundOn',
-              'graphicsQuality', 'lastSeen', 'onboardingComplete', 'photoURL'
+              'graphicsQuality', 'lastSeen', 'onboardingComplete', 'photoURL',
+              // Lagos Life layer — player can write all these
+              'birthClass', 'vitals', 'vitalsUpdatedAt',
+              'activeLoan', 'lastBillDate',
+              'jailedUntil', 'jailedReason',
+              // Existing needs/housing/daily fields (player-owned)
+              'needs', 'needsUpdatedAt', 'loginStreak', 'lastLoginDate',
+              'dailyTasks', 'gemsFound', 'homeType', 'homeLayout',
+              // Cash/gold/rep can change through job/food/loan/transfer actions
+              // (we still trust the client here — for production, move to Cloud Functions)
+              'cash', 'gold', 'rep', 'totalRuns', 'highScores',
+              'crewId', 'crewName', 'crewColor', 'crewTag'
             ]))
         // Owner: anything (including roles)
         || isOwner()
