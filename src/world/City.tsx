@@ -81,7 +81,7 @@ export default function City({ avatar, quality, riding, inputRef, weather = "cle
         {/* Premium post-processing */}
         {quality !== "low" && (
           <EffectComposer>
-            <Bloom intensity={0.8} luminanceThreshold={0.55} luminanceSmoothing={0.3} mipmapBlur radius={0.7} />
+            <Bloom intensity={0.3} luminanceThreshold={0.7} luminanceSmoothing={0.3} mipmapBlur radius={0.4} />
             <HueSaturation saturation={0.15} />
             <BrightnessContrast brightness={0.02} contrast={0.1} />
             <Vignette eskil={false} offset={0.3} darkness={0.5} />
