@@ -40,8 +40,8 @@ export default function PhoneScreen({ profile }: { profile: PlayerProfile }) {
 
   return (
     <div className="rush-slide-up min-h-screen pb-4">
-      {/* Phone status bar */}
-      <div className="mb-3 flex items-center justify-between rounded-2xl bg-rush-navy px-4 py-2 text-white">
+      {/* Phone status bar — premium dark gradient */}
+      <div className="mb-3 flex items-center justify-between rounded-2xl bg-gradient-to-r from-rush-navy via-rush-purple to-rush-navy px-4 py-2 text-white shadow-lg">
         <span className="text-xs font-bold">{time}</span>
         <div className="flex items-center gap-2 text-[10px]">
           <span>📶 4G</span>
@@ -426,12 +426,25 @@ function MessagesApp({ profile, onClose, app }: { profile: PlayerProfile; onClos
 
   const send = () => {
     if (!input.trim()) return;
-    setMessages(prev => [...prev, { from: "me", text: input.trim(), time: "now" }]);
+    const msg = input.trim();
+    setMessages(prev => [...prev, { from: "me", text: msg, time: "now" }]);
     setInput("");
-    // Auto-reply
-    setTimeout(() => {
-      setMessages(prev => [...prev, { from: selectedChat ?? "Unknown", text: "Got it! 👍", time: "now" }]);
-    }, 1500);
+    // Save to Firestore — real DMs, no auto-reply
+    try {
+      import("@/lib/firestore").then(({ getFirebaseDb }) => {
+        const db = getFirebaseDb();
+        import("firebase/firestore").then(({ collection, addDoc, serverTimestamp }) => {
+          addDoc(collection(db, "dm_chats"), {
+            fromUid: profile.uid,
+            fromName: profile.username,
+            toName: selectedChat,
+            text: msg,
+            createdAt: Date.now(),
+            read: false,
+          }).catch(() => {});
+        });
+      });
+    } catch { /* ignore */ }
   };
 
   if (view === "chat" && selectedChat) {
