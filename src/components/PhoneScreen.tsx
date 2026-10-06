@@ -405,6 +405,8 @@ function MessagesApp({ profile, onClose, app }: { profile: PlayerProfile; onClos
   const [selectedChat, setSelectedChat] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMsg[]>([]);
   const [input, setInput] = useState("");
+  const [searchUsername, setSearchUsername] = useState("");
+  const [searchResult, setSearchResult] = useState<string | null>(null);
 
   // Mock contacts
   const contacts = [
@@ -478,6 +480,28 @@ function MessagesApp({ profile, onClose, app }: { profile: PlayerProfile; onClos
         <button onClick={onClose} className="flex h-9 w-9 items-center justify-center rounded-full bg-white/80 text-rush-navy backdrop-blur">←</button>
         <div className="flex h-10 w-10 items-center justify-center rounded-2xl text-xl" style={{ background: `linear-gradient(135deg, ${app.from}, ${app.to})` }}>{app.icon}</div>
         <h2 className="font-display text-xl text-rush-navy">Messages</h2>
+      </div>
+
+      {/* Username search — start a new chat by typing a username */}
+      <div className="mb-3">
+        <div className="flex gap-2">
+          <input
+            type="text"
+            value={searchUsername}
+            onChange={(e) => setSearchUsername(e.target.value)}
+            placeholder="Search username to chat…"
+            className="flex-1 rounded-full border-2 border-rush-cream bg-white px-4 py-2 text-sm text-rush-navy placeholder:text-rush-navy/40"
+          />
+          <button
+            onClick={() => {
+              const name = searchUsername.trim();
+              if (name) { openChat(name); setSearchUsername(""); }
+            }}
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-rush-green text-white active:scale-90"
+          >
+            ➤
+          </button>
+        </div>
       </div>
 
       {/* Chat list */}
