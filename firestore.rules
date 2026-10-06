@@ -128,5 +128,19 @@ service cloud.firestore {
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read']);
       allow delete: if false;
     }
+
+    // ---------- Multiplayer Race Rooms ----------
+    // Serverless multiplayer: each room is one Firestore document. Room codes
+    // are shared peer-to-peer, so anyone signed in can read/join. Writes are
+    // permissive (any signed-in user can update) — the worst an attacker can
+    // do is grief a room they joined, which the host can mitigate by starting
+    // the race. For stricter rules use FieldTransform / Cloud Functions.
+    match /race_rooms/{roomId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn()
+        && request.resource.data.host_uid == request.auth.uid;
+      allow update: if isSignedIn();
+      allow delete: if false;
+    }
   }
 }

@@ -38,8 +38,29 @@ The Bank app now does **real** transfers — not the previous demo that only deb
 - Bank also lists recent transfer DMs as a transaction history.
 
 ### Share score (viral loop)
-- After every race, the **RaceResultOverlay** now has Share to WhatsApp and Tweet buttons that auto-generate shareable text like `"🏆 I just win Street Race for AfroRush! 5,000m, 12,500 pts, +₦250. My handle na @tunde — beat me if you sabi! 🏍️💨"`.
-- The Home hub top bar now has a small **"Handle @yourname"** chip with the same Share buttons — always visible, so any player can drop their handle on Twitter / WhatsApp at any time.
+- After every race, the **RaceResultOverlay** now has Share to WhatsApp and Tweet buttons with
+  auto-generated shareable text including distance/score/cash/handle.
+- The Home hub top bar has an always-visible Handle chip (@username) with the same
+  share buttons — drop your handle on Twitter/WhatsApp anytime to ask for blessings.
+
+### Multiplayer Race (serverless — no socket server needed)
+Following the Lagos Life "lightweight architecture" rule: complex 3D is stripped out in favor of a 2D `<canvas>` rendering engine synced over atomic Firestore fields.
+
+- **`race_rooms/{roomId}`** Firestore document — one doc per race. Players write their own `players[uid]` sub-object (lane / distance / speed / yOffset / isJumping / lastUpdated) and listen via `onSnapshot` for opponents' positions. No socket server, no Cloud Function needed.
+- **Throttled writes** — client pushes to Firestore ~12 times/sec (every 5 animation frames), so a room with 4 players = ~48 writes/sec total — well under Firestore's free-tier 1k docs/sec budget.
+- **3-lane runner** with Lagos obstacles: danfo buses (yellow), agbero (street toll collectors), potholes, suya carts, pure-water sellers. Some obstacles can be jumped over.
+- **Tracks**: Third Mainland Bridge, Ikeja Traffic, V/I Beach Road — each with a distinct colour theme.
+- **3 input methods**: arrow keys, swipe (mobile), tap (jump).
+- **Matchmaking**: Host creates a room → gets a 6-char code → shares on WhatsApp/X → friends open AfroRush → tap Multiplayer → enter code → race.
+- **Win condition**: First to 2000m wins; placement calculated from opponents' distances. Cash/rep rewards for top 3.
+
+#### Firestore helpers (`lib/firestore.ts`)
+- `createRaceRoom(host, track)` — generates a 6-char code, creates the room doc, returns the code.
+- `joinRaceRoom(player, code)` — adds the player to `players[uid]`.
+- `subscribeToRaceRoom(code, cb)` — live `onSnapshot` of the room doc.
+- `updateRacePlayerState(code, uid, partial)` — throttled sub-field update.
+- `startRaceRoom(code, host_uid)` — host-only flip from lobby → racing.
+- `leaveRaceRoom(code, uid, isHost)` — removes player, promotes next host if host left, deletes room if empty.
 
 ### Firestore rules
 `firestore.rules` now contains a `dm_chats` block:
