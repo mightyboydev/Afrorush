@@ -534,3 +534,155 @@ export async function transferCash(
 
   return { recipientName: recipient.username, recipientUid: recipient.uid };
 }
+
+// ---------- Multiplayer Race Rooms ----------
+// Serverless multiplayer: each room is a single Firestore document. Players
+// write their own `players[uid]` sub-object (throttled by the client to
+// ~12 writes/sec) and listen via onSnapshot for opponents' positions.
+
+const RACE_ROOMS = "race_rooms";
+
+export interface RaceRoomPlayer {
+  username: string;
+  lane: number;          // 0=left, 1=center, 2=right
+  distance: number;      // cumulative distance in metres
+  speed: number;         // current speed (for sync)
+  yOffset: number;       // jump height offset
+  isJumping: boolean;
+  isEliminated: boolean;
+  finished: boolean;
+  lastUpdated: number;
+}
+
+export interface RaceRoom {
+  id: string;
+  room_status: "lobby" | "racing" | "finished";
+  track_theme: "third_mainland" | "ikeja_traffic" | "vi_beach";
+  created_at: number;
+  started_at?: number;
+  finished_at?: number;
+  host_uid: string;
+  players: Record<string, RaceRoomPlayer>;
+}
+
+// Create a new room. Returns the room id (6-char code).
+export async function createRaceRoom(
+  host: PlayerProfile,
+  track: RaceRoom["track_theme"] = "third_mainland"
+): Promise<string> {
+  const db = getFirebaseDb();
+  const code = Math.random().toString(36).substring(2, 8).toUpperCase();
+  const room: RaceRoom = {
+    id: code,
+    room_status: "lobby",
+    track_theme: track,
+    created_at: Date.now(),
+    host_uid: host.uid,
+    players: {
+      [host.uid]: {
+        username: host.username,
+        lane: 1,
+        distance: 0,
+        speed: 6,
+        yOffset: 0,
+        isJumping: false,
+        isEliminated: false,
+        finished: false,
+        lastUpdated: Date.now(),
+      },
+    },
+  };
+  await setDoc(doc(db, RACE_ROOMS, code), room);
+  return code;
+}
+
+// Join an existing room by code. Returns true on success.
+export async function joinRaceRoom(
+  player: PlayerProfile,
+  code: string
+): Promise<boolean> {
+  const db = getFirebaseDb();
+  const ref = doc(db, RACE_ROOMS, code.toUpperCase());
+  const snap = await getDoc(ref);
+  if (!snap.exists()) throw new Error("Room code no dey. Check am well.");
+  const room = snap.data() as RaceRoom;
+  if (room.room_status === "finished") throw new Error("Room don finish already.");
+  // Add this player to the players map
+  await updateDoc(ref, {
+    [`players.${player.uid}`]: {
+      username: player.username,
+      lane: 1,
+      distance: 0,
+      speed: 6,
+      yOffset: 0,
+      isJumping: false,
+      isEliminated: false,
+      finished: false,
+      lastUpdated: Date.now(),
+    } as RaceRoomPlayer,
+  });
+  return true;
+}
+
+// Subscribe to room state changes. Returns unsubscribe.
+export function subscribeToRaceRoom(
+  code: string,
+  cb: (room: RaceRoom | null) => void
+): Unsubscribe {
+  const db = getFirebaseDb();
+  return onSnapshot(doc(db, RACE_ROOMS, code.toUpperCase()), (snap) => {
+    cb(snap.exists() ? (snap.data() as RaceRoom) : null);
+  });
+}
+
+// Throttled position update — the client calls this ~12 times/sec
+export async function updateRacePlayerState(
+  code: string,
+  uid: string,
+  state: Partial<RaceRoomPlayer>
+): Promise<void> {
+  const db = getFirebaseDb();
+  const ref = doc(db, RACE_ROOMS, code.toUpperCase());
+  const patch: Record<string, unknown> = {};
+  for (const k of Object.keys(state)) {
+    patch[`players.${uid}.${k}`] = (state as Record<string, unknown>)[k];
+  }
+  await updateDoc(ref, patch);
+}
+
+// Mark race as started (host only).
+export async function startRaceRoom(code: string, host_uid: string): Promise<void> {
+  const db = getFirebaseDb();
+  const ref = doc(db, RACE_ROOMS, code.toUpperCase());
+  const snap = await getDoc(ref);
+  if (!snap.exists()) throw new Error("Room no dey again.");
+  const room = snap.data() as RaceRoom;
+  if (room.host_uid !== host_uid) throw new Error("Na only host fit start race.");
+  await updateDoc(ref, { room_status: "racing", started_at: Date.now() });
+}
+
+// Leave room + clean up if empty.
+export async function leaveRaceRoom(
+  code: string,
+  uid: string,
+  isHost: boolean
+): Promise<void> {
+  const db = getFirebaseDb();
+  const ref = doc(db, RACE_ROOMS, code.toUpperCase());
+  const snap = await getDoc(ref);
+  if (!snap.exists()) return;
+  const room = snap.data() as RaceRoom;
+  const remainingPlayers = { ...room.players };
+  delete remainingPlayers[uid];
+  if (Object.keys(remainingPlayers).length === 0) {
+    // Empty room — delete it
+    await deleteDoc(ref);
+    return;
+  }
+  // Update players map (must use serverTimestamp-safe approach)
+  await updateDoc(ref, {
+    players: remainingPlayers,
+    // If host left, promote the next player
+    ...(isHost ? { host_uid: Object.keys(remainingPlayers)[0] } : {}),
+  });
+}
