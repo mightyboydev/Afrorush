@@ -219,19 +219,19 @@ function WalkingModel({
 
       {/* Face — eyes, nose, mouth, ears */}
       <mesh position={[-0.05, 1.69, 0.11]}>
-        <sphereGeometry args={[0.025, 12, 12]} />
+        <sphereGeometry args={[0.018, 10, 10]} />
         <meshStandardMaterial color="#ffffff" roughness={0.2} />
       </mesh>
       <mesh position={[0.05, 1.69, 0.11]}>
-        <sphereGeometry args={[0.025, 12, 12]} />
+        <sphereGeometry args={[0.018, 10, 10]} />
         <meshStandardMaterial color="#ffffff" roughness={0.2} />
       </mesh>
       <mesh position={[-0.05, 1.69, 0.13]}>
-        <sphereGeometry args={[0.012, 8, 8]} />
+        <sphereGeometry args={[0.009, 8, 8]} />
         <meshStandardMaterial color="#1a1a1a" />
       </mesh>
       <mesh position={[0.05, 1.69, 0.13]}>
-        <sphereGeometry args={[0.012, 8, 8]} />
+        <sphereGeometry args={[0.009, 8, 8]} />
         <meshStandardMaterial color="#1a1a1a" />
       </mesh>
       <mesh position={[0, 1.66, 0.13]} rotation={[Math.PI / 2, 0, 0]}>

@@ -20,6 +20,10 @@ export function Building({
   color = "#f4e4bc",
   roofColor = "#ff6a1a",
 }: BuildingProps) {
+  // Window grid — rows × columns
+  const windowRows = Math.floor(size[1] / 2.5);
+  const windowCols = Math.max(2, Math.floor(size[0] / 2));
+
   return (
     <group position={position}>
       {/* Body */}
@@ -32,45 +36,58 @@ export function Building({
         <boxGeometry args={[size[0] + 0.6, 0.6, size[2] + 0.6]} />
         <meshStandardMaterial color={roofColor} roughness={0.8} />
       </mesh>
-      {/* Roof detail — small box (water tank / AC) */}
+      {/* Roof detail — water tank */}
       <mesh castShadow position={[size[0] / 3, size[1] + 1, size[2] / 3]}>
-        <boxGeometry args={[1.5, 1, 1.5]} />
+        <cylinderGeometry args={[0.6, 0.7, 1.2, 12]} />
         <meshStandardMaterial color="#7c8a99" roughness={0.7} metalness={0.3} />
       </mesh>
-      {/* Front windows (glowing) */}
-      <mesh position={[0, size[1] * 0.55, size[2] / 2 + 0.01]}>
-        <planeGeometry args={[size[0] * 0.7, size[1] * 0.35]} />
-        <meshStandardMaterial
-          color="#87ceeb"
-          emissive="#87ceeb"
-          emissiveIntensity={0.25}
-          roughness={0.1}
-          metalness={0.6}
-        />
+
+      {/* Window grid — individual windows on front face */}
+      {Array.from({ length: windowRows }).map((_, row) =>
+        Array.from({ length: windowCols }).map((_, col) => (
+          <mesh
+            key={`w-${row}-${col}`}
+            position={[
+              (col - (windowCols - 1) / 2) * (size[0] / windowCols),
+              size[1] * 0.25 + row * 2.2,
+              size[2] / 2 + 0.01,
+            ]}
+          >
+            <planeGeometry args={[size[0] / windowCols * 0.6, 1.2]} />
+            <meshStandardMaterial
+              color="#87ceeb"
+              emissive="#87ceeb"
+              emissiveIntensity={0.15}
+              roughness={0.1}
+              metalness={0.7}
+            />
+          </mesh>
+        ))
+      )}
+
+      {/* Awning over the door — African market style */}
+      <mesh castShadow position={[0, 2.5, size[2] / 2 + 0.5]} rotation={[0.2, 0, 0]}>
+        <boxGeometry args={[size[0] * 0.5, 0.1, 1.5]} />
+        <meshStandardMaterial color={roofColor} roughness={0.7} />
       </mesh>
-      {/* Window frame lines */}
-      <mesh position={[0, size[1] * 0.7, size[2] / 2 + 0.02]}>
-        <planeGeometry args={[size[0] * 0.7, 0.1]} />
-        <meshBasicMaterial color={color} />
-      </mesh>
-      <mesh position={[0, size[1] * 0.4, size[2] / 2 + 0.02]}>
-        <planeGeometry args={[size[0] * 0.7, 0.1]} />
-        <meshBasicMaterial color={color} />
-      </mesh>
-      {/* Vertical window dividers */}
-      <mesh position={[-size[0] * 0.18, size[1] * 0.55, size[2] / 2 + 0.02]}>
-        <planeGeometry args={[0.1, size[1] * 0.35]} />
-        <meshBasicMaterial color={color} />
-      </mesh>
-      <mesh position={[size[0] * 0.18, size[1] * 0.55, size[2] / 2 + 0.02]}>
-        <planeGeometry args={[0.1, size[1] * 0.35]} />
-        <meshBasicMaterial color={color} />
-      </mesh>
+
       {/* Door */}
       <mesh position={[0, size[1] * 0.12, size[2] / 2 + 0.02]}>
         <planeGeometry args={[1, 2.4]} />
-        <meshStandardMaterial color="#5a3a1a" roughness={0.9} />
+        <meshStandardMaterial color="#3a2a1a" roughness={0.9} />
       </mesh>
+
+      {/* Side windows — left face */}
+      {Array.from({ length: windowRows }).map((_, row) => (
+        <mesh
+          key={`sw-${row}`}
+          position={[-size[0] / 2 - 0.01, size[1] * 0.25 + row * 2.2, 0]}
+          rotation={[0, -Math.PI / 2, 0]}
+        >
+          <planeGeometry args={[size[2] * 0.5, 1.2]} />
+          <meshStandardMaterial color="#87ceeb" emissive="#87ceeb" emissiveIntensity={0.1} roughness={0.1} metalness={0.7} />
+        </mesh>
+      ))}
     </group>
   );
 }
