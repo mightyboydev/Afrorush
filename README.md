@@ -30,6 +30,17 @@ The Messages app now uses **real Firestore DMs** instead of mock contacts:
 - `subscribeToDms(uid, cb)` — live `onSnapshot` of all DMs where you are sender or recipient. Falls back to two queries if the composite index isn't built yet.
 - `MessagesApp` (`src/components/PhoneScreen.tsx`) lists real conversations, supports debounced username search, sends real messages, and updates in real time.
 
+### Real peer-to-peer cash transfer (the Lagos Life viral hook)
+The Bank app now does **real** transfers — not the previous demo that only debited the sender:
+- `findPlayerByUsername(username)` — exact-match lookup in `users` collection.
+- `transferCash(from, recipientUsername, amount, note)` — atomically debits sender, credits recipient (with refund-on-failure), and **sends the recipient a DM notification** (`💸 You don receive ₦X from @sender`) so they see the money land in real time. This is the killer viral loop from Lagos Life.
+- Bank UI shows a "Your Handle" card with **Share to WhatsApp / Share to X / Copy handle** buttons so players can post their handle on social media and ask for "blessings".
+- Bank also lists recent transfer DMs as a transaction history.
+
+### Share score (viral loop)
+- After every race, the **RaceResultOverlay** now has Share to WhatsApp and Tweet buttons that auto-generate shareable text like `"🏆 I just win Street Race for AfroRush! 5,000m, 12,500 pts, +₦250. My handle na @tunde — beat me if you sabi! 🏍️💨"`.
+- The Home hub top bar now has a small **"Handle @yourname"** chip with the same Share buttons — always visible, so any player can drop their handle on Twitter / WhatsApp at any time.
+
 ### Firestore rules
 `firestore.rules` now contains a `dm_chats` block:
 - `read` — only signed-in participants (`fromUid` or `toUid` == `auth.uid`).
