@@ -19,6 +19,7 @@ import BuyScreen from "@/components/BuyScreen";
 import Joystick from "@/components/Joystick";
 import PhoneScreen from "@/components/PhoneScreen";
 import MapScreen from "@/components/MapScreen";
+import SafeCanvas from "@/components/SafeCanvas";
 import { ShareHandleButton } from "@/components/PhoneScreen";
 
 // 3D Home Room — heavy, ssr:false
@@ -29,6 +30,7 @@ const CharacterPreview3D = lazy(() => import("@/components/CharacterPreview"));
 const MultiplayerRace = lazy(() => import("@/components/MultiplayerRace"));
 
 const LOCATIONS = [
+  // Lagos hubs
   { id: "motor-park", name: "Motor Park", emoji: "🛺", color: "#1fb86f", desc: "Social hub. Okadas, danfos, keke." },
   { id: "garage", name: "Garage", emoji: "🏍️", color: "#ff6a1a", desc: "Customize your bike & outfit." },
   { id: "race-track", name: "Race Track", emoji: "🏁", color: "#ffc531", desc: "Street, Delivery, Police Chase, Freestyle." },
@@ -41,6 +43,16 @@ const LOCATIONS = [
   { id: "mosque", name: "Central Mosque", emoji: "🕌", color: "#16a3b1", desc: "Lagos Central Mosque." },
   { id: "unilag", name: "UNILAG", emoji: "🎓", color: "#ffc531", desc: "University of Lagos, Akoka." },
   { id: "lekki", name: "Lekki Bridge", emoji: "🌉", color: "#7c3aed", desc: "Lekki-Ikoyi Link Bridge." },
+  // Kaduna hubs
+  { id: "kaduna-park", name: "Kaduna Motor Park", emoji: "🚐", color: "#7c3aed", desc: "Wuse park · northern okada + go-slow." },
+  { id: "ahmadu-bello", name: "ABU Zaria", emoji: "🎓", color: "#1fb86f", desc: "Ahmadu Bello University · samaru campus." },
+  { id: "murtala-square", name: "Murtala Square", emoji: "🏟️", color: "#ff6a1a", desc: "Sports + recreation ground, Kaduna." },
+  { id: "kaduna-mall", name: "Kaduna Mega Mall", emoji: "🏬", color: "#c026d3", desc: "Shoprite + cinema · biggest in the north." },
+  { id: "hamdala", name: "Hamdala Hotel", emoji: "🏨", color: "#ffc531", desc: "Legendary hotel on Ahmadu Bello Way." },
+  { id: "kaduna-river", name: "River Kaduna", emoji: "🐊", color: "#16a3b1", desc: "Crocodile-infested · bridge views." },
+  // Abuja hubs (extra)
+  { id: "abuja-city-gate", name: "City Gate", emoji: "🚪", color: "#16a3b1", desc: "Iconic Abuja welcome arch." },
+  { id: "wuse-market", name: "Wuse Market", emoji: "🛍️", color: "#c026d3", desc: "Biggest market in the capital." },
 ];
 
 type Overlay = "race-mode" | "shop" | "suya" | "crew" | "motor-park" | "mp-lobby" | null;
@@ -127,12 +139,30 @@ function HubContent() {
   const hasLoan = !!profile.activeLoan;
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-gradient-to-b from-[#f5d28a] via-[#e8c068] to-[#a47e44]">
-      {/* 3D Home Room — always rendered, behind UI */}
+    <main className="relative min-h-screen overflow-hidden bg-gradient-to-b from-[#b3e5fc] via-[#fff8e7] to-[#fff8e7]">
+      {/* Decorative clouds (matches Landing page) */}
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute left-[10%] top-[8%] h-16 w-32 rounded-full bg-white/80 blur-md rush-float" />
+        <div className="absolute right-[15%] top-[15%] h-12 w-24 rounded-full bg-white/70 blur-md rush-float" style={{ animationDelay: "1s" }} />
+        <div className="absolute left-[60%] top-[5%] h-20 w-40 rounded-full bg-white/60 blur-md rush-float" style={{ animationDelay: "2s" }} />
+      </div>
+      {/* 3D Home Room — always rendered, behind UI. Wrapped in SafeCanvas
+          so a Three.js / WebGL crash never takes down the whole hub. */}
       <div className="fixed inset-0 z-0">
-        <Suspense fallback={<div className="flex h-full items-center justify-center text-rush-navy/40">Loading room…</div>}>
-          <HomeRoom avatar={profile.avatar} quality={profile.graphicsQuality} />
-        </Suspense>
+        <SafeCanvas
+          fallback={
+            <div className="flex h-full w-full flex-col items-center justify-center bg-gradient-to-b from-[#b3e5fc] to-[#fff8e7] text-center">
+              <div className="text-7xl" style={{ filter: "drop-shadow(0 8px 12px rgba(20,33,61,0.2))" }}>🏍️💨</div>
+              <p className="mt-3 px-6 text-xs text-rush-navy/50">
+                3D no dey your phone, but you fit still play AfroRush — the rest of the app dey work fine!
+              </p>
+            </div>
+          }
+        >
+          <Suspense fallback={<div className="flex h-full items-center justify-center text-rush-navy/40">Loading room…</div>}>
+            <HomeRoom avatar={profile.avatar} quality={profile.graphicsQuality} />
+          </Suspense>
+        </SafeCanvas>
       </div>
 
       {/* Welcome okada */}
@@ -207,6 +237,15 @@ function HubContent() {
             <div className="flex items-center gap-1 rounded-full bg-white/80 px-2 py-0.5 backdrop-blur-md">
               <span className="h-1.5 w-1.5 rounded-full bg-rush-green animate-pulse" />
               <span className="text-[9px] font-bold text-rush-navy">{onlineCount} online</span>
+            </div>
+            {/* Player's home city — Lagos, Kaduna, Abuja, etc. */}
+            <div
+              className="flex items-center gap-1 rounded-full px-2 py-0.5 backdrop-blur-md"
+              style={{ background: "rgba(255,255,255,0.8)" }}
+              title={`Home city: ${profile.city ?? "lagos"}`}
+            >
+              <span className="text-[10px]">📍</span>
+              <span className="text-[9px] font-bold text-rush-navy uppercase">{(profile.city ?? "lagos").replace(/^\w/, (c) => c.toUpperCase())}</span>
             </div>
             <div className="rounded-full bg-white/80 px-2 py-0.5 text-[9px] font-bold text-rush-navy backdrop-blur-md">
               🔥 {profile.loginStreak || 1} day
