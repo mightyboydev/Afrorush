@@ -7,7 +7,7 @@
 
 import { useRef, Suspense, useMemo, useState, useEffect } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { ContactShadows, SoftShadows } from "@react-three/drei";
+import { ContactShadows, SoftShadows, OrbitControls } from "@react-three/drei";
 import * as THREE from "three";
 import type { AvatarConfig } from "@/lib/storage";
 
@@ -92,6 +92,27 @@ export default function HomeRoom({ avatar, quality = "medium", onReady }: HomeRo
           opacity={0.32}
           color="#3a2a1a"
           resolution={1024}
+        />
+
+        {/* Touch + mouse controls — pinch to zoom, drag to rotate.
+            Constraints keep the camera grounded (no upside-down, no zoom
+            inside the floor, no flying away). Damping = smooth feel. */}
+        <OrbitControls
+          makeDefault
+          enablePan={true}                 // two-finger drag pans (mobile) / right-drag pans (desktop)
+          enableZoom={true}                // pinch (mobile) / scroll wheel (desktop)
+          enableRotate={true}              // one-finger drag rotates (mobile) / left-drag (desktop)
+          minDistance={4}                   // can't zoom closer than 4 units
+          maxDistance={16}                  // can't zoom further than 16 units (was 6 → now flexible)
+          minPolarAngle={Math.PI / 8}      // ~22° from straight up — can't go fully top-down
+          maxPolarAngle={Math.PI / 2.15}    // ~83° — can't dip below the floor horizon
+          enableDamping                    // smooth deceleration after drag release
+          dampingFactor={0.08}             // how fast it slows (lower = smoother, 0.05-0.1 sweet spot)
+          rotateSpeed={0.7}                // slightly slower so it doesn't feel jumpy on mobile
+          zoomSpeed={0.8}
+          panSpeed={0.7}
+          target={[0, 0.8, 0]}             // look at the player avatar (slightly above floor)
+          screenSpacePanning={false}       // pan in world space (feels more grounded)
         />
       </Suspense>
     </Canvas>
