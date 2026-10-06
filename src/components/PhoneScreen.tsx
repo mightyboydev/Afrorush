@@ -406,7 +406,6 @@ function MessagesApp({ profile, onClose, app }: { profile: PlayerProfile; onClos
   const [messages, setMessages] = useState<ChatMsg[]>([]);
   const [input, setInput] = useState("");
   const [searchUsername, setSearchUsername] = useState("");
-  const [searchResult, setSearchResult] = useState<string | null>(null);
 
   // Mock contacts
   const contacts = [
@@ -482,7 +481,7 @@ function MessagesApp({ profile, onClose, app }: { profile: PlayerProfile; onClos
         <h2 className="font-display text-xl text-rush-navy">Messages</h2>
       </div>
 
-      {/* Username search — start a new chat by typing a username */}
+      {/* Username search — start new chat by typing username */}
       <div className="mb-3">
         <div className="flex gap-2">
           <input
@@ -490,7 +489,7 @@ function MessagesApp({ profile, onClose, app }: { profile: PlayerProfile; onClos
             value={searchUsername}
             onChange={(e) => setSearchUsername(e.target.value)}
             placeholder="Search username to chat…"
-            className="flex-1 rounded-full border-2 border-rush-cream bg-white px-4 py-2 text-sm text-rush-navy placeholder:text-rush-navy/40"
+            className="flex-1 rounded-full border-2 border-rush-cream bg-white px-4 py-2 text-sm text-rush-navy placeholder:text-rush-navy/40 focus:border-rush-green focus:outline-none"
           />
           <button
             onClick={() => {
