@@ -88,6 +88,30 @@ export interface PlayerProfile {
   // Housing
   homeType: "room" | "selfcon" | "flat" | "duplex" | "seaplot";
   homeLayout: HomeItem[]; // placed furniture items
+  // ---------- Lagos Life socio-economic layer ----------
+  // Birth class — random roll on signup. Nepo = rich spawn, Lapo = broke spawn.
+  birthClass: "nepo" | "lapo";
+  // Vitals (different from `needs` — these gate actions, not just decay)
+  vitals: {
+    stamina: number;     // 0-100, drained by working, restored by food. 0 = stranded.
+    hunger: number;     // 0-100, raised by working. 100 = starving, can't work.
+    street_cred: number; // 0-100, raised by nightlife. Affects pickpocket success.
+  };
+  vitalsUpdatedAt: number;
+  // Micro-loan debt trap (Lapo mechanic)
+  activeLoan: {
+    principal: number;     // original amount borrowed
+    interestRate: number;  // e.g. 0.05 = 5% per hour
+    totalOwed: number;     // principal + accrued interest (updated each tick)
+    takenAt: number;       // ms timestamp
+  } | null;
+  // Saturday bills
+  lastBillDate: string | null; // YYYY-MM-DD of last Saturday bill run
+  // Police / jail (used by report-to-police + agbero extortion)
+  jailedUntil: number | null;  // ms timestamp; null = not jailed
+  jailedReason: string | null;
+  // Computed flag — true if cash <= 0 AND activeLoan exists (Stranded state)
+  // We don't store this; we derive it in UI.
 }
 
 export interface DailyTask {
@@ -243,6 +267,8 @@ export const DEFAULT_HIGH_SCORES: HighScores = {
 export const DEFAULT_UNLOCKED = ["bike-spark", "outfit-street", "stk-none", "horn-beep", "exh-stock"];
 
 // Make a fresh PlayerProfile document for a new user.
+// Includes the Lagos Life "socio-economic roll": 30% chance of Nepo Baby
+// (5M cash + premium skin), 70% chance of Lapo Baby (0 cash, must hustle).
 export function makeDefaultProfile(
   uid: string,
   email: string | null,
@@ -250,6 +276,10 @@ export function makeDefaultProfile(
   photoURL: string | null = null
 ): PlayerProfile {
   const now = Date.now();
+  // Birth roll — 30% nepo, 70% lapo (Lagos Life proportions)
+  const birthClass: "nepo" | "lapo" = Math.random() < 0.3 ? "nepo" : "lapo";
+  const cash = birthClass === "nepo" ? 5_000_000 : 0;
+  const outfitId = birthClass === "nepo" ? "outfit-kente" : "outfit-street";
   return {
     uid,
     username,
@@ -257,9 +287,9 @@ export function makeDefaultProfile(
     photoURL,
     avatar: { ...DEFAULT_AVATAR },
     city: "lagos",
-    loadout: { ...DEFAULT_LOADOUT },
-    cash: 500,
-    gold: 50,
+    loadout: { ...DEFAULT_LOADOUT, outfitId },
+    cash,
+    gold: birthClass === "nepo" ? 100 : 10,
     rep: 0,
     totalRuns: 0,
     highScores: { ...DEFAULT_HIGH_SCORES },
@@ -286,6 +316,18 @@ export function makeDefaultProfile(
     gemsFound: [],
     homeType: "room",
     homeLayout: [],
+    // Lagos Life layer
+    birthClass,
+    vitals: {
+      stamina: birthClass === "nepo" ? 100 : 60,   // lapo starts tired
+      hunger: birthClass === "nepo" ? 0 : 30,      // lapo starts a bit hungry
+      street_cred: birthClass === "nepo" ? 40 : 10,
+    },
+    vitalsUpdatedAt: now,
+    activeLoan: null,
+    lastBillDate: null,
+    jailedUntil: null,
+    jailedReason: null,
   };
 }
 

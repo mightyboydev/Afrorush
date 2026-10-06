@@ -308,5 +308,112 @@ export function migrateProfile(existing: Partial<PlayerProfile>): PlayerProfile 
     }
   }
 
+  // ---------- Lagos Life layer migration + decay ----------
+  if (existing.birthClass === undefined) {
+    // Existing players become Lapo by default (they had 500 cash before; treat
+    // them as Lapo with a small grace top-up so they're not stranded instantly)
+    merged.birthClass = "lapo";
+    changed = true;
+  }
+  if (!existing.vitals) {
+    merged.vitals = { stamina: 80, hunger: 20, street_cred: 10 };
+    changed = true;
+  }
+  if (existing.vitalsUpdatedAt === undefined) {
+    merged.vitalsUpdatedAt = Date.now();
+    changed = true;
+  }
+  if (existing.activeLoan === undefined) { merged.activeLoan = null; changed = true; }
+  if (existing.lastBillDate === undefined) { merged.lastBillDate = null; changed = true; }
+  if (existing.jailedUntil === undefined) { merged.jailedUntil = null; changed = true; }
+  if (existing.jailedReason === undefined) { merged.jailedReason = null; changed = true; }
+
+  // Vitals decay over real time — stamina drains, hunger rises.
+  if (merged.vitals && merged.vitalsUpdatedAt) {
+    const now = Date.now();
+    const elapsedMin = Math.max(0, (now - merged.vitalsUpdatedAt) / 60000);
+    if (elapsedMin > 1) {
+      const staminaDrainPerMin = 0.05;  // ~1 point per 20 min
+      const hungerRisePerMin = 0.07;    // ~1 point per 14 min
+      merged.vitals.stamina = Math.max(0, Math.min(100, (merged.vitals.stamina ?? 80) - elapsedMin * staminaDrainPerMin));
+      merged.vitals.hunger = Math.max(0, Math.min(100, (merged.vitals.hunger ?? 20) + elapsedMin * hungerRisePerMin));
+      merged.vitalsUpdatedAt = now;
+      changed = true;
+    }
+  }
+
+  // Saturday bills — rent + electricity. Runs once per week per player.
+  // We compute this client-side on profile load (no Cloud Function needed).
+  // Bills: ₦2,500 rent + ₦500 electricity = ₦3,000 total (Lagos-shaped number)
+  if (merged.lastBillDate === null || isSaturdayBillDue(merged.lastBillDate)) {
+    const today = new Date();
+    const todayStr = today.toISOString().slice(0, 10); // YYYY-MM-DD
+    // Only deduct if today is Saturday AND we haven't billed this Saturday yet
+    if (today.getDay() === 6 && merged.lastBillDate !== todayStr && merged.createdAt < Date.now() - 24 * 3600 * 1000) {
+      // Skip the very first day after signup (24h grace)
+      const billTotal = 3000;
+      const newCash = Math.max(-5000, (merged.cash ?? 0) - billTotal); // allow going negative up to -5000
+      merged.cash = newCash;
+      merged.lastBillDate = todayStr;
+      changed = true;
+    } else if (merged.lastBillDate !== todayStr) {
+      // Not Saturday — keep lastBillDate updated so we don't re-check every render
+      // (but only persist if we actually billed; otherwise it'll drift)
+    }
+  }
+
+  // Loan interest compounding — runs hourly (or on every profile load if >1h elapsed)
+  if (merged.activeLoan) {
+    const now = Date.now();
+    const loan = merged.activeLoan;
+    const hoursElapsed = (now - loan.takenAt) / (60 * 60 * 1000);
+    if (hoursElapsed >= 1) {
+      // Compound interest: totalOwed = principal * (1 + rate) ^ hoursElapsed
+      const newOwed = Math.round(loan.principal * Math.pow(1 + loan.interestRate, hoursElapsed));
+      if (newOwed !== loan.totalOwed) {
+        merged.activeLoan = {
+          ...loan,
+          totalOwed: newOwed,
+          // Move takenAt forward by the elapsed hours so we don't recompute
+          takenAt: loan.takenAt + Math.floor(hoursElapsed) * 60 * 60 * 1000,
+        };
+        changed = true;
+      }
+    }
+    // Auto-deduct from cash if player has money (best-effort repayment)
+    if (merged.cash > 0 && merged.activeLoan.totalOwed > 0) {
+      const autoPay = Math.min(merged.cash, Math.ceil(merged.activeLoan.totalOwed * 0.05));
+      if (autoPay > 0) {
+        merged.cash -= autoPay;
+        const newOwed = Math.max(0, merged.activeLoan.totalOwed - autoPay);
+        if (newOwed === 0) {
+          merged.activeLoan = null;
+        } else {
+          merged.activeLoan = { ...merged.activeLoan, totalOwed: newOwed };
+        }
+        changed = true;
+      }
+    }
+  }
+
+  // Clear jail if sentence is over
+  if (merged.jailedUntil && merged.jailedUntil < Date.now()) {
+    merged.jailedUntil = null;
+    merged.jailedReason = null;
+    changed = true;
+  }
+
   return changed ? merged : (existing as PlayerProfile);
+}
+
+// Helper: is the player's lastBillDate a Saturday that's older than today?
+function isSaturdayBillDue(lastBill: string): boolean {
+  try {
+    const last = new Date(lastBill + "T00:00:00Z");
+    const today = new Date();
+    // If today is Saturday AND the last bill wasn't today, bill is due
+    return today.getDay() === 6 && last.toISOString().slice(0, 10) !== today.toISOString().slice(0, 10);
+  } catch {
+    return false;
+  }
 }

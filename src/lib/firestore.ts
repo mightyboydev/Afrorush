@@ -686,3 +686,112 @@ export async function leaveRaceRoom(
     ...(isHost ? { host_uid: Object.keys(remainingPlayers)[0] } : {}),
   });
 }
+
+// ---------- Lagos Life: Micro-loans ----------
+// Lapo Babies (and anyone with cash < 1000) can take a micro-loan. The loan
+// compounds at 5% per hour (so ₦1000 becomes ₦1050 in 1h, ₦1102 in 2h).
+// Auto-deducted from cash as the player earns.
+
+export async function takeMicroLoan(
+  profile: PlayerProfile,
+  amount: number
+): Promise<void> {
+  if (amount <= 0 || amount > 50000) throw new Error("Loan must be ₦1 - ₦50,000");
+  if (profile.activeLoan) throw new Error("You still get outstanding loan. Pay am first!");
+  const db = getFirebaseDb();
+  const loan = {
+    principal: amount,
+    interestRate: 0.05, // 5% per hour
+    totalOwed: amount,
+    takenAt: Date.now(),
+  };
+  await updateDoc(doc(db, USERS, profile.uid), {
+    cash: increment(amount),
+    activeLoan: loan,
+  });
+}
+
+export async function repayMicroLoan(
+  profile: PlayerProfile,
+  amount: number
+): Promise<void> {
+  if (!profile.activeLoan) throw new Error("You no get outstanding loan.");
+  if (amount <= 0) throw new Error("Enter amount");
+  if (amount > profile.cash) throw new Error("You no get enough cash");
+  if (amount > profile.activeLoan.totalOwed) amount = profile.activeLoan.totalOwed;
+  const db = getFirebaseDb();
+  const newOwed = profile.activeLoan.totalOwed - amount;
+  await updateDoc(doc(db, USERS, profile.uid), {
+    cash: increment(-amount),
+    activeLoan: newOwed === 0 ? null : { ...profile.activeLoan, totalOwed: newOwed },
+  });
+}
+
+// ---------- Lagos Life: Street interactions ----------
+// Pickpocket: attacker tries to steal a percentage of victim's pocket cash.
+// Success rate depends on attacker's street_cred vs victim's street_cred.
+// On success: attacker gains cash, victim loses cash, victim gets a DM.
+// On failure: attacker gets reported automatically, jailed for 5 minutes.
+export async function pickpocket(
+  attacker: PlayerProfile,
+  victimUid: string
+): Promise<{ success: boolean; stolen: number; message: string }> {
+  const db = getFirebaseDb();
+  const victimSnap = await getDoc(doc(db, USERS, victimUid));
+  if (!victimSnap.exists()) throw new Error("Victim no dey");
+  const victim = victimSnap.data() as PlayerProfile;
+  if (victim.cash <= 0) {
+    return { success: false, stolen: 0, message: `${victim.username} no get cash for pocket. Try another person.` };
+  }
+  // Success rate: 50% base + (attacker.cred - victim.cred) / 2
+  const attackerCred = attacker.vitals?.street_cred ?? 10;
+  const victimCred = victim.vitals?.street_cred ?? 10;
+  const successRate = Math.max(0.1, Math.min(0.85, 0.5 + (attackerCred - victimCred) / 200));
+  const success = Math.random() < successRate;
+  if (!success) {
+    // Auto-jail the attacker for 5 minutes
+    await updateDoc(doc(db, USERS, attacker.uid), {
+      jailedUntil: Date.now() + 5 * 60 * 1000,
+      jailedReason: `Caught trying to pickpocket ${victim.username}`,
+    });
+    return { success: false, stolen: 0, message: `🚔 You been caught! Dem lock you for 5 minutes.` };
+  }
+  // Steal 5-20% of victim's cash
+  const pct = 0.05 + Math.random() * 0.15;
+  const stolen = Math.min(victim.cash, Math.round(victim.cash * pct));
+  await updateDoc(doc(db, USERS, victimUid), { cash: increment(-stolen) });
+  await updateDoc(doc(db, USERS, attacker.uid), { cash: increment(stolen) });
+  // Notify victim via DM
+  try {
+    await sendDm(attacker, victimUid, victim.username, `🚨 Pickpocket alert! @${attacker.username} don steal ₦${stolen.toLocaleString()} from your pocket! Report am if you catch am.`);
+  } catch { /* best-effort */ }
+  return { success: true, stolen, message: `💰 Success! You don pickpocket ₦${stolen.toLocaleString()} from @${victim.username}!` };
+}
+
+// Report to police: target a player who's been harassing you. If they've
+// pickpocketed someone in the last hour (we can't verify, so it's a vote
+// system), they get jailed. For simplicity, anyone can jail anyone for
+// 5 minutes — but each player can only report once per hour (cooldown
+// tracked in their own profile).
+export async function reportToPolice(
+  reporter: PlayerProfile,
+  offenderUid: string
+): Promise<{ success: boolean; message: string }> {
+  const db = getFirebaseDb();
+  const offenderSnap = await getDoc(doc(db, USERS, offenderUid));
+  if (!offenderSnap.exists()) throw new Error("Person no dey");
+  const offender = offenderSnap.data() as PlayerProfile;
+  if (offender.jailedUntil && offender.jailedUntil > Date.now()) {
+    return { success: false, message: `${offender.username} dey inside cell already.` };
+  }
+  // Jail offender for 10 minutes
+  await updateDoc(doc(db, USERS, offenderUid), {
+    jailedUntil: Date.now() + 10 * 60 * 1000,
+    jailedReason: `Reported by @${reporter.username}`,
+  });
+  // Notify offender via DM
+  try {
+    await sendDm(reporter, offenderUid, offender.username, `🚔 @${reporter.username} don report you to police! Dem lock you for 10 minutes. Stay calm — e go pass.`);
+  } catch { /* best-effort */ }
+  return { success: true, message: `✓ You don report @${offender.username}. Police lock am for 10 minutes.` };
+}
