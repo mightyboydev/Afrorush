@@ -120,6 +120,12 @@ function HubContent() {
     hour12: false,
   });
 
+  // Lagos Life state flags
+  const isJailed = profile.jailedUntil && profile.jailedUntil > Date.now();
+  const isStranded = profile.cash <= 0 && !isJailed;
+  const isNepo = profile.birthClass === "nepo";
+  const hasLoan = !!profile.activeLoan;
+
   return (
     <main className="relative min-h-screen overflow-hidden bg-gradient-to-b from-[#f5d28a] via-[#e8c068] to-[#a47e44]">
       {/* 3D Home Room — always rendered, behind UI */}
@@ -208,16 +214,60 @@ function HubContent() {
             <div className="rounded-full bg-white/80 px-2 py-0.5 text-[9px] font-bold text-rush-navy backdrop-blur-md">
               🏆 {profile.rep.toLocaleString()} rep
             </div>
+            {/* Birth class badge — Nepo (rich) or Lapo (broke) */}
+            <div
+              className={`rounded-full px-2 py-0.5 text-[9px] font-bold backdrop-blur-md ${isNepo ? "bg-rush-gold/30 text-rush-navy" : "bg-rush-navy/15 text-rush-navy"}`}
+              title={isNepo ? "Nepo Baby — born with silver spoon" : "Lapo Baby — hustler from day one"}
+            >
+              {isNepo ? "👶 Nepo" : "💪 Lapo"}
+            </div>
           </div>
+
+          {/* Lagos Life state banners — Jailed / Stranded / Loan warning */}
+          {isJailed && (
+            <div className="mx-auto mt-1.5 max-w-md rounded-2xl bg-red-600/95 px-3 py-2 text-center backdrop-blur-md">
+              <div className="text-[10px] font-bold uppercase tracking-wider text-white">🚔 You dey inside cell</div>
+              <div className="text-[9px] text-white/80">{profile.jailedReason}</div>
+              <div className="text-[9px] font-bold text-white">
+                Release in {Math.ceil(((profile.jailedUntil ?? 0) - Date.now()) / 60000)} min
+              </div>
+            </div>
+          )}
+          {isStranded && !isJailed && (
+            <div className="mx-auto mt-1.5 max-w-md rounded-2xl bg-rush-orange/95 px-3 py-2 text-center backdrop-blur-md">
+              <div className="text-[10px] font-bold uppercase tracking-wider text-white">😅 You dey stranded!</div>
+              <div className="text-[9px] text-white/90">Cash = 0. Take loan for Buka/phone to bounce back.</div>
+              <button
+                onClick={() => setTab("phone")}
+                className="mt-1 rounded-full bg-white px-3 py-0.5 text-[9px] font-bold text-rush-orange active:scale-95"
+              >
+                Open Phone →
+              </button>
+            </div>
+          )}
+          {hasLoan && !isJailed && !isStranded && (
+            <div className="mx-auto mt-1.5 max-w-md rounded-2xl bg-red-50/95 px-3 py-1.5 text-center backdrop-blur-md">
+              <div className="text-[9px] font-bold text-red-700">
+                💸 Active loan: ₦{profile.activeLoan!.totalOwed.toLocaleString()} (5%/hr) — pay quick!
+              </div>
+            </div>
+          )}
         </header>
       )}
 
       {/* Tab content — pushed below the fixed top status bar.
           Home tab: only needs + small task/gem cards (locations live in Map tab).
           Other tabs scroll normally. */}
-      <div className={`relative z-10 overflow-y-auto px-3 pb-24 pt-[124px] transition-opacity ${cleanScreen ? "opacity-0 pointer-events-none" : ""}`}>
+      <div className={`relative z-10 overflow-y-auto px-3 pb-24 pt-[150px] transition-opacity ${cleanScreen ? "opacity-0 pointer-events-none" : ""}`}>
         {tab === "home" && (
           <div className="mx-auto max-w-md space-y-2">
+            {/* Lagos Life vitals — stamina / hunger / street_cred */}
+            <div className="grid grid-cols-3 gap-1.5">
+              <VitalCard label="Stamina" value={profile.vitals?.stamina ?? 80} color="#1fb86f" icon="⚡" />
+              <VitalCard label="Hunger" value={profile.vitals?.hunger ?? 20} color="#ff6a1a" icon="🍽️" inverted />
+              <VitalCard label="Cred" value={profile.vitals?.street_cred ?? 10} color="#7c3aed" icon="💯" />
+            </div>
+
             {/* Needs — compact circular ring row */}
             <NeedsBar profile={profile} />
 
@@ -775,6 +825,37 @@ function Stat({ label, value }: { label: string; value: string }) {
     <div className="rounded-xl bg-rush-cream/50 p-2 text-center">
       <div className="text-[9px] uppercase tracking-wider text-rush-navy/50">{label}</div>
       <div className="font-mono text-sm font-bold text-rush-navy">{value}</div>
+    </div>
+  );
+}
+
+// ---------- Lagos Life VitalCard — small compact vital display ----------
+function VitalCard({ label, value, color, icon, inverted = false }: {
+  label: string;
+  value: number;
+  color: string;
+  icon: string;
+  inverted?: boolean; // true for hunger (high = bad)
+}) {
+  const v = Math.round(value);
+  const isLow = inverted ? v > 70 : v < 30;
+  return (
+    <div className="rounded-2xl bg-white/65 p-2 backdrop-blur-md">
+      <div className="mb-0.5 flex items-center justify-between">
+        <span className="text-[10px]">{icon}</span>
+        <span className="text-[8px] font-bold uppercase tracking-wider text-rush-navy/50">{label}</span>
+      </div>
+      <div className="h-1 w-full overflow-hidden rounded-full bg-rush-cream">
+        <div
+          className="h-full rounded-full transition-all"
+          style={{
+            width: `${v}%`,
+            background: isLow ? "#ef4444" : color,
+            transition: "width 0.4s, background 0.3s",
+          }}
+        />
+      </div>
+      <div className="mt-0.5 text-center text-[10px] font-bold text-rush-navy">{v}</div>
     </div>
   );
 }
