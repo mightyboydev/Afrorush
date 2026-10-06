@@ -3,10 +3,10 @@
 // src/components/PhoneScreen.tsx — Smartphone interface with app grid.
 // Apps: Jobs, Messages, Bank, Crew, Leaderboard, Settings, Camera, Ride, Health, etc.
 
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useAuth } from "@/lib/auth";
 import { formatNaira, type PlayerProfile } from "@/lib/storage";
-import { updateProfile } from "@/lib/firestore";
+import { updateProfile, sendDm, searchPlayersByUsername, subscribeToDms, type DmMessage } from "@/lib/firestore";
 
 interface App {
   id: string;
@@ -400,76 +400,154 @@ function BankApp({ profile, onClose, app }: { profile: PlayerProfile; onClose: (
   );
 }
 
-// ---------- Messages App — Texting ----------
+// ---------- Messages App — Real DMs ----------
 
-interface ChatMsg { from: string; text: string; time: string; }
+interface DmThread {
+  uid: string;        // other user's uid
+  name: string;       // other user's name
+  last: string;        // last message preview
+  time: string;        // formatted time
+  unread: number;
+  ts: number;
+}
+
+function formatTimeAgo(ts: number): string {
+  const diff = Date.now() - ts;
+  if (diff < 60_000) return "now";
+  if (diff < 3_600_000) return `${Math.floor(diff / 60_000)}m`;
+  if (diff < 86_400_000) return `${Math.floor(diff / 3_600_000)}h`;
+  return `${Math.floor(diff / 86_400_000)}d`;
+}
 
 function MessagesApp({ profile, onClose, app }: { profile: PlayerProfile; onClose: () => void; app: App }) {
   const [view, setView] = useState<"list" | "chat">("list");
-  const [selectedChat, setSelectedChat] = useState<string | null>(null);
-  const [messages, setMessages] = useState<ChatMsg[]>([]);
+  const [selectedUid, setSelectedUid] = useState<string | null>(null);
+  const [selectedName, setSelectedName] = useState<string>("");
   const [input, setInput] = useState("");
   const [searchUsername, setSearchUsername] = useState("");
+  const [searchResults, setSearchResults] = useState<Array<{ uid: string; username: string; photoURL: string | null }>>([]);
+  const [searching, setSearching] = useState(false);
+  const [allDms, setAllDms] = useState<DmMessage[]>([]);
+  const [sending, setSending] = useState(false);
 
-  // Mock contacts
-  const contacts = [
-    { name: "Crew Chat", emoji: "👥", last: "Yo, who's racing tonight?", time: "2m", unread: 3 },
-    { name: "Baba Tunde", emoji: "🧑", last: "Suya spot is open!", time: "5m", unread: 1 },
-    { name: "Kelechi", emoji: "🧑", last: "Challenge accepted! 🏁", time: "1h", unread: 0 },
-    { name: "Mama Chichi", emoji: "👩", last: "New Ankara just arrived", time: "3h", unread: 0 },
-    { name: "Street Radio", emoji: "📻", last: "Now playing: Afrobeats mix", time: "1d", unread: 0 },
-  ];
+  // Subscribe to all DMs involving me — real-time
+  useEffect(() => {
+    const unsub = subscribeToDms(profile.uid, (msgs) => setAllDms(msgs));
+    return () => unsub();
+  }, [profile.uid]);
 
-  const openChat = (name: string) => {
-    setSelectedChat(name);
-    setView("chat");
-    setMessages([
-      { from: name, text: contacts.find(c => c.name === name)?.last ?? "Hello!", time: "now" },
-    ]);
-  };
+  // Debounced username search
+  useEffect(() => {
+    const q = searchUsername.trim();
+    if (!q) { setSearchResults([]); return; }
+    setSearching(true);
+    const t = setTimeout(async () => {
+      try {
+        const results = await searchPlayersByUsername(q);
+        // Filter out self
+        setSearchResults(results.filter((r) => r.uid !== profile.uid));
+      } catch {
+        setSearchResults([]);
+      } finally {
+        setSearching(false);
+      }
+    }, 350);
+    return () => clearTimeout(t);
+  }, [searchUsername, profile.uid]);
 
-  const send = () => {
-    if (!input.trim()) return;
-    const msg = input.trim();
-    setMessages(prev => [...prev, { from: "me", text: msg, time: "now" }]);
-    setInput("");
-    // Save to Firestore — real DMs, no auto-reply
-    try {
-      import("@/lib/firestore").then(({ getFirebaseDb }) => {
-        const db = getFirebaseDb();
-        import("firebase/firestore").then(({ collection, addDoc, serverTimestamp }) => {
-          addDoc(collection(db, "dm_chats"), {
-            fromUid: profile.uid,
-            fromName: profile.username,
-            toName: selectedChat,
-            text: msg,
-            createdAt: Date.now(),
-            read: false,
-          }).catch(() => {});
+  // Build thread list from flat DM array
+  const threads: DmThread[] = useMemo(() => {
+    const map = new Map<string, DmThread>();
+    for (const m of allDms) {
+      const isMe = m.fromUid === profile.uid;
+      const otherUid = isMe ? m.toUid : m.fromUid;
+      const otherName = isMe ? m.toName : m.fromName;
+      const existing = map.get(otherUid);
+      const unreadInc = !isMe && !m.read ? 1 : 0;
+      if (!existing || m.createdAt > existing.ts) {
+        map.set(otherUid, {
+          uid: otherUid,
+          name: otherName || "Player",
+          last: m.text,
+          time: formatTimeAgo(m.createdAt),
+          unread: existing ? existing.unread + unreadInc : unreadInc,
+          ts: m.createdAt,
         });
-      });
-    } catch { /* ignore */ }
+      } else {
+        existing.unread += unreadInc;
+      }
+    }
+    return Array.from(map.values()).sort((a, b) => b.ts - a.ts);
+  }, [allDms, profile.uid]);
+
+  // Messages for the currently selected thread
+  const currentThreadMsgs = useMemo(() => {
+    if (!selectedUid) return [];
+    return allDms
+      .filter((m) => (m.fromUid === selectedUid && m.toUid === profile.uid) || (m.fromUid === profile.uid && m.toUid === selectedUid))
+      .sort((a, b) => a.createdAt - b.createdAt);
+  }, [allDms, selectedUid, profile.uid]);
+
+  const openChat = (uid: string, name: string) => {
+    setSelectedUid(uid);
+    setSelectedName(name);
+    setView("chat");
+    setInput("");
   };
 
-  if (view === "chat" && selectedChat) {
+  const send = async () => {
+    const text = input.trim();
+    if (!text || !selectedUid) return;
+    setSending(true);
+    setInput("");
+    try {
+      await sendDm(profile, selectedUid, selectedName, text);
+    } catch (e) {
+      // Revert on error
+      setInput(text);
+      console.error("DM send failed:", e);
+    } finally {
+      setSending(false);
+    }
+  };
+
+  // ---------- Chat view ----------
+  if (view === "chat" && selectedUid) {
     return (
       <div className="rush-bounce-in">
         <div className="mb-4 flex items-center gap-3">
           <button onClick={() => setView("list")} className="flex h-9 w-9 items-center justify-center rounded-full bg-white/80 text-rush-navy backdrop-blur">←</button>
-          <div className="flex h-10 w-10 items-center justify-center rounded-2xl text-xl bg-rush-jade/20">{contacts.find(c => c.name === selectedChat)?.emoji ?? "💬"}</div>
-          <h2 className="font-display text-lg text-rush-navy">{selectedChat}</h2>
+          <div className="flex h-10 w-10 items-center justify-center rounded-2xl text-xl" style={{ background: `linear-gradient(135deg, ${app.from}, ${app.to})` }}>💬</div>
+          <div className="flex-1">
+            <h2 className="font-display text-lg text-rush-navy">{selectedName}</h2>
+            <div className="text-[9px] text-rush-navy/50">Real DM · Live</div>
+          </div>
         </div>
 
         {/* Chat messages */}
-        <div className="min-h-[300px] space-y-2 rounded-3xl bg-white/60 p-4">
-          {messages.map((msg, i) => (
-            <div key={i} className={`flex ${msg.from === "me" ? "justify-end" : "justify-start"}`}>
-              <div className={`max-w-[75%] rounded-2xl px-3 py-2 text-sm ${msg.from === "me" ? "bg-rush-green text-white" : "bg-white text-rush-navy"}`}>
-                {msg.text}
-                <div className={`mt-0.5 text-[8px] ${msg.from === "me" ? "text-white/60" : "text-rush-navy/40"}`}>{msg.time}</div>
+        <div className="flex min-h-[300px] flex-col justify-end space-y-2 rounded-3xl bg-white/60 p-4">
+          {currentThreadMsgs.length === 0 && (
+            <div className="flex flex-1 items-center justify-center text-center">
+              <div>
+                <div className="mb-2 text-4xl">👋</div>
+                <div className="text-xs text-rush-navy/60">Say hi to {selectedName}!</div>
+                <div className="mt-1 text-[10px] text-rush-navy/40">Messages are delivered when they&apos;re online.</div>
               </div>
             </div>
-          ))}
+          )}
+          {currentThreadMsgs.map((msg) => {
+            const mine = msg.fromUid === profile.uid;
+            return (
+              <div key={msg.id} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
+                <div className={`max-w-[75%] rounded-2xl px-3 py-2 text-sm ${mine ? "bg-rush-green text-white" : "bg-white text-rush-navy"}`}>
+                  {msg.text}
+                  <div className={`mt-0.5 text-[8px] ${mine ? "text-white/60" : "text-rush-navy/40"}`}>
+                    {formatTimeAgo(msg.createdAt)}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
         </div>
 
         {/* Input */}
@@ -478,11 +556,16 @@ function MessagesApp({ profile, onClose, app }: { profile: PlayerProfile; onClos
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && send()}
-            placeholder="Type a message…"
-            className="flex-1 rounded-full border border-rush-cream bg-white px-4 py-2.5 text-sm text-rush-navy"
+            onKeyDown={(e) => e.key === "Enter" && !sending && send()}
+            placeholder={sending ? "Sending…" : "Type a message…"}
+            disabled={sending}
+            className="flex-1 rounded-full border border-rush-cream bg-white px-4 py-2.5 text-sm text-rush-navy disabled:opacity-60"
           />
-          <button onClick={send} className="flex h-10 w-10 items-center justify-center rounded-full bg-rush-green text-white active:scale-95">
+          <button
+            onClick={send}
+            disabled={sending || !input.trim()}
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-rush-green text-white active:scale-95 disabled:opacity-50"
+          >
             ➤
           </button>
         </div>
@@ -490,6 +573,7 @@ function MessagesApp({ profile, onClose, app }: { profile: PlayerProfile; onClos
     );
   }
 
+  // ---------- List view ----------
   return (
     <div className="rush-bounce-in">
       <div className="mb-4 flex items-center gap-3">
@@ -498,41 +582,75 @@ function MessagesApp({ profile, onClose, app }: { profile: PlayerProfile; onClos
         <h2 className="font-display text-xl text-rush-navy">Messages</h2>
       </div>
 
-      {/* Username search — start new chat by typing username */}
+      {/* Search bar — find real players by username */}
       <div className="mb-3">
         <div className="flex gap-2">
           <input
             type="text"
             value={searchUsername}
             onChange={(e) => setSearchUsername(e.target.value)}
-            placeholder="Search username to chat…"
+            placeholder="Search username to start chat…"
             className="flex-1 rounded-full border-2 border-rush-cream bg-white px-4 py-2 text-sm text-rush-navy placeholder:text-rush-navy/40 focus:border-rush-green focus:outline-none"
           />
-          <button
-            onClick={() => {
-              const name = searchUsername.trim();
-              if (name) { openChat(name); setSearchUsername(""); }
-            }}
-            className="flex h-10 w-10 items-center justify-center rounded-full bg-rush-green text-white active:scale-90"
-          >
-            ➤
-          </button>
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-rush-cream text-rush-navy/60">
+            {searching ? "…" : "🔍"}
+          </div>
         </div>
+        {searchResults.length > 0 && (
+          <div className="mt-2 space-y-1 rounded-2xl bg-white/70 p-2 backdrop-blur-md">
+            {searchResults.map((p) => (
+              <button
+                key={p.uid}
+                onClick={() => { openChat(p.uid, p.username); setSearchUsername(""); }}
+                className="flex w-full items-center gap-2 rounded-xl p-2 text-left hover:bg-rush-cream/50 active:scale-95"
+              >
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-rush-jade text-xs font-bold text-white">
+                  {p.username.charAt(0).toUpperCase()}
+                </div>
+                <span className="flex-1 text-sm font-bold text-rush-navy">{p.username}</span>
+                <span className="text-[9px] font-bold text-rush-green">CHAT →</span>
+              </button>
+            ))}
+          </div>
+        )}
+        {searchUsername.trim() && !searching && searchResults.length === 0 && (
+          <div className="mt-2 rounded-xl bg-rush-cream/60 p-3 text-center text-xs text-rush-navy/60">
+            No player found with that username. They need to sign up first!
+          </div>
+        )}
       </div>
 
-      {/* Chat list */}
+      {/* Threads (real DMs from Firestore) */}
+      <div className="mb-2 text-[10px] font-bold uppercase tracking-widest text-rush-navy/50">Conversations</div>
       <div className="space-y-2">
-        {contacts.map((c) => (
-          <button key={c.name} onClick={() => openChat(c.name)} className="flex w-full items-center gap-3 rounded-2xl bg-white/80 p-3 backdrop-blur active:scale-95">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-rush-cream text-xl">{c.emoji}</div>
+        {threads.length === 0 && (
+          <div className="rounded-2xl bg-white/70 p-6 text-center backdrop-blur-md">
+            <div className="mb-2 text-4xl">💬</div>
+            <div className="text-sm font-bold text-rush-navy">No conversations yet</div>
+            <p className="mt-1 text-xs text-rush-navy/60">Search a username above to start your first chat with another AfroRush player.</p>
+          </div>
+        )}
+        {threads.map((t) => (
+          <button
+            key={t.uid}
+            onClick={() => openChat(t.uid, t.name)}
+            className="flex w-full items-center gap-3 rounded-2xl bg-white/80 p-3 backdrop-blur active:scale-95"
+          >
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-rush-jade text-base font-bold text-white">
+              {t.name.charAt(0).toUpperCase()}
+            </div>
             <div className="flex-1 text-left">
               <div className="flex items-center justify-between">
-                <span className="text-sm font-bold text-rush-navy">{c.name}</span>
-                <span className="text-[10px] text-rush-navy/40">{c.time}</span>
+                <span className="text-sm font-bold text-rush-navy">{t.name}</span>
+                <span className="text-[10px] text-rush-navy/40">{t.time}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="truncate text-xs text-rush-navy/60">{c.last}</span>
-                {c.unread > 0 && <span className="ml-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-rush-green px-1 text-[10px] font-bold text-white">{c.unread}</span>}
+                <span className="truncate text-xs text-rush-navy/60">{t.last}</span>
+                {t.unread > 0 && (
+                  <span className="ml-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-rush-green px-1 text-[10px] font-bold text-white">
+                    {t.unread}
+                  </span>
+                )}
               </div>
             </div>
           </button>
