@@ -477,3 +477,60 @@ export function subscribeToDms(
     return () => {};
   }
 }
+
+// ---------- Peer-to-peer transfers (the Lagos Life viral mechanic) ----------
+// Find a player by exact username (case-insensitive). Used by Bank / transfer UI.
+export async function findPlayerByUsername(
+  username: string
+): Promise<{ uid: string; username: string; cash: number; photoURL: string | null } | null> {
+  const db = getFirebaseDb();
+  const q = query(
+    collection(db, USERS),
+    where("username", "==", username.trim()),
+    limit(1)
+  );
+  const snap = await getDocs(q);
+  if (snap.empty) return null;
+  const p = snap.docs[0].data() as PlayerProfile;
+  return { uid: p.uid, username: p.username, cash: p.cash, photoURL: p.photoURL };
+}
+
+// Transfer cash from `from` profile to a recipient username.
+// Atomic-ish: debits sender, credits recipient, sends the recipient a DM
+// notification of the transfer. Throws if recipient not found or insufficient
+// balance. Returns the recipient's display name on success.
+export async function transferCash(
+  from: PlayerProfile,
+  recipientUsername: string,
+  amount: number,
+  note?: string
+): Promise<{ recipientName: string; recipientUid: string }> {
+  if (amount <= 0) throw new Error("Amount must be positive");
+  if (amount > from.cash) throw new Error("You no get enough cash for this transfer");
+  const recipient = await findPlayerByUsername(recipientUsername);
+  if (!recipient) throw new Error(`No player called "${recipientUsername}". Tell them make them sign up first!`);
+  if (recipient.uid === from.uid) throw new Error("You no fit send money to yourself");
+
+  const db = getFirebaseDb();
+
+  // Debit sender
+  await updateDoc(doc(db, USERS, from.uid), { cash: increment(-amount) });
+  // Credit recipient (best-effort — if this fails, refund sender)
+  try {
+    await updateDoc(doc(db, USERS, recipient.uid), { cash: increment(amount) });
+  } catch (e) {
+    // Refund sender if recipient credit fails
+    await updateDoc(doc(db, USERS, from.uid), { cash: increment(amount) });
+    throw new Error("Transfer failed. Try again.");
+  }
+
+  // Send recipient a DM so they see the money land (the viral hook!)
+  try {
+    const text = `💸 You don receive ₦${amount.toLocaleString()} from @${from.username}${note ? ` — "${note}"` : ""}. Open AfroRush to spend am!`;
+    await sendDm(from, recipient.uid, recipient.username, text);
+  } catch {
+    /* DM is best-effort — don't fail the transfer */
+  }
+
+  return { recipientName: recipient.username, recipientUid: recipient.uid };
+}
