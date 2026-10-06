@@ -145,30 +145,22 @@ export default function MapScreen({ profile, onVisitLocation, onChallengePlayer,
 
       {/* Map */}
       <div className="relative mb-4 overflow-hidden rounded-3xl rush-soft-shadow" style={{ aspectRatio: "1 / 1" }}>
-        {/* Map background — 3D-style gradient with depth */}
-        <div className="absolute inset-0 bg-gradient-to-br from-[#6ba83a] via-[#7ec050] to-[#5a9030]" />
+        {/* Map background — stylized city grid */}
+        <div className="absolute inset-0 bg-gradient-to-br from-[#8db965] via-[#a8d877] to-[#7ca85a]" />
         {/* Water (lagoon) */}
-        <div className="absolute bottom-0 left-0 right-0 h-[18%] bg-gradient-to-b from-[#2196f3]/90 to-[#1565c0]" />
-        {/* Roads — grid pattern with shadows for depth */}
+        <div className="absolute bottom-0 left-0 right-0 h-[18%] bg-gradient-to-b from-[#0ea5e9]/80 to-[#0284c7]" />
+        {/* Roads — grid pattern */}
         <svg className="absolute inset-0 h-full w-full" viewBox="0 0 100 100" preserveAspectRatio="none">
-          {/* Main roads with shadow */}
-          <rect x="0" y="46" width="100" height="6" fill="#1a1a1e" />
-          <rect x="0" y="47" width="100" height="0.6" fill="#ffc531" opacity="0.9" />
-          <rect x="0" y="51" width="100" height="0.6" fill="#ffc531" opacity="0.9" />
-          <rect x="46" y="0" width="6" height="100" fill="#1a1a1e" />
-          <rect x="47" y="0" width="0.6" height="100" fill="#ffc531" opacity="0.9" />
-          <rect x="51" y="0" width="0.6" height="100" fill="#ffc531" opacity="0.9" />
-          {/* Secondary roads */}
-          <rect x="0" y="27" width="100" height="2.5" fill="#2a2a2e" />
-          <rect x="0" y="69" width="100" height="2.5" fill="#2a2a2e" />
-          <rect x="27" y="0" width="2.5" height="100" fill="#2a2a2e" />
-          <rect x="69" y="0" width="2.5" height="100" fill="#2a2a2e" />
-          {/* Building blocks — subtle dark rectangles for 3D feel */}
-          <rect x="52" y="30" width="14" height="16" fill="#5a8a3a" opacity="0.4" rx="1" />
-          <rect x="30" y="52" width="14" height="14" fill="#5a8a3a" opacity="0.4" rx="1" />
-          <rect x="52" y="52" width="14" height="14" fill="#5a8a3a" opacity="0.4" rx="1" />
-          <rect x="2" y="2" width="22" height="22" fill="#4a7a2a" opacity="0.3" rx="1" />
-          <rect x="72" y="2" width="22" height="22" fill="#4a7a2a" opacity="0.3" rx="1" />
+          <rect x="0" y="48" width="100" height="4" fill="#2a2a2e" />
+          <rect x="0" y="48" width="100" height="0.5" fill="#ffc531" />
+          <rect x="0" y="51.5" width="100" height="0.5" fill="#ffc531" />
+          <rect x="48" y="0" width="4" height="100" fill="#2a2a2e" />
+          <rect x="48" y="0" width="0.5" height="100" fill="#ffc531" />
+          <rect x="51.5" y="0" width="0.5" height="100" fill="#ffc531" />
+          <rect x="0" y="28" width="100" height="2" fill="#3a3a3e" />
+          <rect x="0" y="68" width="100" height="2" fill="#3a3a3e" />
+          <rect x="28" y="0" width="2" height="100" fill="#3a3a3e" />
+          <rect x="68" y="0" width="2" height="100" fill="#3a3a3e" />
         </svg>
 
         {/* Location pins */}

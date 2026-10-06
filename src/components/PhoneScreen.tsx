@@ -54,62 +54,66 @@ export default function PhoneScreen({ profile }: { profile: PlayerProfile }) {
         <AppContent appId={openApp} profile={profile} onClose={() => setOpenApp(null)} />
       ) : (
         <>
-          {/* Wallet card — cleaner premium look */}
-          <div className="mb-4 overflow-hidden rounded-3xl bg-gradient-to-br from-rush-navy via-rush-purple to-rush-navy p-4 text-white shadow-xl">
+          {/* Wallet card — premium dark gradient like Lagos Life */}
+          <div className="mb-4 overflow-hidden rounded-3xl bg-gradient-to-br from-[#1a1a2e] via-[#16213e] to-[#0f3460] p-4 text-white shadow-xl">
             <div className="mb-3 flex items-center justify-between">
-              <span className="text-[10px] font-bold uppercase tracking-widest text-white/60">AfroRush Wallet</span>
-              <span className="rounded-full bg-rush-green/30 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-rush-green">Active</span>
+              <span className="text-[10px] font-bold uppercase tracking-widest text-white/50">AfroRush Wallet</span>
+              <span className="rounded-full bg-rush-green/20 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-rush-green">● Active</span>
             </div>
             <div className="flex items-end justify-between">
               <div>
-                <div className="text-[9px] uppercase tracking-wider text-white/50">Cash Balance</div>
-                <div className="font-display text-3xl">{formatNaira(profile.cash)}</div>
+                <div className="text-[9px] uppercase tracking-wider text-white/40">Cash</div>
+                <div className="font-display text-2xl">{formatNaira(profile.cash)}</div>
               </div>
               <div className="text-right">
-                <div className="text-[9px] uppercase tracking-wider text-white/50">Gold</div>
-                <div className="font-display text-xl text-rush-gold">🪙 {profile.gold}</div>
+                <div className="text-[9px] uppercase tracking-wider text-white/40">Gold</div>
+                <div className="font-display text-lg text-rush-gold">🪙 {profile.gold}</div>
               </div>
             </div>
             {/* Mini stat bar */}
             <div className="mt-3 flex gap-2 border-t border-white/10 pt-2">
               <div className="flex-1 text-center">
-                <div className="text-[8px] uppercase tracking-wider text-white/40">Rep</div>
+                <div className="text-[8px] uppercase tracking-wider text-white/30">Rep</div>
                 <div className="text-xs font-bold text-rush-jade">{profile.rep.toLocaleString()}</div>
               </div>
               <div className="flex-1 text-center">
-                <div className="text-[8px] uppercase tracking-wider text-white/40">Runs</div>
+                <div className="text-[8px] uppercase tracking-wider text-white/30">Runs</div>
                 <div className="text-xs font-bold text-white">{profile.totalRuns}</div>
               </div>
               <div className="flex-1 text-center">
-                <div className="text-[8px] uppercase tracking-wider text-white/40">Crew</div>
+                <div className="text-[8px] uppercase tracking-wider text-white/30">Crew</div>
                 <div className="text-xs font-bold text-white">{profile.crewTag ?? "—"}</div>
               </div>
             </div>
           </div>
 
-          {/* App grid — cleaner with labels */}
+          {/* App grid — squircle icons like Lagos Life */}
           <div className="mb-2 text-[10px] font-bold uppercase tracking-widest text-rush-navy/50">Apps</div>
-          <div className="grid grid-cols-4 gap-3">
+          <div className="grid grid-cols-4 gap-2.5">
             {APPS.map((app) => (
               <button
                 key={app.id}
                 onClick={() => !app.locked && setOpenApp(app.id)}
-                className="flex flex-col items-center gap-1.5 transition-all active:scale-90"
+                className="flex flex-col items-center gap-1 transition-all active:scale-90"
               >
                 <div className="relative">
                   <div
-                    className="rush-squircle flex h-14 w-14 items-center justify-center text-2xl"
-                    style={{ "--icon-from": app.from, "--icon-to": app.to } as React.CSSProperties}
+                    className="flex h-12 w-12 items-center justify-center text-xl"
+                    style={{
+                      borderRadius: "22%",
+                      background: `linear-gradient(135deg, ${app.from}, ${app.to})`,
+                      boxShadow: "0 3px 8px -1px rgba(20,33,61,0.2), inset 0 -1px 3px rgba(0,0,0,0.1)",
+                    }}
                   >
                     {app.locked ? "🔒" : app.icon}
                   </div>
                   {app.badge && (
-                    <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full border-2 border-white bg-rush-orange px-1 text-[10px] font-bold text-white">
+                    <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full border-2 border-white bg-rush-orange px-1 text-[8px] font-bold text-white">
                       {app.badge}
                     </span>
                   )}
                 </div>
-                <span className="text-[9px] font-bold text-rush-navy">{app.label}</span>
+                <span className="text-[8px] font-bold text-rush-navy">{app.label}</span>
               </button>
             ))}
           </div>
