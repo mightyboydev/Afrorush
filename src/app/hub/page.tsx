@@ -105,10 +105,20 @@ function HubContent() {
   }
 
   const lvl = levelFromRep(profile.rep);
-  const clock = new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false });
+  const hour = new Date().getHours();
+  // Simple weather mock — based on hour (Lagos is mostly sunny/humid)
+  const weather =
+    hour >= 6 && hour < 18
+      ? { emoji: "☀️", text: "Sunny" }
+      : { emoji: "🌙", text: "Clear" };
+  const clock = new Date().toLocaleTimeString("en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-gradient-to-b from-[#f5e6c8] to-[#e8d5b0]">
+    <main className="relative min-h-screen overflow-hidden bg-gradient-to-b from-[#f5d28a] via-[#e8c068] to-[#a47e44]">
       {/* 3D Home Room — always rendered, behind UI */}
       <div className="fixed inset-0 z-0">
         <Suspense fallback={<div className="flex h-full items-center justify-center text-rush-navy/40">Loading room…</div>}>
@@ -131,94 +141,114 @@ function HubContent() {
         </div>
       )}
 
-      {/* UI overlay — hidden when cleanScreen is on */}
+      {/* Top status bar — compact, always visible, like Lagos Life */}
       {!cleanScreen && (
-        <div className="relative z-10">
-          {/* Top bar */}
-          <header className="flex items-center justify-between px-3 pt-3 safe-pt">
-            <button onClick={() => setShowLogoutConfirm(true)} className="flex items-center gap-2 rounded-2xl rush-glass-pill px-2.5 py-1.5 active:scale-95">
-              <div className="flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold text-white" style={{ background: profile.avatar?.skinTone ?? "#c68642" }}>
+        <header className="fixed inset-x-0 top-0 z-30 safe-pt">
+          <div className="mx-auto flex max-w-md items-center justify-between gap-1.5 px-2.5 pt-2">
+            {/* Left — avatar + time + weather */}
+            <button
+              onClick={() => setShowLogoutConfirm(true)}
+              className="flex items-center gap-1.5 rounded-full rush-glass-pill py-1 pl-1 pr-2.5 active:scale-95"
+              aria-label="Profile menu"
+            >
+              <div
+                className="flex h-7 w-7 items-center justify-center rounded-full text-[11px] font-bold text-white ring-2 ring-white/70"
+                style={{ background: profile.avatar?.skinTone ?? "#c68642" }}
+              >
                 {profile.username.charAt(0).toUpperCase()}
               </div>
-              <div className="text-left">
-                <div className="text-[10px] font-bold text-rush-navy">{profile.username}</div>
-                <div className="text-[8px] uppercase tracking-wider text-rush-navy/50">{levelTitle(lvl)} · Lvl {lvl}</div>
+              <div className="text-left leading-tight">
+                <div className="flex items-center gap-1 text-[10px] font-bold text-rush-navy">
+                  {clock}
+                  <span>{weather.emoji}</span>
+                  <span className="font-medium text-rush-navy/70">{weather.text}</span>
+                </div>
+                <div className="text-[8px] uppercase tracking-wide text-rush-navy/50">
+                  {levelTitle(lvl)} · Lvl {lvl}
+                </div>
               </div>
             </button>
 
-            <div className="flex items-center gap-1.5">
-              {/* Clock */}
-              <div className="rounded-xl rush-glass-pill px-2.5 py-1.5 text-center">
-                <div className="text-[8px] uppercase tracking-wider text-rush-navy/50">Time</div>
-                <div className="font-mono text-xs font-bold text-rush-navy">{clock}</div>
-              </div>
-              {/* Cash + add button */}
-              <div className="flex items-center gap-1 rounded-xl rush-glass-pill px-2.5 py-1.5">
-                <span className="text-xs">💵</span>
-                <span className="text-xs font-bold text-rush-gold">{formatNaira(profile.cash)}</span>
-                <button className="flex h-5 w-5 items-center justify-center rounded-full bg-rush-green text-xs text-white active:scale-90">+</button>
-              </div>
-              {/* Sound toggle */}
-              <button onClick={() => refreshProfile()} className="flex h-8 w-8 items-center justify-center rounded-xl rush-glass-pill text-sm active:scale-90">
-                {profile.soundOn ? "🔊" : "🔇"}
+            {/* Right — money pill + add button */}
+            <div className="flex items-center gap-1 rounded-full rush-glass-pill py-1 pl-2.5 pr-1">
+              <span className="text-[11px]">💵</span>
+              <span className="text-[11px] font-bold text-rush-gold">{formatNaira(profile.cash)}</span>
+              <button
+                className="flex h-6 w-6 items-center justify-center rounded-full bg-rush-green text-xs font-bold text-white active:scale-90"
+                aria-label="Add cash"
+                title="Get more cash"
+              >
+                +
               </button>
             </div>
-          </header>
+          </div>
 
-          {/* Live chips */}
-          <div className="mt-2 flex items-center justify-center gap-2 px-3">
-            <div className="flex items-center gap-1.5 rounded-full rush-glass-pill px-3 py-1">
+          {/* Live chips — small, under top bar */}
+          <div className="mx-auto flex max-w-md items-center gap-1.5 px-2.5 pt-1.5">
+            <div className="flex items-center gap-1 rounded-full bg-white/80 px-2 py-0.5 backdrop-blur-md">
               <span className="h-1.5 w-1.5 rounded-full bg-rush-green animate-pulse" />
-              <span className="text-[10px] font-bold text-rush-navy">{onlineCount} online</span>
+              <span className="text-[9px] font-bold text-rush-navy">{onlineCount} online</span>
             </div>
-            <div className="rounded-full rush-glass-pill px-3 py-1 text-[10px] font-bold text-rush-navy">
-              🔥 {profile.loginStreak || 1} day streak
+            <div className="rounded-full bg-white/80 px-2 py-0.5 text-[9px] font-bold text-rush-navy backdrop-blur-md">
+              🔥 {profile.loginStreak || 1} day
+            </div>
+            <div className="rounded-full bg-white/80 px-2 py-0.5 text-[9px] font-bold text-rush-navy backdrop-blur-md">
+              🏆 {profile.rep.toLocaleString()} rep
             </div>
           </div>
-        </div>
+        </header>
       )}
 
-      {/* Tab content — semi-transparent so 3D shows through */}
-      <div className={`relative z-10 overflow-y-auto px-3 pb-24 pt-1 transition-opacity ${cleanScreen ? "opacity-0 pointer-events-none" : ""}`}>
+      {/* Tab content — pushed below the fixed top status bar.
+          Home tab: only needs + small task/gem cards (locations live in Map tab).
+          Other tabs scroll normally. */}
+      <div className={`relative z-10 overflow-y-auto px-3 pb-24 pt-[88px] transition-opacity ${cleanScreen ? "opacity-0 pointer-events-none" : ""}`}>
         {tab === "home" && (
           <div className="mx-auto max-w-md space-y-2">
-            {/* Needs bars — compact */}
+            {/* Needs — compact circular ring row */}
             <NeedsBar profile={profile} />
 
-            {/* Today's task + Gem hunt — side by side, compact */}
+            {/* Today's task + Gem hunt — small secondary cards */}
             <div className="grid grid-cols-2 gap-2">
-              <div className="rounded-2xl bg-white/60 p-2.5 backdrop-blur-md">
-                <div className="mb-1 flex items-center justify-between">
-                  <span className="text-[8px] font-bold uppercase tracking-wider text-rush-navy/50">Task</span>
-                  <span className="text-[8px] text-rush-gold">+₦500</span>
+              <button
+                onClick={() => setOverlay("suya")}
+                className="flex flex-col gap-1 rounded-2xl bg-white/70 p-2.5 text-left backdrop-blur-md active:scale-95"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-[8px] font-bold uppercase tracking-wider text-rush-navy/50">Today&apos;s Task</span>
+                  <span className="text-[8px] font-bold text-rush-gold">+₦500</span>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <span className="text-base">🍢</span>
                   <span className="text-[10px] font-bold text-rush-navy">Visit Suya Spot</span>
                 </div>
-              </div>
-              <div className="rounded-2xl bg-white/60 p-2.5 backdrop-blur-md">
-                <div className="mb-1 flex items-center justify-between">
-                  <span className="text-[8px] font-bold uppercase tracking-wider text-rush-navy/50">Gems</span>
-                  <span className="text-[8px] text-rush-purple">💎 {profile.gemsFound?.length || 0}/5</span>
+              </button>
+              <button
+                onClick={() => setTab("map")}
+                className="flex flex-col gap-1 rounded-2xl bg-white/70 p-2.5 text-left backdrop-blur-md active:scale-95"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-[8px] font-bold uppercase tracking-wider text-rush-navy/50">Daily Gems</span>
+                  <span className="text-[8px] font-bold text-rush-purple">💎 {profile.gemsFound?.length || 0}/5</span>
                 </div>
-                <p className="text-[9px] text-rush-navy/50">Find hidden gems in the city!</p>
-              </div>
+                <p className="text-[9px] leading-tight text-rush-navy/60">Find hidden gems in the city — open Map</p>
+              </button>
             </div>
 
-            {/* Quick locations — horizontal scroll, compact */}
-            <div className="flex gap-1.5 overflow-x-auto pb-1">
-              {LOCATIONS.slice(0, 8).map((loc) => (
-                <button
-                  key={loc.id}
-                  onClick={() => handleLocation(loc.id)}
-                  className="flex shrink-0 flex-col items-center gap-0.5 rounded-xl bg-white/60 p-1.5 backdrop-blur-md active:scale-95"
-                >
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg text-base" style={{ background: `${loc.color}22` }}>{loc.emoji}</div>
-                  <span className="text-[7px] font-bold text-rush-navy">{loc.name}</span>
-                </button>
-              ))}
-            </div>
+            {/* Quick action — open Map to see all locations */}
+            <button
+              onClick={() => setTab("map")}
+              className="flex w-full items-center justify-between rounded-2xl bg-white/70 p-2.5 backdrop-blur-md active:scale-95"
+            >
+              <div className="flex items-center gap-2">
+                <span className="text-base">🗺️</span>
+                <div className="text-left">
+                  <div className="text-[10px] font-bold text-rush-navy">Explore Lagos</div>
+                  <div className="text-[9px] text-rush-navy/60">Motor Park · Garage · Race Track · Market · Crew HQ</div>
+                </div>
+              </div>
+              <span className="text-rush-navy/40">→</span>
+            </button>
           </div>
         )}
 
@@ -284,7 +314,7 @@ function HubContent() {
         <CrewOverlay profile={profile} onClose={() => setOverlay(null)} />
       )}
       {overlay === "motor-park" && (
-        <MotorParkOverlay profile={profile} unlocked={unlocked} onClose={() => setOverlay(null)} />
+        <MotorParkOverlay profile={profile} unlocked={unlocked} onClose={() => setOverlay(null)} onNavigate={(t) => { setOverlay(null); setTab(t); }} />
       )}
 
       {/* 3D Race game */}
@@ -444,7 +474,7 @@ function CrewOverlay({ profile, onClose }: { profile: PlayerProfile; onClose: ()
   );
 }
 
-function MotorParkOverlay({ profile, unlocked, onClose }: { profile: PlayerProfile; unlocked: string[]; onClose: () => void }) {
+function MotorParkOverlay({ profile, unlocked, onClose, onNavigate }: { profile: PlayerProfile; unlocked: string[]; onClose: () => void; onNavigate: (tab: Tab) => void }) {
   const inputRef = useRef({ x: 0, y: 0, boost: false });
   const [riding, setRiding] = useState(false);
   const [showVehiclePicker, setShowVehiclePicker] = useState(false);
@@ -491,19 +521,19 @@ function MotorParkOverlay({ profile, unlocked, onClose }: { profile: PlayerProfi
               <button onClick={() => setShowPhoneInWorld(false)} className="text-rush-navy/40">✕</button>
             </div>
             <div className="space-y-2">
-              <button onClick={() => { setShowPhoneInWorld(false); setTab("phone"); onClose(); }} className="flex w-full items-center gap-2 rounded-xl bg-rush-cream/50 p-2 text-left active:scale-95">
+              <button onClick={() => { setShowPhoneInWorld(false); onNavigate("phone"); }} className="flex w-full items-center gap-2 rounded-xl bg-rush-cream/50 p-2 text-left active:scale-95">
                 <span className="text-lg">💬</span>
                 <span className="text-xs font-bold text-rush-navy">Messages</span>
               </button>
-              <button onClick={() => { setShowPhoneInWorld(false); setTab("phone"); onClose(); }} className="flex w-full items-center gap-2 rounded-xl bg-rush-cream/50 p-2 text-left active:scale-95">
+              <button onClick={() => { setShowPhoneInWorld(false); onNavigate("phone"); }} className="flex w-full items-center gap-2 rounded-xl bg-rush-cream/50 p-2 text-left active:scale-95">
                 <span className="text-lg">🏦</span>
                 <span className="text-xs font-bold text-rush-navy">Bank</span>
               </button>
-              <button onClick={() => { setShowPhoneInWorld(false); setTab("map"); onClose(); }} className="flex w-full items-center gap-2 rounded-xl bg-rush-cream/50 p-2 text-left active:scale-95">
+              <button onClick={() => { setShowPhoneInWorld(false); onNavigate("map"); }} className="flex w-full items-center gap-2 rounded-xl bg-rush-cream/50 p-2 text-left active:scale-95">
                 <span className="text-lg">🗺️</span>
                 <span className="text-xs font-bold text-rush-navy">Map / Ask Location</span>
               </button>
-              <button onClick={() => { setShowPhoneInWorld(false); setTab("phone"); onClose(); }} className="flex w-full items-center gap-2 rounded-xl bg-rush-cream/50 p-2 text-left active:scale-95">
+              <button onClick={() => { setShowPhoneInWorld(false); onNavigate("phone"); }} className="flex w-full items-center gap-2 rounded-xl bg-rush-cream/50 p-2 text-left active:scale-95">
                 <span className="text-lg">🛺</span>
                 <span className="text-xs font-bold text-rush-navy">Ride — Call Okada</span>
               </button>
