@@ -5,6 +5,7 @@ import {
   collection,
   doc,
   getDoc,
+  getDocs,
   setDoc,
   updateDoc,
   deleteDoc,
@@ -15,7 +16,12 @@ import {
   limit,
   arrayUnion,
   increment,
+  serverTimestamp,
+  addDoc,
+  or,
+  and,
   type Unsubscribe,
+  type QueryConstraint,
 } from "firebase/firestore";
 import { getFirebaseDb } from "./firebase";
 import {
@@ -31,6 +37,7 @@ import {
 const USERS = "users";
 const CREWS = "crews";
 const PRESENCE = "presence";
+const DM_CHATS = "dm_chats";
 
 // We store the unlocked items list as a sub-doc to keep profile doc small.
 const UNLOCKED_KEY = "unlocked";
@@ -352,4 +359,121 @@ export async function fetchPlayerState(uid: string): Promise<{
     fetchUnlocked(uid),
   ]);
   return { profile, unlocked };
+}
+
+// ---------- Direct Messages (DMs) ----------
+// DMs are stored in the `dm_chats` collection. Each message has:
+//   fromUid, fromName, toUid, toName, text, createdAt, read
+// We query by participant (using OR on fromUid/toUid) so a user sees all
+// messages they sent OR received.
+
+export interface DmMessage {
+  id: string;
+  fromUid: string;
+  fromName: string;
+  toUid: string;
+  toName: string;
+  text: string;
+  createdAt: number;
+  read: boolean;
+}
+
+// Helper: stable chatId from two UIDs (sorted) — used for grouping threads.
+export function dmChatId(uidA: string, uidB: string): string {
+  return [uidA, uidB].sort().join("__");
+}
+
+// Search for a player by username (case-insensitive prefix match).
+// Returns up to 10 matches.
+export async function searchPlayersByUsername(
+  usernamePrefix: string
+): Promise<Array<{ uid: string; username: string; photoURL: string | null }>> {
+  const db = getFirebaseDb();
+  const q = query(
+    collection(db, USERS),
+    where("username", ">=", usernamePrefix),
+    where("username", "<=", usernamePrefix + "\uf8ff"),
+    limit(10)
+  );
+  const snap = await getDocs(q);
+  return snap.docs.map((d) => {
+    const p = d.data() as PlayerProfile;
+    return { uid: p.uid, username: p.username, photoURL: p.photoURL };
+  });
+}
+
+// Send a DM. Uses chatId for easy thread lookup.
+export async function sendDm(
+  from: PlayerProfile,
+  toUid: string,
+  toName: string,
+  text: string
+): Promise<void> {
+  const db = getFirebaseDb();
+  const chatId = dmChatId(from.uid, toUid);
+  await addDoc(collection(db, DM_CHATS), {
+    chatId,
+    fromUid: from.uid,
+    fromName: from.username,
+    toUid,
+    toName,
+    text,
+    createdAt: Date.now(),
+    read: false,
+  });
+}
+
+// Subscribe to all DMs involving `uid` (sent OR received), newest first.
+// Returns an unsubscribe function.
+export function subscribeToDms(
+  uid: string,
+  cb: (messages: DmMessage[]) => void
+): Unsubscribe {
+  const db = getFirebaseDb();
+  // Try OR query (requires composite index). If it errors, fallback to two
+  // separate queries handled by the caller.
+  try {
+    const q = query(
+      collection(db, DM_CHATS),
+      or(where("fromUid", "==", uid), where("toUid", "==", uid)),
+      orderBy("createdAt", "asc")
+    );
+    return onSnapshot(
+      q,
+      (snap) => {
+        const messages = snap.docs.map((d) => ({
+          id: d.id,
+          ...(d.data() as Omit<DmMessage, "id">),
+        }));
+        cb(messages);
+      },
+      // Fallback: if composite index missing, fall back to a single
+      // client-side filter on the toUid query.
+      async () => {
+        const receivedQ = query(
+          collection(db, DM_CHATS),
+          where("toUid", "==", uid),
+          orderBy("createdAt", "asc")
+        );
+        const sentQ = query(
+          collection(db, DM_CHATS),
+          where("fromUid", "==", uid),
+          orderBy("createdAt", "asc")
+        );
+        const [recv, sent] = await Promise.all([getDocs(receivedQ), getDocs(sentQ)]);
+        const combined: DmMessage[] = [];
+        recv.forEach((d) =>
+          combined.push({ id: d.id, ...(d.data() as Omit<DmMessage, "id">) })
+        );
+        sent.forEach((d) =>
+          combined.push({ id: d.id, ...(d.data() as Omit<DmMessage, "id">) })
+        );
+        combined.sort((a, b) => a.createdAt - b.createdAt);
+        cb(combined);
+      }
+    );
+  } catch {
+    // Synchronous fallback — should never hit, but keep TS happy.
+    return () => {};
+  }
 }
