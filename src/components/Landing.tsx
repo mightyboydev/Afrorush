@@ -8,6 +8,7 @@ import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { useAuth } from "@/lib/auth";
 import { SKIN_TONES, HAIR_STYLES, HAIR_COLORS, DEFAULT_AVATAR, type AvatarConfig } from "@/lib/storage";
+import SafeCanvas from "@/components/SafeCanvas";
 
 // 3D character preview — ssr:false
 const CharacterPreview3D = dynamic(() => import("@/components/CharacterPreview"), { ssr: false });
@@ -159,10 +160,21 @@ export default function Landing() {
               <div className="space-y-3">
                 {/* Character preview + form layout (like phlifestyle) */}
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                  {/* Left: 3D character preview */}
+                  {/* Left: 3D character preview (wrapped in SafeCanvas — never crashes the page) */}
                   <div className="relative">
                     <div className="overflow-hidden rounded-2xl bg-gradient-to-b from-[#b3e5fc]/30 to-[#fff8e7]/30">
-                      <CharacterPreview3D avatar={previewAvatar} height={200} />
+                      <SafeCanvas
+                        fallback={
+                          <div className="flex h-[200px] w-full flex-col items-center justify-center bg-gradient-to-b from-[#b3e5fc]/60 to-[#fff8e7]/60 text-center">
+                            <div className="text-7xl" style={{ filter: "drop-shadow(0 8px 12px rgba(20,33,61,0.2))" }}>🧑🏾</div>
+                            <p className="mt-2 px-4 text-[10px] text-rush-navy/50">
+                              3D no dey your phone, but you fit still sign up and play!
+                            </p>
+                          </div>
+                        }
+                      >
+                        <CharacterPreview3D avatar={previewAvatar} height={200} />
+                      </SafeCanvas>
                     </div>
                     {/* Shuffle button */}
                     <button
@@ -348,6 +360,8 @@ export default function Landing() {
       {/* Footer */}
       <footer className="relative z-10 mt-4 px-4 pb-4 text-center sm:px-6 safe-pb">
         <div className="mb-1 flex items-center justify-center gap-3 text-[10px] text-rush-navy/40">
+          <a href="/about" className="hover:text-rush-navy">About</a>
+          <span>·</span>
           <a href="/privacy" className="hover:text-rush-navy">Privacy</a>
           <span>·</span>
           <a href="/terms" className="hover:text-rush-navy">Terms</a>

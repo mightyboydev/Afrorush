@@ -2,8 +2,10 @@
 
 // src/components/CharacterPreview.tsx — 3D character turntable for onboarding.
 // Drag to rotate, see your character from all angles.
+// Falls back to a CSS/emoji avatar if WebGL is unavailable (so the page
+// never hard-crashes on phones without WebGL support).
 
-import { Suspense, useRef, useState } from "react";
+import { Suspense, useRef, useState, useEffect } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { OrbitControls, ContactShadows, Environment as DreiEnv } from "@react-three/drei";
@@ -14,7 +16,42 @@ export interface CharacterPreviewProps {
   height?: number;
 }
 
+// ---------- WebGL detector (same as HomeRoom) ----------
+function hasWebGL(): boolean {
+  if (typeof window === "undefined") return true; // assume ok during SSR
+  try {
+    const canvas = document.createElement("canvas");
+    return !!(
+      window.WebGLRenderingContext &&
+      (canvas.getContext("webgl") || canvas.getContext("experimental-webgl"))
+    );
+  } catch {
+    return false;
+  }
+}
+
 export default function CharacterPreview({ avatar, height = 300 }: CharacterPreviewProps) {
+  const [webglOk, setWebglOk] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    setWebglOk(hasWebGL());
+  }, []);
+
+  // While checking (SSR + first paint), render an empty div to avoid hydration mismatch
+  if (webglOk === null) {
+    return (
+      <div
+        style={{ height, width: "100%" }}
+        className="overflow-hidden rounded-3xl bg-gradient-to-b from-[#b3e5fc]/40 to-[#fff8e7]/40"
+      />
+    );
+  }
+
+  // Fallback: 2D emoji avatar — no WebGL needed
+  if (!webglOk) {
+    return <CharacterFallback avatar={avatar} height={height} />;
+  }
+
   return (
     <div style={{ height, width: "100%" }} className="overflow-hidden rounded-3xl bg-gradient-to-b from-[#b3e5fc]/40 to-[#fff8e7]/40">
       <Canvas
@@ -55,6 +92,47 @@ export default function CharacterPreview({ avatar, height = 300 }: CharacterPrev
           />
         </Suspense>
       </Canvas>
+    </div>
+  );
+}
+
+// ---------- 2D Fallback (CSS + emoji) ----------
+function CharacterFallback({ avatar, height }: { avatar: AvatarConfig; height: number }) {
+  // Map skin tone → emoji
+  const skinToEmoji: Record<string, string> = {
+    "#8d5524": "🧑🏾",
+    "#c68642": "🧑🏽",
+    "#e0ac69": "🧑🏼",
+    "#f1c27d": "🧑🏻",
+    "#ffdbac": "🧑🏻",
+  };
+  const emoji = skinToEmoji[avatar.skinTone] ?? "🧑🏾";
+  const hairEmoji = avatar.hair === "afro" ? "💇🏾" : avatar.hair === "cap" ? "🧢" : "";
+
+  return (
+    <div
+      style={{ height, width: "100%" }}
+      className="flex flex-col items-center justify-center overflow-hidden rounded-3xl bg-gradient-to-b from-[#b3e5fc]/60 to-[#fff8e7]/60"
+    >
+      <div className="text-[10px] font-bold uppercase tracking-widest text-rush-navy/40">2D preview</div>
+      <div className="relative">
+        <div
+          className="text-8xl"
+          style={{ filter: "drop-shadow(0 8px 12px rgba(20,33,61,0.2))" }}
+        >
+          {emoji}
+        </div>
+        {hairEmoji && (
+          <div className="absolute -right-2 -top-2 text-3xl">{hairEmoji}</div>
+        )}
+      </div>
+      <div className="mt-2 flex gap-1">
+        <span className="h-3 w-3 rounded-full border-2 border-white shadow" style={{ background: avatar.hairColor }} />
+        <span className="h-3 w-3 rounded-full border-2 border-white shadow" style={{ background: avatar.skinTone }} />
+      </div>
+      <p className="mt-3 max-w-[80%] text-center text-[9px] text-rush-navy/40">
+        WebGL no dey your device, but you fit still continue. Your avatar go show as emoji for now.
+      </p>
     </div>
   );
 }

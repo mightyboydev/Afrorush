@@ -254,6 +254,7 @@ export default function Onboarding() {
                   >
                     <div className="text-sm font-bold text-rush-navy" style={{ color: c.accent }}>{c.name}</div>
                     <div className="text-[10px] uppercase tracking-wider text-rush-navy/60">{c.country}</div>
+                    <div className="mt-0.5 text-[9px] leading-tight text-rush-navy/50">{c.desc}</div>
                   </button>
                 ))}
               </div>
