@@ -3,7 +3,7 @@
 // src/app/hub/page.tsx — Home screen: 3D room, needs bars, top bar, bottom nav.
 // Phase 1 of the life-sim restyle.
 
-import { useEffect, useState, lazy, Suspense } from "react";
+import { useEffect, useState, useRef, lazy, Suspense } from "react";
 import { useRouter } from "next/navigation";
 import { AuthProvider, useAuth } from "@/lib/auth";
 import {
@@ -15,6 +15,7 @@ import {
 import { subscribeToOnlinePlayers } from "@/lib/firestore";
 import BottomNav, { type Tab } from "@/components/BottomNav";
 import NeedsBar from "@/components/NeedsBar";
+import Joystick from "@/components/Joystick";
 import BuyScreen from "@/components/BuyScreen";
 import PhoneScreen from "@/components/PhoneScreen";
 import MapScreen from "@/components/MapScreen";
@@ -447,19 +448,37 @@ function CrewOverlay({ profile, onClose }: { profile: PlayerProfile; onClose: ()
 }
 
 function MotorParkOverlay({ profile, onClose }: { profile: PlayerProfile; onClose: () => void }) {
-  const inputRef = { current: { x: 0, y: 0, boost: false } };
+  const inputRef = useRef({ x: 0, y: 0, boost: false });
   const [riding, setRiding] = useState(false);
   return (
     <div className="fixed inset-0 z-50 bg-rush-sky">
       <Suspense fallback={<div className="flex h-full items-center justify-center text-rush-navy">Loading the streets…</div>}>
         <City avatar={profile.avatar} quality={profile.graphicsQuality} riding={riding} inputRef={inputRef} />
       </Suspense>
+
+      {/* Top bar */}
       <div className="absolute left-3 top-3 z-30 flex items-center gap-2">
-        <button onClick={onClose} className="rush-glass-pill flex items-center gap-1 px-3 py-2 text-xs font-bold uppercase tracking-wider text-rush-navy">← Home</button>
+        <button onClick={onClose} className="rush-glass-pill flex items-center gap-1 px-3 py-2 text-xs font-bold uppercase tracking-wider text-rush-navy active:scale-95">← Home</button>
         <div className="rush-glass-pill px-3 py-2 text-xs font-bold text-rush-navy">🛺 Motor Park</div>
       </div>
+
+      {/* FIXED joystick — bottom-left, always visible */}
+      <Joystick inputRef={inputRef} />
+
+      {/* Action buttons — bottom-right */}
       <div className="absolute bottom-6 right-4 z-30 flex flex-col gap-2">
-        <button onClick={() => setRiding((r) => !r)} className={`flex h-14 w-14 items-center justify-center rounded-full text-2xl shadow-lg ${riding ? "bg-rush-orange text-white" : "rush-glass-pill"}`}>{riding ? "🛑" : "🏍️"}</button>
+        <button
+          onPointerDown={(e) => { e.preventDefault(); inputRef.current.boost = true; }}
+          onPointerUp={() => { inputRef.current.boost = false; }}
+          onPointerLeave={() => { inputRef.current.boost = false; }}
+          className="flex h-16 w-16 touch-none items-center justify-center rounded-full bg-rush-green text-2xl text-white shadow-lg shadow-rush-green/30 active:scale-95"
+          style={{ touchAction: "none" }}
+        >
+          ⚡
+        </button>
+        <button onClick={() => setRiding((r) => !r)} className={`flex h-14 w-14 items-center justify-center rounded-full text-2xl shadow-lg active:scale-95 ${riding ? "bg-rush-orange text-white" : "rush-glass-pill"}`}>
+          {riding ? "🛑" : "🏍️"}
+        </button>
       </div>
     </div>
   );
