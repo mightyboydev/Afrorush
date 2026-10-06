@@ -240,7 +240,7 @@ function AppShell({ profile }: { profile: NonNullable<ReturnType<typeof useAuth>
       />
 
       {/* Tab content overlays */}
-      <div className="fixed inset-0 z-10 overflow-y-auto pb-20">
+      <div className={`fixed inset-0 z-10 overflow-y-auto pb-20 ${tab === "home" ? "" : "bg-[#f4efe6]"}`}>
         {tab === "home" && (
           <div className="mx-auto max-w-md px-4 pt-4 safe-pt">
             <HomeScreen profile={profile} />
