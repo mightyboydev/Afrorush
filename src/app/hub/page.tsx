@@ -7,6 +7,8 @@ import { useEffect, useState, useRef, lazy, Suspense } from "react";
 import { useRouter } from "next/navigation";
 import { PlusIcon } from "@/ui/icons";
 import { OkadaMascot } from "@/ui/mascot";
+import { Panel, PrimaryButton } from "@/ui/kit";
+import { BukaIcon, StarIcon, MapIcon as MapIconSvg } from "@/ui/icons";
 import { AuthProvider, useAuth } from "@/lib/auth";
 import {
   formatNaira,
@@ -36,11 +38,11 @@ const MultiplayerRace = lazy(() => import("@/components/MultiplayerRace"));
 // These always show regardless of state. The real-world places from places.ts
 // are added on top based on the player's home city.
 const GAME_HUBS = [
-  { id: "motor-park", name: "Motor Park", emoji: "🛺", color: "#0d7c4a", desc: "Social hub. Okadas, danfos, keke.", category: "social" as PlaceCategory, state: "lagos" as StateId },
-  { id: "garage", name: "Garage", emoji: "🏍️", color: "#c87f3f", desc: "Customize your bike & outfit.", category: "social" as PlaceCategory, state: "lagos" as StateId },
-  { id: "race-track", name: "Race Track", emoji: "🏁", color: "#d4a017", desc: "Street, Delivery, Police Chase, Freestyle.", category: "recreation" as PlaceCategory, state: "lagos" as StateId },
-  { id: "suya-spot", name: "Suya Spot", emoji: "🍢", color: "#c87f3f", desc: "Daily free reward + food buffs.", category: "social" as PlaceCategory, state: "lagos" as StateId },
-  { id: "crew-hq", name: "Crew HQ", emoji: "👥", color: "#7c3aed", desc: "Manage crew, crew wars.", category: "social" as PlaceCategory, state: "lagos" as StateId },
+  { id: "motor-park", name: "Motor Park", emoji: "", color: "#0d7c4a", desc: "Social hub. Okadas, danfos, keke.", category: "social" as PlaceCategory, state: "lagos" as StateId },
+  { id: "garage", name: "Garage", emoji: "", color: "#c87f3f", desc: "Customize your bike & outfit.", category: "social" as PlaceCategory, state: "lagos" as StateId },
+  { id: "race-track", name: "Race Track", emoji: "", color: "#d4a017", desc: "Street, Delivery, Police Chase, Freestyle.", category: "recreation" as PlaceCategory, state: "lagos" as StateId },
+  { id: "suya-spot", name: "Suya Spot", emoji: "", color: "#c87f3f", desc: "Daily free reward + food buffs.", category: "social" as PlaceCategory, state: "lagos" as StateId },
+  { id: "crew-hq", name: "Crew HQ", emoji: "", color: "#7c3aed", desc: "Manage crew, crew wars.", category: "social" as PlaceCategory, state: "lagos" as StateId },
 ];
 
 // Build a flat LOCATIONS array: game hubs + real places for the player's state
@@ -133,8 +135,8 @@ function HubContent() {
   // Simple weather mock — based on hour (Lagos is mostly sunny/humid)
   const weather =
     hour >= 6 && hour < 18
-      ? { emoji: "☀️", text: "Sunny" }
-      : { emoji: "🌙", text: "Clear" };
+      ? { emoji: "", text: "Sunny" }
+      : { emoji: "", text: "Clear" };
   const clock = new Date().toLocaleTimeString("en-US", {
     hour: "2-digit",
     minute: "2-digit",
@@ -183,7 +185,7 @@ function HubContent() {
             </div>
           }
         >
-          <Suspense fallback={<div className="flex h-full items-center justify-center text-rush-navy/40">Loading room…</div>}>
+          <Suspense fallback={<div className="flex h-full items-center justify-center text-rush-ink/40">Loading room…</div>}>
             <HomeRoom avatar={profile.avatar} quality={profile.graphicsQuality} />
           </Suspense>
         </SafeCanvas>
@@ -192,7 +194,7 @@ function HubContent() {
       {/* Welcome okada */}
       {showOkada && (
         <div className="pointer-events-none fixed inset-x-0 top-1/3 z-40 flex justify-center">
-          <div className="animate-[okada-drive_2.5s_ease-in-out_forwards] text-5xl">🏍️💨</div>
+          <div className="animate-[okada-drive_2.5s_ease-in-out_forwards] text-5xl"></div>
           <style>{`
             @keyframes okada-drive {
               0% { transform: translateX(-100vw) rotate(-5deg); opacity: 0; }
@@ -230,7 +232,7 @@ function HubContent() {
                 <div className="text-left leading-tight">
                   <div className="text-[11px] font-bold text-rush-ink tabular-nums">
                     {clock}
-                    <span className="ml-1">{weather.emoji}</span>
+                    <span className="ml-1">""</span>
                   </div>
                   <div className="text-[9px] font-medium text-rush-ink-soft">
                     {levelTitle(lvl)} · Lvl {lvl}
@@ -248,7 +250,7 @@ function HubContent() {
                 }`}
                 title={isNepo ? "Nepo Baby — born with silver spoon" : "Lapo Baby — hustler from day one"}
               >
-                {isNepo ? "👶 Nepo" : "💪 Lapo"}
+                {isNepo ? "Nepo" : "Lapo"}
               </div>
 
               {/* Spacer */}
@@ -265,7 +267,7 @@ function HubContent() {
                 aria-label="Open Bank to send or top up"
               >
                 <span className="text-[13px] font-bold text-white tabular-nums">
-                  ₦{formatNaira(profile.cash)}
+                  {formatNaira(profile.cash)}
                 </span>
                 {/* Plus button — gold circle with glow */}
                 <span
@@ -294,18 +296,18 @@ function HubContent() {
                 onClick={() => setOverlay("city-picker")}
                 className="rush-glass-pill btn-press flex shrink-0 items-center gap-1 px-2.5 py-1 text-[11px] font-semibold text-rush-ink"
               >
-                <span>📍</span>
+                
                 <span className="uppercase">{(profile.city ?? "lagos").replace(/^\w/, (c) => c.toUpperCase())}</span>
                 <span className="text-rush-ink-soft text-[9px]">⌄</span>
               </button>
               {/* Streak */}
               <div className="rush-glass-pill flex shrink-0 items-center gap-1 px-2.5 py-1 text-[11px] font-semibold text-rush-ink">
-                <span>🔥</span>
+                
                 <span className="tabular-nums">{profile.loginStreak || 1} day</span>
               </div>
               {/* Rep */}
               <div className="rush-glass-pill flex shrink-0 items-center gap-1 px-2.5 py-1 text-[11px] font-semibold text-rush-ink">
-                <span>🏆</span>
+                
                 <span className="tabular-nums">{profile.rep.toLocaleString()}</span>
               </div>
               {/* Handle + share buttons */}
@@ -320,7 +322,7 @@ function HubContent() {
           {isJailed && (
             <div className="mx-auto mt-1.5 max-w-md px-2.5">
               <div className="flex items-center gap-2 rounded-2xl bg-rush-rose/95 px-3 py-2 text-white shadow-lg">
-                <span className="text-lg">🚔</span>
+                
                 <div className="flex-1">
                   <div className="text-[10px] font-bold uppercase tracking-wider">You dey inside cell</div>
                   <div className="text-[9px] text-white/80">{profile.jailedReason}</div>
@@ -337,7 +339,7 @@ function HubContent() {
                 onClick={() => setTab("phone")}
                 className="btn-press flex w-full items-center gap-2 rounded-2xl bg-rush-sunset/95 px-3 py-2 text-white shadow-lg"
               >
-                <span className="text-lg">😅</span>
+                
                 <div className="flex-1 text-left">
                   <div className="text-[10px] font-bold uppercase tracking-wider">You dey stranded!</div>
                   <div className="text-[9px] text-white/90">Cash = 0. Take loan for Buka/phone to bounce back.</div>
@@ -349,7 +351,7 @@ function HubContent() {
           {hasLoan && !isJailed && !isStranded && (
             <div className="mx-auto mt-1.5 max-w-md px-2.5">
               <div className="flex items-center gap-2 rounded-2xl bg-rush-rose/15 px-3 py-2 ring-1 ring-rush-rose/30">
-                <span className="text-base">💸</span>
+                
                 <div className="flex-1">
                   <div className="text-[10px] font-bold uppercase tracking-wider text-rush-rose">Active loan</div>
                   <div className="text-[9px] text-rush-ink-soft">
@@ -369,19 +371,15 @@ function HubContent() {
       )}
 
       {/* Tab content — pushed below the fixed top status bar.
-          Home tab: only needs + small task/gem cards (locations live in Map tab).
-          Other tabs scroll normally. */}
+          Opaque dark backdrop behind non-home tabs so 3D doesn't show through. */}
       <div className={`relative z-10 overflow-y-auto px-3 pb-24 pt-[150px] transition-opacity ${cleanScreen ? "opacity-0 pointer-events-none" : ""}`}>
+        {/* Opaque backdrop for Map/Phone/Buy tabs (home stays transparent for 3D) */}
+        {tab !== "home" && (
+          <div className="pointer-events-none fixed inset-0 z-0" style={{ background: "linear-gradient(180deg, var(--ar-bg-deep) 0%, var(--ar-bg) 100%)" }} />
+        )}
         {tab === "home" && (
           <div className="mx-auto max-w-md space-y-2">
-            {/* Lagos Life vitals — stamina / hunger / street_cred */}
-            <div className="grid grid-cols-3 gap-1.5">
-              <VitalCard label="Stamina" value={profile.vitals?.stamina ?? 80} color="#22b573" icon="⚡" />
-              <VitalCard label="Hunger" value={profile.vitals?.hunger ?? 20} color="#f59e42" icon="🍽️" inverted />
-              <VitalCard label="Cred" value={profile.vitals?.street_cred ?? 10} color="#7c3aed" icon="💯" />
-            </div>
-
-            {/* Needs — compact circular ring row */}
+            {/* Needs — compact circular ring row (single set, no duplicates) */}
             <NeedsBar profile={profile} />
 
             {/* Today's task + Gem hunt — small secondary cards */}
@@ -395,7 +393,7 @@ function HubContent() {
                   <span className="text-[8px] font-bold text-rush-amber-deep tabular-nums">+₦500</span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <span className="text-base">🍢</span>
+                  <BukaIcon size={16} className="text-rush-terracotta" />
                   <span className="text-[10px] font-bold text-rush-ink">Visit Suya Spot</span>
                 </div>
               </button>
@@ -405,7 +403,7 @@ function HubContent() {
               >
                 <div className="flex items-center justify-between">
                   <span className="text-[8px] font-bold uppercase tracking-wider text-rush-ink-soft">Daily Gems</span>
-                  <span className="text-[8px] font-bold text-rush-purple tabular-nums">💎 {profile.gemsFound?.length || 0}/5</span>
+                  <span className="text-[8px] font-bold text-rush-purple tabular-nums">{profile.gemsFound?.length || 0}/5</span>
                 </div>
                 <p className="text-[9px] leading-tight text-rush-ink-soft">Find hidden gems in the city — open Map</p>
               </button>
@@ -417,7 +415,7 @@ function HubContent() {
               className="panel rush-glass btn-press flex w-full items-center justify-between p-2.5"
             >
               <div className="flex items-center gap-2">
-                <span className="text-base">🗺️</span>
+                <MapIconSvg size={16} className="text-rush-lagoon" />
                 <div className="text-left">
                   <div className="text-[10px] font-bold text-rush-ink">Explore Lagos</div>
                   <div className="text-[9px] text-rush-ink-soft">Motor Park · Garage · Race Track · Market · Crew HQ</div>
@@ -453,7 +451,7 @@ function HubContent() {
         className="fixed bottom-20 left-3 z-30 flex h-10 w-10 items-center justify-center rounded-full rush-glass-pill text-sm active:scale-90"
         aria-label="Toggle UI"
       >
-        {cleanScreen ? "👁️" : "🙈"}
+        {cleanScreen ? "" : ""}
       </button>
 
       {/* Bottom nav */}
@@ -463,11 +461,11 @@ function HubContent() {
       {showLogoutConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setShowLogoutConfirm(false)}>
           <div className="rush-bounce-in rush-card w-full max-w-xs p-5 text-center" onClick={(e) => e.stopPropagation()}>
-            <div className="mb-2 text-4xl">🚪</div>
-            <div className="font-display text-lg text-rush-navy">Log out?</div>
-            <p className="mt-1 text-xs text-rush-navy/60">You can always come back to the streets.</p>
+            <div className="mb-2 text-4xl"></div>
+            <div className="font-display text-lg text-rush-ink">Log out?</div>
+            <p className="mt-1 text-xs text-rush-ink/60">You can always come back to the streets.</p>
             <div className="mt-4 flex gap-2">
-              <button onClick={() => setShowLogoutConfirm(false)} className="flex-1 rounded-2xl bg-rush-cream px-4 py-3 text-sm font-bold uppercase tracking-wider text-rush-navy">Stay</button>
+              <button onClick={() => setShowLogoutConfirm(false)} className="flex-1 rounded-2xl bg-rush-cream px-4 py-3 text-sm font-bold uppercase tracking-wider text-rush-ink">Stay</button>
               <button onClick={() => signOutUser().then(() => router.replace("/"))} className="flex-1 rounded-2xl bg-red-500 px-4 py-3 text-sm font-bold uppercase tracking-wider text-white">Log Out</button>
             </div>
           </div>
@@ -550,27 +548,16 @@ function HubContent() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setSelectedLocation(null)}>
           <div className="rush-bounce-in rush-card w-full max-w-sm p-6 text-center" onClick={(e) => e.stopPropagation()}>
             <div className="mb-2 text-5xl">{selectedLocation.emoji}</div>
-            <h2 className="font-display text-2xl text-rush-navy">{selectedLocation.name}</h2>
-            <p className="mt-2 text-sm text-rush-navy/60">{selectedLocation.desc}</p>
+            <h2 className="font-display text-2xl text-rush-ink">{selectedLocation.name}</h2>
+            <p className="mt-2 text-sm text-rush-ink/60">{selectedLocation.desc}</p>
             <div className="mt-4 flex gap-2">
-              <button onClick={() => setSelectedLocation(null)} className="flex-1 rounded-2xl bg-rush-cream px-4 py-3 text-sm font-bold uppercase tracking-wider text-rush-navy">Close</button>
+              <button onClick={() => setSelectedLocation(null)} className="flex-1 rounded-2xl bg-rush-cream px-4 py-3 text-sm font-bold uppercase tracking-wider text-rush-ink">Close</button>
               <button onClick={() => { setOverlay("motor-park"); setSelectedLocation(null); }} className="flex-1 rounded-2xl bg-rush-green px-4 py-3 text-sm font-bold uppercase tracking-wider text-white">Go There →</button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Footer */}
-      <footer className="relative z-10 px-4 pb-2 text-center safe-pb">
-        <div className="flex items-center justify-center gap-3 text-[10px] text-rush-navy/40">
-          <a href="/about" className="hover:text-rush-navy">About</a>
-          <span>·</span>
-          <a href="/privacy" className="hover:text-rush-navy">Privacy</a>
-          <span>·</span>
-          <a href="/terms" className="hover:text-rush-navy">Terms</a>
-        </div>
-        <div className="text-[10px] uppercase tracking-widest text-rush-navy/30">AfroRush</div>
-      </footer>
     </main>
   );
 }
@@ -582,8 +569,8 @@ function OverlaySheet({ title, onClose, children }: { title: string; onClose: ()
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50" onClick={onClose}>
       <div className="rush-bounce-in max-h-[90vh] w-full max-w-md overflow-y-auto rounded-t-3xl bg-rush-cream p-4 pb-8 safe-pb" onClick={(e) => e.stopPropagation()}>
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="font-display text-xl text-rush-navy">{title}</h2>
-          <button onClick={onClose} className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-rush-navy">✕</button>
+          <h2 className="font-display text-xl text-rush-ink">{title}</h2>
+          <button onClick={onClose} className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-rush-ink"></button>
         </div>
         {children}
       </div>
@@ -593,32 +580,32 @@ function OverlaySheet({ title, onClose, children }: { title: string; onClose: ()
 
 function RaceModePicker({ onClose, onPick, onMultiplayer }: { onClose: () => void; onPick: (mode: "street-race" | "delivery-rush" | "police-chase" | "freestyle-run") => void; onMultiplayer: () => void }) {
   const modes = [
-    { id: "street-race" as const, name: "Street Race", emoji: "🏁", desc: "Hit top speed. Beat the clock.", color: "#ffc531" },
-    { id: "delivery-rush" as const, name: "Delivery Rush", emoji: "📦", desc: "Pick up & drop off parcels.", color: "#1fb86f" },
-    { id: "police-chase" as const, name: "Police Chase", emoji: "🚓", desc: "Outrun the sirens for 60s.", color: "#16a3b1" },
+    { id: "street-race" as const, name: "Street Race", emoji: "", desc: "Hit top speed. Beat the clock.", color: "#ffc531" },
+    { id: "delivery-rush" as const, name: "Delivery Rush", emoji: "", desc: "Pick up & drop off parcels.", color: "#1fb86f" },
+    { id: "police-chase" as const, name: "Police Chase", emoji: "", desc: "Outrun the sirens for 60s.", color: "#16a3b1" },
     { id: "freestyle-run" as const, name: "Freestyle Run", emoji: "∞", desc: "Endless. Stack distance + style.", color: "#7c3aed" },
   ];
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={onClose}>
       <div className="rush-bounce-in rush-card w-full max-w-sm p-5" onClick={(e) => e.stopPropagation()}>
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="font-display text-xl text-rush-navy">Pick a Race</h2>
-          <button onClick={onClose} className="flex h-9 w-9 items-center justify-center rounded-full bg-rush-cream text-rush-navy">✕</button>
+          <h2 className="font-display text-xl text-rush-ink">Pick a Race</h2>
+          <button onClick={onClose} className="flex h-9 w-9 items-center justify-center rounded-full bg-rush-cream text-rush-ink"></button>
         </div>
         <div className="space-y-2">
           {/* Multiplayer — featured at top */}
           <button onClick={onMultiplayer} className="flex w-full items-center gap-3 rounded-2xl bg-gradient-to-r from-rush-green/20 to-rush-jade/20 p-3 ring-2 ring-rush-green/40 active:scale-95">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl text-2xl" style={{ background: "#1fb86f22" }}>👥</div>
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl text-2xl" style={{ background: "#1fb86f22" }}></div>
             <div className="flex-1 text-left">
-              <div className="text-sm font-bold text-rush-navy">Multiplayer Race</div>
-              <div className="text-[10px] text-rush-navy/60">Race friends live · room code · serverless</div>
+              <div className="text-sm font-bold text-rush-ink">Multiplayer Race</div>
+              <div className="text-[10px] text-rush-ink/60">Race friends live · room code · serverless</div>
             </div>
             <span className="rounded-full bg-rush-green px-2 py-0.5 text-[8px] font-bold uppercase text-white">New</span>
           </button>
           {modes.map((m) => (
             <button key={m.id} onClick={() => onPick(m.id)} className="flex w-full items-center gap-3 rounded-2xl bg-white p-3 active:scale-95">
               <div className="flex h-12 w-12 items-center justify-center rounded-2xl text-2xl" style={{ background: `${m.color}22` }}>{m.emoji}</div>
-              <div className="flex-1 text-left"><div className="text-sm font-bold text-rush-navy">{m.name}</div><div className="text-[10px] text-rush-navy/60">{m.desc}</div></div>
+              <div className="flex-1 text-left"><div className="text-sm font-bold text-rush-ink">{m.name}</div><div className="text-[10px] text-rush-ink/60">{m.desc}</div></div>
               <span className="text-xs font-bold" style={{ color: m.color }}>→</span>
             </button>
           ))}
@@ -656,22 +643,22 @@ function MultiplayerLobby({ profile, onClose, onJoinRoom }: { profile: PlayerPro
   };
 
   const tracks: Array<{ id: typeof track; name: string; emoji: string; desc: string }> = [
-    { id: "third_mainland", name: "Third Mainland Bridge", emoji: "🌉", desc: "Longest bridge · fast straight" },
-    { id: "ikeja_traffic", name: "Ikeja Traffic", emoji: "🚦", desc: "Tight lanes · more obstacles" },
-    { id: "vi_beach", name: "V/I Beach Road", emoji: "🏖️", desc: "Coastal cruise · smooth" },
+    { id: "third_mainland", name: "Third Mainland Bridge", emoji: "", desc: "Longest bridge · fast straight" },
+    { id: "ikeja_traffic", name: "Ikeja Traffic", emoji: "", desc: "Tight lanes · more obstacles" },
+    { id: "vi_beach", name: "V/I Beach Road", emoji: "", desc: "Coastal cruise · smooth" },
   ];
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
       <div className="rush-bounce-in rush-card w-full max-w-sm p-5" onClick={(e) => e.stopPropagation()}>
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="font-display text-xl text-rush-navy">Multiplayer Race</h2>
-          <button onClick={onClose} className="flex h-9 w-9 items-center justify-center rounded-full bg-rush-cream text-rush-navy">✕</button>
+          <h2 className="font-display text-xl text-rush-ink">Multiplayer Race</h2>
+          <button onClick={onClose} className="flex h-9 w-9 items-center justify-center rounded-full bg-rush-cream text-rush-ink"></button>
         </div>
 
         {/* Create room */}
         <div className="mb-4">
-          <div className="mb-2 text-[10px] font-bold uppercase tracking-wider text-rush-navy/60">Create New Room</div>
+          <div className="mb-2 text-[10px] font-bold uppercase tracking-wider text-rush-ink/60">Create New Room</div>
           <div className="mb-2 grid grid-cols-3 gap-1.5">
             {tracks.map((t) => (
               <button
@@ -680,32 +667,32 @@ function MultiplayerLobby({ profile, onClose, onJoinRoom }: { profile: PlayerPro
                 className={`rounded-xl p-2 text-center transition-all ${track === t.id ? "bg-rush-green/15 ring-2 ring-rush-green" : "bg-white"}`}
               >
                 <div className="text-lg">{t.emoji}</div>
-                <div className="text-[8px] font-bold text-rush-navy">{t.name.split(" ")[0]}</div>
+                <div className="text-[8px] font-bold text-rush-ink">{t.name.split(" ")[0]}</div>
               </button>
             ))}
           </div>
           <button onClick={createRoom} disabled={busy} className="w-full rounded-2xl bg-rush-green px-4 py-3 text-sm font-bold uppercase tracking-wider text-white disabled:opacity-50">
-            {busy ? "Creating…" : "🏁 Create Room"}
+            {busy ? "Creating…" : " Create Room"}
           </button>
         </div>
 
         {/* Divider */}
         <div className="my-3 flex items-center gap-2">
           <div className="h-px flex-1 bg-rush-cream" />
-          <span className="text-[9px] uppercase tracking-wider text-rush-navy/40">or</span>
+          <span className="text-[9px] uppercase tracking-wider text-rush-ink/40">or</span>
           <div className="h-px flex-1 bg-rush-cream" />
         </div>
 
         {/* Join room */}
         <div>
-          <div className="mb-2 text-[10px] font-bold uppercase tracking-wider text-rush-navy/60">Join with Code</div>
+          <div className="mb-2 text-[10px] font-bold uppercase tracking-wider text-rush-ink/60">Join with Code</div>
           <input
             type="text"
             value={joinCode}
             onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
             maxLength={6}
             placeholder="ENTER 6-CHAR CODE"
-            className="mb-2 w-full rounded-xl border-2 border-rush-cream bg-white px-3 py-2.5 text-center font-mono text-lg tracking-widest text-rush-navy placeholder:text-rush-navy/30 focus:border-rush-green focus:outline-none"
+            className="mb-2 w-full rounded-xl border-2 border-rush-cream bg-white px-3 py-2.5 text-center font-mono text-lg tracking-widest text-rush-ink placeholder:text-rush-ink/30 focus:border-rush-green focus:outline-none"
           />
           <button onClick={joinRoom} disabled={busy} className="w-full rounded-2xl bg-rush-navy px-4 py-3 text-sm font-bold uppercase tracking-wider text-white disabled:opacity-50">
             {busy ? "Joining…" : "→ Join Room"}
@@ -715,8 +702,8 @@ function MultiplayerLobby({ profile, onClose, onJoinRoom }: { profile: PlayerPro
         {error && <div className="mt-3 rounded-xl bg-red-50 px-3 py-2 text-xs text-red-600">{error}</div>}
 
         {/* How to share */}
-        <p className="mt-3 text-center text-[9px] text-rush-navy/40">
-          After creating, share the room code with your friends on WhatsApp/X. Dem go open AfroRush, tap Multiplayer, enter code, race! 🏍️💨
+        <p className="mt-3 text-center text-[9px] text-rush-ink/40">
+          After creating, share the room code with your friends on WhatsApp/X. Dem go open AfroRush, tap Multiplayer, enter code, race! 
         </p>
       </div>
     </div>
@@ -739,11 +726,11 @@ function SuyaOverlay({ profile, onClose, onClaimed }: { profile: PlayerProfile; 
   return (
     <OverlaySheet title="Suya Spot" onClose={onClose}>
       <div className="text-center">
-        <div className="mb-3 text-6xl">🍢</div>
-        <div className="font-display text-lg text-rush-navy">Daily Suya Reward</div>
-        <p className="mt-1 text-xs text-rush-navy/60">Claim your free suya every day for ₦500 + 25 rep.</p>
-        <button onClick={claim} disabled={claimed || busy} className={`mt-4 w-full rounded-2xl px-4 py-3 text-sm font-bold uppercase tracking-wider ${claimed ? "bg-rush-cream text-rush-navy/50" : "bg-rush-orange text-white active:scale-95"} disabled:opacity-50`}>
-          {claimed ? "✓ Claimed — come back tomorrow!" : busy ? "Claiming…" : "Claim Suya 🍢"}
+        <div className="mb-3 text-6xl"></div>
+        <div className="font-display text-lg text-rush-ink">Daily Suya Reward</div>
+        <p className="mt-1 text-xs text-rush-ink/60">Claim your free suya every day for ₦500 + 25 rep.</p>
+        <button onClick={claim} disabled={claimed || busy} className={`mt-4 w-full rounded-2xl px-4 py-3 text-sm font-bold uppercase tracking-wider ${claimed ? "bg-rush-cream text-rush-ink/50" : "bg-rush-orange text-white active:scale-95"} disabled:opacity-50`}>
+          {claimed ? " Claimed — come back tomorrow!" : busy ? "Claiming…" : "Claim Suya "}
         </button>
       </div>
     </OverlaySheet>
@@ -771,8 +758,8 @@ function CrewOverlay({ profile, onClose }: { profile: PlayerProfile; onClose: ()
     <OverlaySheet title="Crew HQ" onClose={onClose}>
       {profile.crewId ? (
         <div className="rounded-3xl border-2 p-4" style={{ borderColor: profile.crewColor ?? "#7c3aed", background: `${profile.crewColor ?? "#7c3aed"}22` }}>
-          <div className="font-display text-xl text-rush-navy">{profile.crewName}</div>
-          <div className="text-xs text-rush-navy/60">Tag: [{profile.crewTag}]</div>
+          <div className="font-display text-xl text-rush-ink">{profile.crewName}</div>
+          <div className="text-xs text-rush-ink/60">Tag: [{profile.crewTag}]</div>
         </div>
       ) : showCreate ? (
         <div className="space-y-3">
@@ -782,7 +769,7 @@ function CrewOverlay({ profile, onClose }: { profile: PlayerProfile; onClose: ()
         </div>
       ) : (
         <div className="text-center">
-          <div className="mb-3 text-5xl">👥</div>
+          <div className="mb-3 text-5xl"></div>
           <button onClick={() => setShowCreate(true)} className="rounded-2xl bg-rush-purple px-6 py-3 text-sm font-bold uppercase text-white">+ Create a Crew</button>
         </div>
       )}
@@ -794,30 +781,30 @@ function MotorParkOverlay({ profile, unlocked, onClose, onNavigate }: { profile:
   const inputRef = useRef({ x: 0, y: 0, boost: false });
   const [riding, setRiding] = useState(false);
   const [showVehiclePicker, setShowVehiclePicker] = useState(false);
-  const [selectedVehicle, setSelectedVehicle] = useState("🏍️");
+  const [selectedVehicle, setSelectedVehicle] = useState("");
   const [showPhoneInWorld, setShowPhoneInWorld] = useState(false);
 
   // Vehicles the player owns (from unlocked items)
   const ownedVehicles = [
-    { id: "okada", name: "Okada", emoji: "🏍️", color: "#ff6a1a" },
-    ...unlocked.includes("danfo") ? [{ id: "danfo", name: "Danfo", emoji: "🚌", color: "#ffc531" }] : [],
-    ...unlocked.includes("keke") ? [{ id: "keke", name: "Keke", emoji: "🛺", color: "#ff6a1a" }] : [],
-    ...unlocked.includes("cab") ? [{ id: "cab", name: "Cab", emoji: "🚕", color: "#ffc531" }] : [],
-    ...unlocked.includes("sedan") ? [{ id: "sedan", name: "Sedan", emoji: "🚗", color: "#1e3a5f" }] : [],
-    ...unlocked.includes("suv") ? [{ id: "suv", name: "SUV", emoji: "🚙", color: "#14213d" }] : [],
+    { id: "okada", name: "Okada", emoji: "", color: "#ff6a1a" },
+    ...unlocked.includes("danfo") ? [{ id: "danfo", name: "Danfo", emoji: "", color: "#ffc531" }] : [],
+    ...unlocked.includes("keke") ? [{ id: "keke", name: "Keke", emoji: "", color: "#ff6a1a" }] : [],
+    ...unlocked.includes("cab") ? [{ id: "cab", name: "Cab", emoji: "", color: "#ffc531" }] : [],
+    ...unlocked.includes("sedan") ? [{ id: "sedan", name: "Sedan", emoji: "", color: "#1e3a5f" }] : [],
+    ...unlocked.includes("suv") ? [{ id: "suv", name: "SUV", emoji: "", color: "#14213d" }] : [],
   ];
 
   return (
     <div className="fixed inset-0 z-50 bg-rush-sky" style={{ width: "100vw", height: "100vh" }}>
-      <Suspense fallback={<div className="flex h-full items-center justify-center text-rush-navy">Loading the streets…</div>}>
+      <Suspense fallback={<div className="flex h-full items-center justify-center text-rush-ink">Loading the streets…</div>}>
         <City avatar={profile.avatar} quality={profile.graphicsQuality} riding={riding} inputRef={inputRef} />
       </Suspense>
 
       {/* Top bar */}
       <div className="absolute left-3 top-3 z-30 flex items-center gap-2">
-        <button onClick={onClose} className="rush-glass-pill flex items-center gap-1 px-3 py-2 text-xs font-bold uppercase tracking-wider text-rush-navy active:scale-95">← Home</button>
-        <div className="rush-glass-pill px-3 py-2 text-xs font-bold text-rush-navy">🛺 Motor Park</div>
-        <div className="rush-glass-pill px-3 py-2 text-xs font-bold text-rush-navy">{selectedVehicle} {riding ? "Riding" : "Walking"}</div>
+        <button onClick={onClose} className="rush-glass-pill flex items-center gap-1 px-3 py-2 text-xs font-bold uppercase tracking-wider text-rush-ink active:scale-95">← Home</button>
+        <div className="rush-glass-pill px-3 py-2 text-xs font-bold text-rush-ink"> Motor Park</div>
+        <div className="rush-glass-pill px-3 py-2 text-xs font-bold text-rush-ink">{selectedVehicle} {riding ? "Riding" : "Walking"}</div>
       </div>
 
       {/* Floating phone button — top right */}
@@ -825,7 +812,7 @@ function MotorParkOverlay({ profile, unlocked, onClose, onNavigate }: { profile:
         onClick={() => setShowPhoneInWorld((s) => !s)}
         className="absolute right-3 top-3 z-30 flex h-10 w-10 items-center justify-center rounded-full rush-glass-pill text-lg active:scale-90"
       >
-        📱
+        
       </button>
 
       {/* Phone overlay in world */}
@@ -833,25 +820,25 @@ function MotorParkOverlay({ profile, unlocked, onClose, onNavigate }: { profile:
         <div className="absolute right-3 top-16 z-40 w-72 rush-bounce-in">
           <div className="rush-card max-h-[60vh] overflow-y-auto p-3">
             <div className="mb-2 flex items-center justify-between">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-rush-navy/60">Quick Phone</span>
-              <button onClick={() => setShowPhoneInWorld(false)} className="text-rush-navy/40">✕</button>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-rush-ink/60">Quick Phone</span>
+              <button onClick={() => setShowPhoneInWorld(false)} className="text-rush-ink/40"></button>
             </div>
             <div className="space-y-2">
               <button onClick={() => { setShowPhoneInWorld(false); onNavigate("phone"); }} className="flex w-full items-center gap-2 rounded-xl bg-rush-cream/50 p-2 text-left active:scale-95">
-                <span className="text-lg">💬</span>
-                <span className="text-xs font-bold text-rush-navy">Messages</span>
+                <span className="text-lg"></span>
+                <span className="text-xs font-bold text-rush-ink">Messages</span>
               </button>
               <button onClick={() => { setShowPhoneInWorld(false); onNavigate("phone"); }} className="flex w-full items-center gap-2 rounded-xl bg-rush-cream/50 p-2 text-left active:scale-95">
-                <span className="text-lg">🏦</span>
-                <span className="text-xs font-bold text-rush-navy">Bank</span>
+                <span className="text-lg"></span>
+                <span className="text-xs font-bold text-rush-ink">Bank</span>
               </button>
               <button onClick={() => { setShowPhoneInWorld(false); onNavigate("map"); }} className="flex w-full items-center gap-2 rounded-xl bg-rush-cream/50 p-2 text-left active:scale-95">
-                <span className="text-lg">🗺️</span>
-                <span className="text-xs font-bold text-rush-navy">Map / Ask Location</span>
+                <span className="text-lg"></span>
+                <span className="text-xs font-bold text-rush-ink">Map / Ask Location</span>
               </button>
               <button onClick={() => { setShowPhoneInWorld(false); onNavigate("phone"); }} className="flex w-full items-center gap-2 rounded-xl bg-rush-cream/50 p-2 text-left active:scale-95">
-                <span className="text-lg">🛺</span>
-                <span className="text-xs font-bold text-rush-navy">Ride — Call Okada</span>
+                <span className="text-lg"></span>
+                <span className="text-xs font-bold text-rush-ink">Ride — Call Okada</span>
               </button>
             </div>
           </div>
@@ -871,15 +858,15 @@ function MotorParkOverlay({ profile, unlocked, onClose, onNavigate }: { profile:
           className="flex h-16 w-16 touch-none items-center justify-center rounded-full bg-rush-green text-2xl text-white shadow-lg shadow-rush-green/30 active:scale-95"
           style={{ touchAction: "none" }}
         >
-          ⚡
+          
         </button>
         {/* Ride / vehicle toggle */}
         <button onClick={() => setRiding((r) => !r)} className={`flex h-14 w-14 items-center justify-center rounded-full text-2xl shadow-lg active:scale-95 ${riding ? "bg-rush-orange text-white" : "rush-glass-pill"}`}>
-          {riding ? "🛑" : selectedVehicle}
+          {riding ? "" : selectedVehicle}
         </button>
         {/* Vehicle picker */}
         <button onClick={() => setShowVehiclePicker((s) => !s)} className="flex h-12 w-12 items-center justify-center rounded-full rush-glass-pill text-lg active:scale-95">
-          🚗
+          
         </button>
       </div>
 
@@ -888,8 +875,8 @@ function MotorParkOverlay({ profile, unlocked, onClose, onNavigate }: { profile:
         <div className="absolute inset-x-0 bottom-20 z-40 mx-auto max-w-md px-4">
           <div className="rush-bounce-in rush-card p-4">
             <div className="mb-3 flex items-center justify-between">
-              <span className="text-xs font-bold uppercase tracking-wider text-rush-navy/60">Select Vehicle</span>
-              <button onClick={() => setShowVehiclePicker(false)} className="text-rush-navy/40">✕</button>
+              <span className="text-xs font-bold uppercase tracking-wider text-rush-ink/60">Select Vehicle</span>
+              <button onClick={() => setShowVehiclePicker(false)} className="text-rush-ink/40"></button>
             </div>
             <div className="grid grid-cols-3 gap-2">
               {ownedVehicles.map((v) => (
@@ -899,11 +886,11 @@ function MotorParkOverlay({ profile, unlocked, onClose, onNavigate }: { profile:
                   className={`flex flex-col items-center gap-1 rounded-2xl border-2 p-2 active:scale-95 ${selectedVehicle === v.emoji ? "border-rush-green bg-rush-green/10" : "border-transparent bg-white/80"}`}
                 >
                   <span className="text-2xl">{v.emoji}</span>
-                  <span className="text-[9px] font-bold text-rush-navy">{v.name}</span>
+                  <span className="text-[9px] font-bold text-rush-ink">{v.name}</span>
                 </button>
               ))}
             </div>
-            <p className="mt-2 text-center text-[9px] text-rush-navy/40">Buy more vehicles in the Market!</p>
+            <p className="mt-2 text-center text-[9px] text-rush-ink/40">Buy more vehicles in the Market!</p>
           </div>
         </div>
       )}
@@ -918,8 +905,8 @@ function RaceResultOverlay({ result, profile, onClose }: { result: import("@/gam
     : result.mode === "police-chase" ? "Police Chase"
     : "Freestyle Run";
   const shareText = won
-    ? `🏆 I just win ${modeLabel} for AfroRush! ${result.distance}m, ${result.score.toLocaleString()} pts, +₦${result.cashEarned}. My handle na @${profile.username} — beat me if you sabi! 🏍️💨`
-    : `😅 I done crash for ${modeLabel} for AfroRush — but I still stack ${result.score.toLocaleString()} pts and ₦${result.cashEarned}. Try beat my score, my handle na @${profile.username} 🏍️`;
+    ? ` I just win ${modeLabel} for AfroRush! ${result.distance}m, ${result.score.toLocaleString()} pts, +₦${result.cashEarned}. My handle na @${profile.username} — beat me if you sabi! `
+    : ` I done crash for ${modeLabel} for AfroRush — but I still stack ${result.score.toLocaleString()} pts and ₦${result.cashEarned}. Try beat my score, my handle na @${profile.username} `;
   const shareUrl = typeof window !== "undefined" ? window.location.origin : "https://afrorush.vercel.app";
   const shareToWhatsApp = () => window.open(`https://wa.me/?text=${encodeURIComponent(shareText + " " + shareUrl)}`, "_blank");
   const shareToX = () => window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`, "_blank");
@@ -938,14 +925,14 @@ function RaceResultOverlay({ result, profile, onClose }: { result: import("@/gam
         {/* Share score — viral loop */}
         <div className="mt-3 grid grid-cols-2 gap-2">
           <button onClick={shareToWhatsApp} className="flex items-center justify-center gap-1.5 rounded-2xl bg-rush-green px-4 py-3 text-xs font-bold uppercase tracking-wider text-white active:scale-95">
-            💬 Share
+             Share
           </button>
           <button onClick={shareToX} className="flex items-center justify-center gap-1.5 rounded-2xl bg-rush-navy px-4 py-3 text-xs font-bold uppercase tracking-wider text-white active:scale-95">
-            𝕏 Tweet
+             Tweet
           </button>
         </div>
 
-        <button onClick={onClose} className="mt-2 w-full rounded-2xl bg-rush-cream px-4 py-3 text-sm font-bold uppercase tracking-wider text-rush-navy">Back to Home</button>
+        <button onClick={onClose} className="mt-2 w-full rounded-2xl bg-rush-cream px-4 py-3 text-sm font-bold uppercase tracking-wider text-rush-ink">Back to Home</button>
       </div>
     </div>
   );
@@ -954,8 +941,8 @@ function RaceResultOverlay({ result, profile, onClose }: { result: import("@/gam
 function Stat({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-xl bg-rush-cream/50 p-2 text-center">
-      <div className="text-[9px] uppercase tracking-wider text-rush-navy/50">{label}</div>
-      <div className="font-mono text-sm font-bold text-rush-navy">{value}</div>
+      <div className="text-[9px] uppercase tracking-wider text-rush-ink/50">{label}</div>
+      <div className="font-mono text-sm font-bold text-rush-ink">{value}</div>
     </div>
   );
 }
@@ -1038,7 +1025,7 @@ function CityPickerOverlay({
         {/* Header */}
         <div className="mb-3 flex items-center justify-between">
           <h2 className="font-display text-xl text-rush-ink">Pick Your City</h2>
-          <button onClick={onClose} className="btn-press flex h-9 w-9 items-center justify-center rounded-full bg-rush-mist text-rush-ink">✕</button>
+          <button onClick={onClose} className="btn-press flex h-9 w-9 items-center justify-center rounded-full bg-rush-mist text-rush-ink"></button>
         </div>
 
         {/* State tabs */}
@@ -1155,7 +1142,7 @@ function CityPickerOverlay({
         )}
         {selectedState === currentCity && (
           <div className="mt-4 rounded-2xl bg-rush-mist/60 px-4 py-3 text-center text-xs text-rush-ink-soft">
-            ✓ This is your current city
+             This is your current city
           </div>
         )}
       </div>
