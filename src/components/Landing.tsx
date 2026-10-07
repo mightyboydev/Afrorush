@@ -83,14 +83,14 @@ export default function Landing() {
   };
 
   return (
-    <main className="page-bg-day relative min-h-screen w-full overflow-hidden">
-      {/* === Harmattan hero scene (replaces the 3D preview that crashed on phones) === */}
-      <HarmattanHero className="pointer-events-none absolute inset-0 z-0 h-full w-full" />
+    <main className="page-bg-night relative min-h-screen w-full overflow-hidden">
+      {/* === Harmattan hero scene (now on dark canvas so neon glows) === */}
+      <HarmattanHero className="pointer-events-none absolute inset-0 z-0 h-full w-full opacity-90" />
 
       {/* Top header */}
       <header className="relative z-10 flex items-center justify-between px-4 pt-4 safe-pt sm:px-6">
         <div className="flex items-center gap-2">
-          <img src="/afrorush-logo.jpg" alt="AfroRush" width={40} height={40} className="h-10 w-10 rounded-xl border-2 border-white rush-soft-shadow" />
+          <img src="/afrorush-logo.jpg" alt="AfroRush" width={40} height={40} className="h-10 w-10 rounded-xl border-2 border-white/20" />
           <span className="font-display text-xl text-rush-ink">
             Afro<span className="text-rush-leaf">Rush</span>
           </span>
@@ -98,16 +98,22 @@ export default function Landing() {
         <div className="flex gap-2">
           <button
             onClick={() => setMode("login")}
-            className={`ar-pill btn-press px-4 py-2 text-xs font-bold uppercase tracking-wider transition-all ${
-              mode === "login" ? "bg-rush-indigo-deep text-white" : "text-rush-ink"
-            }`}
-            style={mode === "login" ? { background: "var(--ar-indigo-deep)", color: "#fff" } : undefined}
+            className="btn-press rounded-full px-4 py-2 text-xs font-bold uppercase tracking-wider transition-all"
+            style={
+              mode === "login"
+                ? { background: "var(--ar-gold)", color: "#1a0f1f", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.4), 0 4px 12px rgba(212,160,23,0.5)" }
+                : { background: "rgba(245,234,208,0.08)", color: "var(--ar-text)", border: "1px solid rgba(245,234,208,0.15)" }
+            }
           >
             Log in
           </button>
           <button
             onClick={() => setMode("signup")}
-            className="ar-btn-primary btn-press px-4 py-2 text-xs font-bold uppercase tracking-wider text-white"
+            className="btn-press rounded-full px-4 py-2 text-xs font-bold uppercase tracking-wider text-white"
+            style={{
+              background: "var(--ar-emerald-gradient)",
+              boxShadow: "inset 0 1px 0 rgba(255,255,255,0.25), 0 4px 14px rgba(13,124,74,0.5)",
+            }}
           >
             Sign up free
           </button>
@@ -117,28 +123,48 @@ export default function Landing() {
       {/* Hero */}
       <div className="relative z-10 px-4 pt-4 sm:px-6">
         <div className="mx-auto max-w-md text-center">
-          <div className="mb-2 inline-block rounded-full bg-white/80 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-rush-green rush-pill">
-            🟢 {onlineCount.toLocaleString()} riding now · free
+          <div
+            className="mb-2 inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-bold uppercase tracking-widest text-rush-ink"
+            style={{
+              background: "rgba(40, 24, 50, 0.65)",
+              backdropFilter: "blur(12px) saturate(1.6)",
+              WebkitBackdropFilter: "blur(12px) saturate(1.6)",
+              border: "1px solid rgba(245, 234, 208, 0.15)",
+              boxShadow: "inset 0 1px 0 rgba(245, 234, 208, 0.15)",
+            }}
+          >
+            <span className="rush-online-dot" />
+            <span className="tabular-nums">{onlineCount.toLocaleString()} riding now · free</span>
           </div>
-          <h1 className="font-display text-4xl leading-tight text-rush-navy sm:text-5xl">
+          <h1 className="font-display text-4xl leading-tight text-rush-ink sm:text-5xl" style={{ textShadow: "0 2px 20px rgba(124,58,237,0.5)" }}>
             Step into the<br />
-            <span className="text-rush-green">streets of Africa</span>
+            <span style={{ background: "var(--ar-sunset-gradient)", WebkitBackgroundClip: "text", backgroundClip: "text", color: "transparent" }}>
+              streets of Africa
+            </span>
           </h1>
-          <p className="mx-auto mt-2 max-w-xs text-xs text-rush-navy/60">
+          <p className="mx-auto mt-2 max-w-xs text-xs text-rush-ink-soft">
             Walk, ride, race, build a crew. A loud, alive 3D world.
           </p>
         </div>
 
-        {/* Main card with character preview + auth form (side by side on desktop, stacked on mobile) */}
+        {/* Main card with character preview + auth form (dark glass) */}
         <div className="mx-auto mt-5 max-w-md">
-          <div className="rush-card overflow-hidden p-5">
-
+          <div
+            className="overflow-hidden rounded-3xl p-5"
+            style={{
+              background: "rgba(40, 24, 50, 0.7)",
+              backdropFilter: "blur(20px) saturate(1.6)",
+              WebkitBackdropFilter: "blur(20px) saturate(1.6)",
+              border: "1px solid rgba(245, 234, 208, 0.12)",
+              boxShadow: "inset 0 1px 0 rgba(245, 234, 208, 0.15), 0 12px 40px rgba(0,0,0,0.5)",
+            }}
+          >
             {/* Tab switch */}
-            <div className="mb-4 grid grid-cols-2 gap-1 rounded-full bg-rush-cream p-1">
+            <div className="mb-4 grid grid-cols-2 gap-1 rounded-full p-1" style={{ background: "rgba(245, 234, 208, 0.06)" }}>
               <button
                 type="button"
                 onClick={() => setMode("signup")}
-                className={`rounded-full py-2 text-xs font-bold uppercase tracking-wider transition-all ${
+                className={`btn-press rounded-full py-2 text-xs font-bold uppercase tracking-wider transition-all ${
                   mode === "signup" ? "bg-rush-green text-white shadow" : "text-rush-navy/60"
                 }`}
               >
@@ -285,9 +311,13 @@ export default function Landing() {
                   type="submit"
                   onClick={submit}
                   disabled={busy}
-                  className="w-full rounded-2xl bg-rush-green px-4 py-3 text-sm font-bold uppercase tracking-wider text-white shadow-lg shadow-rush-green/30 transition-all hover:bg-rush-green-dark disabled:opacity-50"
+                  className="btn-press w-full rounded-2xl px-4 py-3 text-sm font-bold uppercase tracking-wider text-white transition-all hover:brightness-110 disabled:opacity-50"
+                  style={{
+                    background: "var(--ar-sunset-gradient)",
+                    boxShadow: "inset 0 1px 0 rgba(255,255,255,0.3), 0 6px 18px -4px rgba(124,58,237,0.55)",
+                  }}
                 >
-                  {busy ? "Please wait…" : "Sign up · it's free"}
+                  {busy ? "Please wait…" : mode === "login" ? "Sign In →" : "Sign up · it's free"}
                 </button>
               </div>
             ) : (

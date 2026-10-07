@@ -76,7 +76,7 @@ export default function PhoneScreen({ profile }: { profile: PlayerProfile }) {
       ) : (
         <>
           {/* Wallet card — premium dark gradient like Lagos Life */}
-          <div className="mb-4 overflow-hidden rounded-3xl bg-gradient-to-br from-[#1e3a8a] via-[#7c3aed] to-[#f97316] p-4 text-white shadow-[0_8px_28px_rgba(22,32,60,0.4)]">
+          <div className="mb-4 overflow-hidden rounded-3xl ar-hero-sunset ar-glow-pulse p-4">
             <div className="mb-3 flex items-center justify-between">
               <span className="text-[10px] font-bold uppercase tracking-widest text-white/50">AfroRush Wallet</span>
               <span className="rounded-full bg-rush-green/20 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-rush-green">● Active</span>
@@ -1183,7 +1183,7 @@ function QuiloxApp({ profile, onClose, app }: { profile: PlayerProfile; onClose:
       </div>
 
       {/* Premium dark gradient card */}
-      <div className="mb-4 overflow-hidden rounded-3xl bg-gradient-to-br from-[#1e3a8a] via-[#7c3aed] to-[#f97316] p-4 text-white shadow-[0_8px_28px_rgba(22,32,60,0.4)]">
+      <div className="mb-4 overflow-hidden rounded-3xl ar-hero-sunset ar-glow-pulse p-4">
         <div className="mb-2 text-[10px] font-bold uppercase tracking-widest text-white/50">V/I Nightclub</div>
         <div className="font-display text-lg">🎉 AfroRush Quilox</div>
         <div className="mt-2 text-[10px] text-white/70">Street Cred: <span className="font-bold text-rush-gold">{Math.round(profile.vitals?.street_cred ?? 10)}/100</span></div>
