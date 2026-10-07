@@ -5,7 +5,7 @@
 
 import { useEffect, useState, useRef, lazy, Suspense } from "react";
 import { useRouter } from "next/navigation";
-import { Plus } from "lucide-react";
+import { PlusIcon } from "@/ui/icons";
 import { AuthProvider, useAuth } from "@/lib/auth";
 import {
   formatNaira,
@@ -242,7 +242,7 @@ function HubContent() {
                 </span>
                 {/* Plus button — green circle */}
                 <span className="flex h-7 w-7 items-center justify-center rounded-full bg-rush-leaf text-white">
-                  <Plus className="h-4 w-4" strokeWidth={2.5} />
+                  <PlusIcon size={16} strokeWidth={2.5} />
                 </span>
               </button>
             </div>
