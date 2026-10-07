@@ -28,11 +28,11 @@ export default function LoadingScreen({ message = "Loading the city…", progres
   }, [progress]);
 
   return (
-    <main className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-gradient-to-b from-[#b3e5fc] via-[#fff8e7] to-[#fff8e7] safe-pt safe-pb">
+    <main className="page-bg-day fixed inset-0 z-[100] flex flex-col items-center justify-center safe-pt safe-pb">
       {/* Logo */}
       <div className="mb-8 flex flex-col items-center">
         <div className="relative mb-4">
-          <div className="absolute inset-0 rounded-3xl bg-rush-green blur-2xl opacity-30" />
+          <div className="absolute inset-0 rounded-3xl bg-rush-leaf blur-2xl opacity-30" />
           <img
             src="/afrorush-logo.jpg"
             alt="AfroRush"
@@ -41,10 +41,10 @@ export default function LoadingScreen({ message = "Loading the city…", progres
             className="relative h-24 w-24 rounded-3xl border-4 border-white rush-soft-shadow sm:h-28 sm:w-28"
           />
         </div>
-        <h1 className="text-3xl font-display text-rush-navy sm:text-4xl">
-          Afro<span className="text-rush-green">Rush</span>
+        <h1 className="text-3xl font-display text-rush-ink sm:text-4xl">
+          Afro<span className="text-rush-leaf">Rush</span>
         </h1>
-        <p className="mt-1 text-xs font-semibold uppercase tracking-widest text-rush-navy/60">
+        <p className="mt-1 text-xs font-semibold uppercase tracking-widest text-rush-ink-soft">
           3D African Street World
         </p>
       </div>
@@ -57,13 +57,13 @@ export default function LoadingScreen({ message = "Loading the city…", progres
             style={{ width: `${shown}%` }}
           />
         </div>
-        <div className="mt-2 text-center text-xs font-semibold uppercase tracking-widest text-rush-navy/70">
+        <div className="mt-2 text-center text-xs font-semibold uppercase tracking-widest text-rush-ink-soft tabular-nums">
           {message} {Math.round(shown)}%
         </div>
       </div>
 
       {/* Footer */}
-      <div className="absolute bottom-6 left-0 right-0 px-6 text-center text-[10px] uppercase tracking-widest text-rush-navy/40">
+      <div className="absolute bottom-6 left-0 right-0 px-6 text-center text-[10px] uppercase tracking-widest text-rush-ink-soft/60">
         Free to play · Ride safe out there
       </div>
     </main>

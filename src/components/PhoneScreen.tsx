@@ -4,6 +4,7 @@
 // Apps: Jobs, Messages, Bank, Crew, Leaderboard, Settings, Camera, Ride, Health, etc.
 
 import { useState, useEffect, useMemo } from "react";
+import { toast } from "sonner";
 import { useAuth } from "@/lib/auth";
 import { formatNaira, type PlayerProfile } from "@/lib/storage";
 import {
@@ -71,7 +72,7 @@ export default function PhoneScreen({ profile }: { profile: PlayerProfile }) {
       ) : (
         <>
           {/* Wallet card — premium dark gradient like Lagos Life */}
-          <div className="mb-4 overflow-hidden rounded-3xl bg-gradient-to-br from-[#1a1a2e] via-[#16213e] to-[#0f3460] p-4 text-white shadow-xl">
+          <div className="mb-4 overflow-hidden rounded-3xl bg-gradient-to-br from-[#1e3a8a] via-[#7c3aed] to-[#f97316] p-4 text-white shadow-[0_8px_28px_rgba(22,32,60,0.4)]">
             <div className="mb-3 flex items-center justify-between">
               <span className="text-[10px] font-bold uppercase tracking-widest text-white/50">AfroRush Wallet</span>
               <span className="rounded-full bg-rush-green/20 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-rush-green">● Active</span>
@@ -104,32 +105,33 @@ export default function PhoneScreen({ profile }: { profile: PlayerProfile }) {
           </div>
 
           {/* App grid — squircle icons like Lagos Life */}
-          <div className="mb-2 text-[10px] font-bold uppercase tracking-widest text-rush-navy/50">Apps</div>
+          <div className="mb-2 text-[10px] font-bold uppercase tracking-widest text-rush-ink-soft">Apps</div>
           <div className="grid grid-cols-4 gap-2.5">
             {APPS.map((app) => (
               <button
                 key={app.id}
                 onClick={() => !app.locked && setOpenApp(app.id)}
-                className="flex flex-col items-center gap-1 transition-all active:scale-90"
+                className="btn-press flex flex-col items-center gap-1.5"
               >
                 <div className="relative">
                   <div
-                    className="flex h-12 w-12 items-center justify-center text-xl"
+                    className="flex size-[58px] items-center justify-center text-[28px] leading-none shadow-lg"
                     style={{
                       borderRadius: "22%",
-                      background: `linear-gradient(135deg, ${app.from}, ${app.to})`,
-                      boxShadow: "0 3px 8px -1px rgba(20,33,61,0.2), inset 0 -1px 3px rgba(0,0,0,0.1)",
+                      background: `linear-gradient(145deg, ${app.from}, ${app.to})`,
+                      boxShadow:
+                        "inset 0 1px rgba(255,255,255,0.3), 0 4px 12px -2px rgba(22,32,60,0.25)",
                     }}
                   >
                     {app.locked ? "🔒" : app.icon}
                   </div>
                   {app.badge && (
-                    <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full border-2 border-white bg-rush-orange px-1 text-[8px] font-bold text-white">
+                    <span className="rush-pop absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full border-2 border-white bg-rush-rose px-1 text-[9px] font-bold text-white">
                       {app.badge}
                     </span>
                   )}
                 </div>
-                <span className="text-[8px] font-bold text-rush-navy">{app.label}</span>
+                <span className="line-clamp-2 w-full text-center text-[11px] font-medium leading-[1.15] text-rush-ink">{app.label}</span>
               </button>
             ))}
           </div>
@@ -396,6 +398,7 @@ function BankApp({ profile, onClose, app }: { profile: PlayerProfile; onClose: (
       const { recipientName } = await transferCash(profile, recipient.trim(), amt, note.trim() || undefined);
       await refreshProfile();
       setMessage(`✓ Sent ₦${amt.toLocaleString()} to @${recipientName}! Dem go see am for Messages.`);
+      toast.success(`💸 Sent ₦${amt.toLocaleString()} to @${recipientName}!`);
       setRecipient(""); setAmount(""); setNote("");
     } catch (e) { setError((e as Error).message); }
     finally { setBusy(false); }
@@ -853,6 +856,7 @@ function JobsApp({ profile, onClose, app }: { profile: PlayerProfile; onClose: (
       });
       await refreshProfile();
       setMessage(`✓ You hustle as ${job.title}! +₦${job.pay.toLocaleString()} · -${job.stamina} stamina · +${job.hunger} hunger`);
+      toast.success(`💼 Hustled ${job.title} for ₦${job.pay.toLocaleString()}!`);
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -1040,6 +1044,7 @@ function BukaApp({ profile, onClose, app }: { profile: PlayerProfile; onClose: (
       });
       await refreshProfile();
       setMessage(`✓ You chop ${item.name}! +${item.stamina} stamina · -${item.hunger} hunger${credBoost ? ` · +${credBoost} street_cred` : ""}`);
+      toast.success(`${item.emoji} Chopped ${item.name}! +${item.stamina} stamina`);
     } catch (e) {
       setError((e as Error).message);
     } finally { setBusy(null); }
@@ -1158,7 +1163,7 @@ function QuiloxApp({ profile, onClose, app }: { profile: PlayerProfile; onClose:
       </div>
 
       {/* Premium dark gradient card */}
-      <div className="mb-4 overflow-hidden rounded-3xl bg-gradient-to-br from-[#1a1a2e] via-[#16213e] to-[#0f3460] p-4 text-white shadow-xl">
+      <div className="mb-4 overflow-hidden rounded-3xl bg-gradient-to-br from-[#1e3a8a] via-[#7c3aed] to-[#f97316] p-4 text-white shadow-[0_8px_28px_rgba(22,32,60,0.4)]">
         <div className="mb-2 text-[10px] font-bold uppercase tracking-widest text-white/50">V/I Nightclub</div>
         <div className="font-display text-lg">🎉 AfroRush Quilox</div>
         <div className="mt-2 text-[10px] text-white/70">Street Cred: <span className="font-bold text-rush-gold">{Math.round(profile.vitals?.street_cred ?? 10)}/100</span></div>
@@ -1220,6 +1225,7 @@ function LoanApp({ profile, onClose, app }: { profile: PlayerProfile; onClose: (
       await takeMicroLoan(profile, amt);
       await refreshProfile();
       setMessage(`✓ You don borrow ₦${amt.toLocaleString()}. Interest na 5% per hour. Pay quick before e grow!`);
+      toast.success(`💸 Borrowed ₦${amt.toLocaleString()}. Pay quick!`);
       setLoanAmount("");
     } catch (e) { setError((e as Error).message); }
     finally { setBusy(null); }
