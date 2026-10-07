@@ -1,0 +1,125 @@
+/*
+ * AfroRush — Kaduna "Harmattan Sun" design tokens.
+ * Warm dusty palette inspired by northern Nigeria: terracotta earth,
+ * indigo Hausa textile, emerald Islam green, gold leather craft.
+ * Harmattan haze, mud-brick warmth, calmer than Lagos.
+ */
+
+:root {
+  /* ===== Brand palette ===== */
+  /* Terracotta — the dominant earth tone (harmattan dust + mud-brick) */
+  --ar-terracotta: #c87f3f;
+  --ar-terracotta-deep: #9c5a26;
+  --ar-terracotta-soft: #e8b886;
+
+  /* Indigo — Hausa textile dye (deep ceremonial blue) */
+  --ar-indigo: #1e3a8a;
+  --ar-indigo-deep: #0f1f4d;
+  --ar-indigo-soft: #c5d4f0;
+
+  /* Emerald — northern Islam green / Hausa flag */
+  --ar-emerald: #0d7c4a;
+  --ar-emerald-deep: #07543a;
+  --ar-emerald-soft: #b8e6cf;
+
+  /* Gold — leather craft + royalty */
+  --ar-gold: #d4a017;
+  --ar-gold-deep: #9c7510;
+  --ar-gold-soft: #f5d77a;
+
+  /* Pottery rose — accent (terracotta pottery) */
+  --ar-rose: #c8463d;
+  --ar-rose-soft: #f0c2bc;
+
+  /* Ink — deep warm brown text (NOT pure black) */
+  --ar-ink: #2b1810;
+  --ar-ink-soft: #6b4f3f;
+  --ar-ink-faint: #a08878;
+
+  /* Surfaces — warm cream + harmattan haze */
+  --ar-cream: #f5ead0;
+  --ar-cream-deep: #ebd9b0;
+  --ar-haze: #faf3e0;
+  --ar-paper: #fffcf2;
+  --ar-mist: #f0e4c8;
+
+  /* Lines + shadows */
+  --ar-line: rgba(43, 24, 16, 0.10);
+  --ar-line-strong: rgba(43, 24, 16, 0.18);
+  --ar-shadow: rgba(122, 60, 20, 0.18);
+  --ar-shadow-strong: rgba(80, 35, 10, 0.32);
+
+  /* ===== Radius scale ===== */
+  --ar-radius-sm: 0.5rem;
+  --ar-radius-md: 0.75rem;
+  --ar-radius-lg: 1rem;
+  --ar-radius-xl: 1.5rem;
+  --ar-radius-2xl: 1.875rem;
+  --ar-radius-3xl: 2.5rem;
+  --ar-radius-pill: 999px;
+
+  /* ===== Motion ===== */
+  --ar-ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --ar-ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --ar-ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ar-dur-fast: 0.12s;
+  --ar-dur-default: 0.18s;
+  --ar-dur-slow: 0.4s;
+
+  /* ===== Typography ===== */
+  --ar-font-display: "Fredoka", "Plus Jakarta Sans", ui-sans-serif, system-ui;
+  --ar-font-body: "Plus Jakarta Sans", ui-sans-serif, system-ui;
+  --ar-font-mono: "JetBrains Mono", ui-monospace;
+
+  /* ===== Container widths ===== */
+  --ar-container-sm: 28rem;
+  --ar-container-md: 32rem;
+  --ar-container-lg: 48rem;
+}
+
+/* ===== Backward-compatible aliases ===== */
+:root {
+  --color-rush-leaf: var(--ar-emerald);
+  --color-rush-leaf-deep: var(--ar-emerald-deep);
+  --color-rush-lagoon: var(--ar-indigo);
+  --color-rush-lagoon-soft: var(--ar-indigo-soft);
+  --color-rush-rose: var(--ar-rose);
+  --color-rush-amber: var(--ar-gold);
+  --color-rush-amber-deep: var(--ar-gold-deep);
+  --color-rush-sunset: var(--ar-terracotta);
+  --color-rush-ink: var(--ar-ink);
+  --color-rush-ink-soft: var(--ar-ink-soft);
+  --color-rush-paper: var(--ar-paper);
+  --color-rush-mist: var(--ar-mist);
+  --color-rush-line: var(--ar-line);
+  --color-rush-green: var(--ar-emerald);
+  --color-rush-green-dark: var(--ar-emerald-deep);
+  --color-rush-navy: var(--ar-indigo-deep);
+  --color-rush-cream: var(--ar-cream);
+  --color-rush-orange: var(--ar-terracotta);
+  --color-rush-gold: var(--ar-gold);
+  --color-rush-sky: #bfe0f7;
+  --color-rush-magenta: #c026d3;
+  --color-rush-purple: #7c3aed;
+  --color-rush-jade: var(--ar-emerald);
+
+  --background: var(--ar-haze);
+  --foreground: var(--ar-ink);
+  --card: var(--ar-paper);
+  --card-foreground: var(--ar-ink);
+  --popover: var(--ar-paper);
+  --popover-foreground: var(--ar-ink);
+  --primary: var(--ar-emerald);
+  --primary-foreground: #ffffff;
+  --secondary: var(--ar-mist);
+  --secondary-foreground: var(--ar-ink);
+  --muted: var(--ar-mist);
+  --muted-foreground: var(--ar-ink-soft);
+  --accent: var(--ar-terracotta);
+  --accent-foreground: #ffffff;
+  --destructive: var(--ar-rose);
+  --border: var(--ar-line);
+  --input: var(--ar-line-strong);
+  --ring: var(--ar-indigo);
+  --radius: var(--ar-radius-lg);
+}
