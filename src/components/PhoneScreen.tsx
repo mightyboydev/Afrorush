@@ -7,6 +7,8 @@ import { useState, useEffect, useMemo } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth";
 import { formatNaira, type PlayerProfile } from "@/lib/storage";
+import { Panel, Pill, PrimaryButton, AnimatedCounter } from "@/ui/kit";
+import { ShareIcon } from "@/ui/icons";
 import {
   updateProfile,
   sendDm,
@@ -32,25 +34,25 @@ interface App {
 }
 
 const APPS: App[] = [
-  { id: "jobs", label: "Jobs", icon: "💼", from: "#0d7c4a", to: "#07543a" },
-  { id: "messages", label: "Messages", icon: "💬", from: "#1e3a8a", to: "#0f1f4d", badge: 3 },
-  { id: "bank", label: "Bank", icon: "🏦", from: "#d4a017", to: "#9c7510" },
-  { id: "buka", label: "Buka", icon: "🍲", from: "#c87f3f", to: "#9c5a26" },
-  { id: "quilox", label: "Quilox", icon: "🎉", from: "#7c3aed", to: "#5b21b6" },
-  { id: "loan", label: "Loan", icon: "💸", from: "#c8463d", to: "#9c352d" },
-  { id: "street", label: "Street", icon: "🚶", from: "#1e3a8a", to: "#0f1f4d" },
-  { id: "crew", label: "Crew", icon: "👥", from: "#7c3aed", to: "#5b21b6" },
-  { id: "leaderboard", label: "Ranks", icon: "🏆", from: "#d4a017", to: "#9c7510" },
-  { id: "ride", label: "Ride", icon: "🛺", from: "#0d7c4a", to: "#07543a" },
-  { id: "health", label: "Health", icon: "❤️", from: "#c8463d", to: "#9c352d" },
-  { id: "camera", label: "Camera", icon: "📷", from: "#1e3a8a", to: "#0f1f4d" },
-  { id: "calendar", label: "Events", icon: "📅", from: "#c87f3f", to: "#9c5a26", badge: 1 },
-  { id: "paper", label: "Gist", icon: "📰", from: "#6b4f3f", to: "#4a3525" },
-  { id: "photo-booth", label: "Booth", icon: "📸", from: "#7c3aed", to: "#5b21b6" },
-  { id: "draughts", label: "Draughts", icon: "♟️", from: "#1e3a8a", to: "#0f1f4d" },
-  { id: "games", label: "Games", icon: "🎮", from: "#c026d3", to: "#a21caf" },
-  { id: "nollywood", label: "Nollywood", icon: "🎬", from: "#c87f3f", to: "#9c5a26", locked: true },
-  { id: "settings", label: "Settings", icon: "⚙️", from: "#6b7280", to: "#4b5563" },
+  { id: "jobs", label: "Jobs", icon: "", from: "#0d7c4a", to: "#07543a" },
+  { id: "messages", label: "Messages", icon: "", from: "#1e3a8a", to: "#0f1f4d", badge: 3 },
+  { id: "bank", label: "Bank", icon: "", from: "#d4a017", to: "#9c7510" },
+  { id: "buka", label: "Buka", icon: "", from: "#c87f3f", to: "#9c5a26" },
+  { id: "quilox", label: "Quilox", icon: "", from: "#7c3aed", to: "#5b21b6" },
+  { id: "loan", label: "Loan", icon: "", from: "#c8463d", to: "#9c352d" },
+  { id: "street", label: "Street", icon: "", from: "#1e3a8a", to: "#0f1f4d" },
+  { id: "crew", label: "Crew", icon: "", from: "#7c3aed", to: "#5b21b6" },
+  { id: "leaderboard", label: "Ranks", icon: "", from: "#d4a017", to: "#9c7510" },
+  { id: "ride", label: "Ride", icon: "", from: "#0d7c4a", to: "#07543a" },
+  { id: "health", label: "Health", icon: "", from: "#c8463d", to: "#9c352d" },
+  { id: "camera", label: "Camera", icon: "", from: "#1e3a8a", to: "#0f1f4d" },
+  { id: "calendar", label: "Events", icon: "", from: "#c87f3f", to: "#9c5a26", badge: 1 },
+  { id: "paper", label: "Gist", icon: "", from: "#6b4f3f", to: "#4a3525" },
+  { id: "photo-booth", label: "Booth", icon: "", from: "#7c3aed", to: "#5b21b6" },
+  { id: "draughts", label: "Draughts", icon: "", from: "#1e3a8a", to: "#0f1f4d" },
+  { id: "games", label: "Games", icon: "", from: "#c026d3", to: "#a21caf" },
+  { id: "nollywood", label: "Nollywood", icon: "", from: "#c87f3f", to: "#9c5a26", locked: true },
+  { id: "settings", label: "Settings", icon: "", from: "#6b7280", to: "#4b5563" },
   { id: "more", label: "More", icon: "•••", from: "#a08878", to: "#6b4f3f" },
 ];
 
@@ -65,8 +67,8 @@ export default function PhoneScreen({ profile }: { profile: PlayerProfile }) {
       <div className="mb-3 flex items-center justify-between rounded-2xl bg-gradient-to-r from-rush-navy via-rush-purple to-rush-navy px-4 py-2 text-white shadow-lg">
         <span className="text-xs font-bold">{time}</span>
         <div className="flex items-center gap-2 text-[10px]">
-          <span>📶 4G</span>
-          <span>🔋 {battery}%</span>
+          <span> 4G</span>
+          <span> {battery}%</span>
         </div>
       </div>
 
@@ -79,7 +81,7 @@ export default function PhoneScreen({ profile }: { profile: PlayerProfile }) {
           <div className="mb-4 overflow-hidden rounded-3xl ar-hero-sunset ar-glow-pulse p-4">
             <div className="mb-3 flex items-center justify-between">
               <span className="text-[10px] font-bold uppercase tracking-widest text-white/50">AfroRush Wallet</span>
-              <span className="rounded-full bg-rush-green/20 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-rush-green">● Active</span>
+              <span className="rounded-full bg-rush-green/20 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-rush-green"> Active</span>
             </div>
             <div className="flex items-end justify-between">
               <div>
@@ -127,7 +129,7 @@ export default function PhoneScreen({ profile }: { profile: PlayerProfile }) {
                         "inset 0 1px rgba(255,255,255,0.3), 0 4px 12px -2px rgba(22,32,60,0.25)",
                     }}
                   >
-                    {app.locked ? "🔒" : app.icon}
+                    {app.locked ? "" : app.icon}
                   </div>
                   {app.badge && (
                     <span className="rush-pop absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full border-2 border-white bg-rush-rose px-1 text-[9px] font-bold text-white">
@@ -141,11 +143,11 @@ export default function PhoneScreen({ profile }: { profile: PlayerProfile }) {
           </div>
 
           {/* Recent activity */}
-          <div className="mt-5 mb-2 text-[10px] font-bold uppercase tracking-widest text-rush-navy/50">Recent</div>
+          <div className="mt-5 mb-2 text-[10px] font-bold uppercase tracking-widest text-rush-ink/50">Recent</div>
           <div className="space-y-2">
-            <ActivityItem icon="🏁" text="Finished Street Race" sub="Earned ₦250 + 15 rep" time="2m ago" />
-            <ActivityItem icon="👥" text="Joined crew 'Lagos Bolt Riders'" sub="Tag [LBR]" time="1h ago" />
-            <ActivityItem icon="🎁" text="Claimed daily reward" sub="₦500 + 10 gold" time="1d ago" />
+            <ActivityItem icon="" text="Finished Street Race" sub="Earned ₦250 + 15 rep" time="2m ago" />
+            <ActivityItem icon="" text="Joined crew 'Lagos Bolt Riders'" sub="Tag [LBR]" time="1h ago" />
+            <ActivityItem icon="" text="Claimed daily reward" sub="₦500 + 10 gold" time="1d ago" />
           </div>
         </>
       )}
@@ -214,7 +216,7 @@ function AppContent({ appId, profile, onClose }: { appId: string; profile: Playe
     <div className="rush-bounce-in">
       {/* App header */}
       <div className="mb-4 flex items-center gap-3">
-        <button onClick={onClose} className="flex h-9 w-9 items-center justify-center rounded-full bg-white/80 text-rush-navy backdrop-blur">
+        <button onClick={onClose} className="flex h-9 w-9 items-center justify-center rounded-full bg-white/80 text-rush-ink backdrop-blur">
           ←
         </button>
         <div
@@ -223,14 +225,14 @@ function AppContent({ appId, profile, onClose }: { appId: string; profile: Playe
         >
           {app.icon}
         </div>
-        <h2 className="font-display text-xl text-rush-navy">{app.label}</h2>
+        <h2 className="font-display text-xl text-rush-ink">{app.label}</h2>
       </div>
 
       {/* App body — placeholder content per app */}
       <div className="rush-glass rounded-3xl p-5 text-center">
         <div className="mb-3 text-5xl">{app.icon}</div>
-        <div className="font-display text-lg text-rush-navy">{app.label} app</div>
-        <p className="mt-1 text-sm text-rush-navy/60">
+        <div className="font-display text-lg text-rush-ink">{app.label} app</div>
+        <p className="mt-1 text-sm text-rush-ink/60">
           {appId === "jobs" && "Find missions and earn Naira. 3 jobs available today."}
           {appId === "messages" && "3 unread messages from your crew."}
           {appId === "bank" && `Balance: ${formatNaira(profile.cash)} · ${profile.gold} gold`}
@@ -275,11 +277,11 @@ function SettingsApp({ profile, onClose, app }: { profile: PlayerProfile; onClos
   return (
     <div className="rush-bounce-in">
       <div className="mb-4 flex items-center gap-3">
-        <button onClick={onClose} className="flex h-9 w-9 items-center justify-center rounded-full bg-white/80 text-rush-navy backdrop-blur">←</button>
+        <button onClick={onClose} className="flex h-9 w-9 items-center justify-center rounded-full bg-white/80 text-rush-ink backdrop-blur">←</button>
         <div className="flex h-10 w-10 items-center justify-center rounded-2xl text-xl" style={{ background: `linear-gradient(135deg, ${app.from}, ${app.to})` }}>
           {app.icon}
         </div>
-        <h2 className="font-display text-xl text-rush-navy">{app.label}</h2>
+        <h2 className="font-display text-xl text-rush-ink">{app.label}</h2>
       </div>
 
       <div className="space-y-3">
@@ -290,8 +292,8 @@ function SettingsApp({ profile, onClose, app }: { profile: PlayerProfile; onClos
               {profile.username.charAt(0).toUpperCase()}
             </div>
             <div>
-              <div className="font-display text-lg text-rush-navy">{profile.username}</div>
-              <div className="text-[10px] uppercase tracking-wider text-rush-navy/50">{profile.email ?? "No email"}</div>
+              <div className="font-display text-lg text-rush-ink">{profile.username}</div>
+              <div className="text-[10px] uppercase tracking-wider text-rush-ink/50">{profile.email ?? "No email"}</div>
             </div>
           </div>
         </div>
@@ -299,10 +301,10 @@ function SettingsApp({ profile, onClose, app }: { profile: PlayerProfile; onClos
         {/* Sound toggle */}
         <button onClick={toggleSound} disabled={busy} className="rush-card flex w-full items-center justify-between p-4">
           <div className="flex items-center gap-3">
-            <span className="text-xl">{profile.soundOn ? "🔊" : "🔇"}</span>
+            <span className="text-xl">{profile.soundOn ? "" : ""}</span>
             <div className="text-left">
-              <div className="text-sm font-bold text-rush-navy">Sound & Music</div>
-              <div className="text-[10px] text-rush-navy/50">{profile.soundOn ? "On" : "Off"}</div>
+              <div className="text-sm font-bold text-rush-ink">Sound & Music</div>
+              <div className="text-[10px] text-rush-ink/50">{profile.soundOn ? "On" : "Off"}</div>
             </div>
           </div>
           <div className={`relative h-7 w-12 rounded-full transition-colors ${profile.soundOn ? "bg-rush-green" : "bg-rush-navy/20"}`}>
@@ -313,26 +315,26 @@ function SettingsApp({ profile, onClose, app }: { profile: PlayerProfile; onClos
         {/* Graphics quality */}
         <button onClick={cycleGraphics} disabled={busy} className="rush-card flex w-full items-center justify-between p-4">
           <div className="flex items-center gap-3">
-            <span className="text-xl">🎨</span>
+            <span className="text-xl"></span>
             <div className="text-left">
-              <div className="text-sm font-bold text-rush-navy">Graphics Quality</div>
-              <div className="text-[10px] uppercase tracking-wider text-rush-navy/50">{profile.graphicsQuality}</div>
+              <div className="text-sm font-bold text-rush-ink">Graphics Quality</div>
+              <div className="text-[10px] uppercase tracking-wider text-rush-ink/50">{profile.graphicsQuality}</div>
             </div>
           </div>
-          <span className="text-xs text-rush-navy/40">Tap to change →</span>
+          <span className="text-xs text-rush-ink/40">Tap to change →</span>
         </button>
 
         {/* Admin link (only for owner) */}
         {profile.uid === "1rf7yswl35QuUyfdQehMs1qdlIy2" && (
           <a href="/admin" className="rush-card flex w-full items-center justify-between p-4">
             <div className="flex items-center gap-3">
-              <span className="text-xl">🛠️</span>
+              <span className="text-xl"></span>
               <div className="text-left">
-                <div className="text-sm font-bold text-rush-navy">Admin Dashboard</div>
-                <div className="text-[10px] text-rush-navy/50">Manage users, crews, economy</div>
+                <div className="text-sm font-bold text-rush-ink">Admin Dashboard</div>
+                <div className="text-[10px] text-rush-ink/50">Manage users, crews, economy</div>
               </div>
             </div>
-            <span className="text-xs text-rush-navy/40">→</span>
+            <span className="text-xs text-rush-ink/40">→</span>
           </a>
         )}
 
@@ -340,17 +342,17 @@ function SettingsApp({ profile, onClose, app }: { profile: PlayerProfile; onClos
         <div className="rush-card overflow-hidden">
           {!confirmLogout ? (
             <button onClick={() => setConfirmLogout(true)} className="flex w-full items-center gap-3 p-4 text-left">
-              <span className="text-xl">🚪</span>
+              <span className="text-xl"></span>
               <div>
                 <div className="text-sm font-bold text-red-500">Log Out</div>
-                <div className="text-[10px] text-rush-navy/50">Sign out of your account</div>
+                <div className="text-[10px] text-rush-ink/50">Sign out of your account</div>
               </div>
             </button>
           ) : (
             <div className="p-4">
-              <div className="mb-3 text-sm font-bold text-rush-navy">Are you sure you want to log out?</div>
+              <div className="mb-3 text-sm font-bold text-rush-ink">Are you sure you want to log out?</div>
               <div className="flex gap-2">
-                <button onClick={() => setConfirmLogout(false)} className="flex-1 rounded-xl bg-rush-cream px-4 py-3 text-sm font-bold uppercase tracking-wider text-rush-navy">
+                <button onClick={() => setConfirmLogout(false)} className="flex-1 rounded-xl bg-rush-cream px-4 py-3 text-sm font-bold uppercase tracking-wider text-rush-ink">
                   Cancel
                 </button>
                 <button onClick={() => signOutUser()} className="flex-1 rounded-xl bg-red-500 px-4 py-3 text-sm font-bold uppercase tracking-wider text-white">
@@ -361,8 +363,8 @@ function SettingsApp({ profile, onClose, app }: { profile: PlayerProfile; onClos
           )}
         </div>
 
-        <div className="px-4 pt-2 text-center text-[10px] uppercase tracking-widest text-rush-navy/30">
-          AfroRush v1.0 · Built with ❤️
+        <div className="px-4 pt-2 text-center text-[10px] uppercase tracking-widest text-rush-ink/30">
+          AfroRush v1.0 · Built with 
         </div>
       </div>
     </div>
@@ -374,10 +376,10 @@ function ActivityItem({ icon, text, sub, time }: { icon: string; text: string; s
     <div className="flex items-center gap-3 rounded-2xl bg-white/80 p-3 backdrop-blur">
       <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-rush-cream text-base">{icon}</span>
       <div className="flex-1 min-w-0">
-        <div className="truncate text-xs font-bold text-rush-navy">{text}</div>
-        <div className="truncate text-[10px] text-rush-navy/50">{sub}</div>
+        <div className="truncate text-xs font-bold text-rush-ink">{text}</div>
+        <div className="truncate text-[10px] text-rush-ink/50">{sub}</div>
       </div>
-      <span className="text-[10px] text-rush-navy/40">{time}</span>
+      <span className="text-[10px] text-rush-ink/40">{time}</span>
     </div>
   );
 }
@@ -403,7 +405,7 @@ function BankApp({ profile, onClose, app }: { profile: PlayerProfile; onClose: (
   // Extract money-transfer DMs as transaction history
   const transactions = useMemo(() => {
     return allDms
-      .filter((m) => m.text.startsWith("💸") || m.text.includes("transfer"))
+      .filter((m) => m.text.startsWith("") || m.text.includes("transfer"))
       .slice(-10)
       .reverse();
   }, [allDms]);
@@ -417,8 +419,8 @@ function BankApp({ profile, onClose, app }: { profile: PlayerProfile; onClose: (
     try {
       const { recipientName } = await transferCash(profile, recipient.trim(), amt, note.trim() || undefined);
       await refreshProfile();
-      setMessage(`✓ Sent ₦${amt.toLocaleString()} to @${recipientName}! Dem go see am for Messages.`);
-      toast.success(`💸 Sent ₦${amt.toLocaleString()} to @${recipientName}!`);
+      setMessage(` Sent ₦${amt.toLocaleString()} to @${recipientName}! Dem go see am for Messages.`);
+      toast.success(` Sent ₦${amt.toLocaleString()} to @${recipientName}!`);
       setRecipient(""); setAmount(""); setNote("");
     } catch (e) { setError((e as Error).message); }
     finally { setBusy(false); }
@@ -430,9 +432,9 @@ function BankApp({ profile, onClose, app }: { profile: PlayerProfile; onClose: (
   return (
     <div className="rush-bounce-in">
       <div className="mb-4 flex items-center gap-3">
-        <button onClick={onClose} className="flex h-9 w-9 items-center justify-center rounded-full bg-white/80 text-rush-navy backdrop-blur">←</button>
+        <button onClick={onClose} className="flex h-9 w-9 items-center justify-center rounded-full bg-white/80 text-rush-ink backdrop-blur">←</button>
         <div className="flex h-10 w-10 items-center justify-center rounded-2xl text-xl" style={{ background: `linear-gradient(135deg, ${app.from}, ${app.to})` }}>{app.icon}</div>
-        <h2 className="font-display text-xl text-rush-navy">Bank</h2>
+        <h2 className="font-display text-xl text-rush-ink">Bank</h2>
       </div>
 
       {/* Balance card */}
@@ -445,22 +447,22 @@ function BankApp({ profile, onClose, app }: { profile: PlayerProfile; onClose: (
       {/* Send money — REAL peer-to-peer */}
       <div className="rush-glass rounded-3xl p-4">
         <div className="mb-3 flex items-center justify-between">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-rush-navy/60">Send Money (Real P2P)</span>
-          <span className="text-[9px] text-rush-green">● Live</span>
+          <span className="text-[10px] font-bold uppercase tracking-wider text-rush-ink/60">Send Money (Real P2P)</span>
+          <span className="text-[9px] text-rush-green"> Live</span>
         </div>
         <input
           type="text"
           value={recipient}
           onChange={(e) => setRecipient(e.target.value)}
           placeholder="Recipient username (e.g. Tunde)"
-          className="mb-2 w-full rounded-xl border border-rush-cream bg-white px-3 py-2.5 text-sm text-rush-navy"
+          className="mb-2 w-full rounded-xl border border-rush-cream bg-white px-3 py-2.5 text-sm text-rush-ink"
         />
         <div className="mb-2 flex gap-1.5">
           {quickAmounts.map((a) => (
             <button
               key={a}
               onClick={() => setAmount(String(a))}
-              className="flex-1 rounded-lg bg-rush-cream/60 py-1.5 text-[10px] font-bold text-rush-navy active:scale-95"
+              className="flex-1 rounded-lg bg-rush-cream/60 py-1.5 text-[10px] font-bold text-rush-ink active:scale-95"
             >
               ₦{a >= 1000 ? `${a / 1000}k` : a}
             </button>
@@ -471,15 +473,15 @@ function BankApp({ profile, onClose, app }: { profile: PlayerProfile; onClose: (
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
           placeholder="Amount (₦)"
-          className="mb-2 w-full rounded-xl border border-rush-cream bg-white px-3 py-2.5 text-sm text-rush-navy"
+          className="mb-2 w-full rounded-xl border border-rush-cream bg-white px-3 py-2.5 text-sm text-rush-ink"
         />
         <input
           type="text"
           value={note}
           onChange={(e) => setNote(e.target.value)}
           maxLength={80}
-          placeholder="Note (optional) — e.g. 'For the suya 🍢'"
-          className="mb-2 w-full rounded-xl border border-rush-cream bg-white px-3 py-2.5 text-sm text-rush-navy"
+          placeholder="Note (optional) — e.g. 'For the suya '"
+          className="mb-2 w-full rounded-xl border border-rush-cream bg-white px-3 py-2.5 text-sm text-rush-ink"
         />
         <button
           onClick={sendMoney}
@@ -494,29 +496,29 @@ function BankApp({ profile, onClose, app }: { profile: PlayerProfile; onClose: (
 
       {/* Your handle — the viral share loop */}
       <div className="mt-3 rush-glass rounded-3xl p-4">
-        <div className="mb-1 text-[10px] font-bold uppercase tracking-wider text-rush-navy/60">Your Handle</div>
+        <div className="mb-1 text-[10px] font-bold uppercase tracking-wider text-rush-ink/60">Your Handle</div>
         <div className="flex items-center justify-between gap-2">
-          <span className="font-display text-lg text-rush-navy">@{profile.username}</span>
+          <span className="font-display text-lg text-rush-ink">@{profile.username}</span>
           <ShareHandleButton username={profile.username} cash={profile.cash} />
         </div>
-        <p className="mt-1 text-[10px] text-rush-navy/50">Drop your handle for Twitter/WhatsApp make people bless you with cash 🤑</p>
+        <p className="mt-1 text-[10px] text-rush-ink/50">Drop your handle for Twitter/WhatsApp make people bless you with cash </p>
       </div>
 
       {/* Transaction history (from DMs) */}
       <div className="mt-3">
-        <div className="mb-2 text-[10px] font-bold uppercase tracking-widest text-rush-navy/50">Recent Transfers</div>
+        <div className="mb-2 text-[10px] font-bold uppercase tracking-widest text-rush-ink/50">Recent Transfers</div>
         {transactions.length === 0 ? (
-          <div className="rounded-2xl bg-white/70 p-4 text-center text-xs text-rush-navy/50">
+          <div className="rounded-2xl bg-white/70 p-4 text-center text-xs text-rush-ink/50">
             No transfers yet. Send money to a friend to start the chain!
           </div>
         ) : (
           <div className="space-y-2">
             {transactions.map((t) => (
               <div key={t.id} className="flex items-center gap-2 rounded-2xl bg-white/80 p-2.5 backdrop-blur">
-                <span className="text-base">💸</span>
+                <span className="text-base"></span>
                 <div className="flex-1 text-left">
-                  <div className="text-[11px] font-bold text-rush-navy">{t.text.split("\n")[0]}</div>
-                  <div className="text-[9px] text-rush-navy/50">{formatTimeAgo(t.createdAt)} ago</div>
+                  <div className="text-[11px] font-bold text-rush-ink">{t.text.split("\n")[0]}</div>
+                  <div className="text-[9px] text-rush-ink/50">{formatTimeAgo(t.createdAt)} ago</div>
                 </div>
               </div>
             ))}
@@ -551,10 +553,10 @@ function ShareHandleButton({ username, cash }: { username: string; cash: number 
 
   return (
     <div className="flex gap-1">
-      <button onClick={shareToWhatsApp} className="flex h-8 w-8 items-center justify-center rounded-lg bg-rush-green/20 text-base active:scale-90" aria-label="Share to WhatsApp">💬</button>
+      <button onClick={shareToWhatsApp} className="flex h-8 w-8 items-center justify-center rounded-lg bg-rush-green/20 text-base active:scale-90" aria-label="Share to WhatsApp"><ShareIcon size={14} /></button>
       <button onClick={shareToX} className="flex h-8 w-8 items-center justify-center rounded-lg bg-rush-purple/20 text-base active:scale-90" aria-label="Share to X">𝕏</button>
       <button onClick={copyHandle} className="flex h-8 w-8 items-center justify-center rounded-lg bg-rush-cream text-base active:scale-90" aria-label="Copy handle">
-        {copied ? "✓" : "📋"}
+        {copied ? "" : ""}
       </button>
     </div>
   );
@@ -678,11 +680,11 @@ function MessagesApp({ profile, onClose, app }: { profile: PlayerProfile; onClos
     return (
       <div className="rush-bounce-in">
         <div className="mb-4 flex items-center gap-3">
-          <button onClick={() => setView("list")} className="flex h-9 w-9 items-center justify-center rounded-full bg-white/80 text-rush-navy backdrop-blur">←</button>
-          <div className="flex h-10 w-10 items-center justify-center rounded-2xl text-xl" style={{ background: `linear-gradient(135deg, ${app.from}, ${app.to})` }}>💬</div>
+          <button onClick={() => setView("list")} className="flex h-9 w-9 items-center justify-center rounded-full bg-white/80 text-rush-ink backdrop-blur">←</button>
+          <div className="flex h-10 w-10 items-center justify-center rounded-2xl text-xl" style={{ background: `linear-gradient(135deg, ${app.from}, ${app.to})` }}></div>
           <div className="flex-1">
-            <h2 className="font-display text-lg text-rush-navy">{selectedName}</h2>
-            <div className="text-[9px] text-rush-navy/50">Real DM · Live</div>
+            <h2 className="font-display text-lg text-rush-ink">{selectedName}</h2>
+            <div className="text-[9px] text-rush-ink/50">Real DM · Live</div>
           </div>
         </div>
 
@@ -691,9 +693,9 @@ function MessagesApp({ profile, onClose, app }: { profile: PlayerProfile; onClos
           {currentThreadMsgs.length === 0 && (
             <div className="flex flex-1 items-center justify-center text-center">
               <div>
-                <div className="mb-2 text-4xl">👋</div>
-                <div className="text-xs text-rush-navy/60">Say hi to {selectedName}!</div>
-                <div className="mt-1 text-[10px] text-rush-navy/40">Messages are delivered when they&apos;re online.</div>
+                <div className="mb-2 text-4xl"></div>
+                <div className="text-xs text-rush-ink/60">Say hi to {selectedName}!</div>
+                <div className="mt-1 text-[10px] text-rush-ink/40">Messages are delivered when they&apos;re online.</div>
               </div>
             </div>
           )}
@@ -701,9 +703,9 @@ function MessagesApp({ profile, onClose, app }: { profile: PlayerProfile; onClos
             const mine = msg.fromUid === profile.uid;
             return (
               <div key={msg.id} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
-                <div className={`max-w-[75%] rounded-2xl px-3 py-2 text-sm ${mine ? "bg-rush-green text-white" : "bg-white text-rush-navy"}`}>
+                <div className={`max-w-[75%] rounded-2xl px-3 py-2 text-sm ${mine ? "bg-rush-green text-white" : "bg-white text-rush-ink"}`}>
                   {msg.text}
-                  <div className={`mt-0.5 text-[8px] ${mine ? "text-white/60" : "text-rush-navy/40"}`}>
+                  <div className={`mt-0.5 text-[8px] ${mine ? "text-white/60" : "text-rush-ink/40"}`}>
                     {formatTimeAgo(msg.createdAt)}
                   </div>
                 </div>
@@ -721,14 +723,14 @@ function MessagesApp({ profile, onClose, app }: { profile: PlayerProfile; onClos
             onKeyDown={(e) => e.key === "Enter" && !sending && send()}
             placeholder={sending ? "Sending…" : "Type a message…"}
             disabled={sending}
-            className="flex-1 rounded-full border border-rush-cream bg-white px-4 py-2.5 text-sm text-rush-navy disabled:opacity-60"
+            className="flex-1 rounded-full border border-rush-cream bg-white px-4 py-2.5 text-sm text-rush-ink disabled:opacity-60"
           />
           <button
             onClick={send}
             disabled={sending || !input.trim()}
             className="flex h-10 w-10 items-center justify-center rounded-full bg-rush-green text-white active:scale-95 disabled:opacity-50"
           >
-            ➤
+            
           </button>
         </div>
       </div>
@@ -739,9 +741,9 @@ function MessagesApp({ profile, onClose, app }: { profile: PlayerProfile; onClos
   return (
     <div className="rush-bounce-in">
       <div className="mb-4 flex items-center gap-3">
-        <button onClick={onClose} className="flex h-9 w-9 items-center justify-center rounded-full bg-white/80 text-rush-navy backdrop-blur">←</button>
+        <button onClick={onClose} className="flex h-9 w-9 items-center justify-center rounded-full bg-white/80 text-rush-ink backdrop-blur">←</button>
         <div className="flex h-10 w-10 items-center justify-center rounded-2xl text-xl" style={{ background: `linear-gradient(135deg, ${app.from}, ${app.to})` }}>{app.icon}</div>
-        <h2 className="font-display text-xl text-rush-navy">Messages</h2>
+        <h2 className="font-display text-xl text-rush-ink">Messages</h2>
       </div>
 
       {/* Search bar — find real players by username */}
@@ -752,10 +754,10 @@ function MessagesApp({ profile, onClose, app }: { profile: PlayerProfile; onClos
             value={searchUsername}
             onChange={(e) => setSearchUsername(e.target.value)}
             placeholder="Search username to start chat…"
-            className="flex-1 rounded-full border-2 border-rush-cream bg-white px-4 py-2 text-sm text-rush-navy placeholder:text-rush-navy/40 focus:border-rush-green focus:outline-none"
+            className="flex-1 rounded-full border-2 border-rush-cream bg-white px-4 py-2 text-sm text-rush-ink placeholder:text-rush-ink/40 focus:border-rush-green focus:outline-none"
           />
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-rush-cream text-rush-navy/60">
-            {searching ? "…" : "🔍"}
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-rush-cream text-rush-ink/60">
+            {searching ? "…" : ""}
           </div>
         </div>
         {searchResults.length > 0 && (
@@ -769,27 +771,27 @@ function MessagesApp({ profile, onClose, app }: { profile: PlayerProfile; onClos
                 <div className="flex h-8 w-8 items-center justify-center rounded-full bg-rush-jade text-xs font-bold text-white">
                   {p.username.charAt(0).toUpperCase()}
                 </div>
-                <span className="flex-1 text-sm font-bold text-rush-navy">{p.username}</span>
+                <span className="flex-1 text-sm font-bold text-rush-ink">{p.username}</span>
                 <span className="text-[9px] font-bold text-rush-green">CHAT →</span>
               </button>
             ))}
           </div>
         )}
         {searchUsername.trim() && !searching && searchResults.length === 0 && (
-          <div className="mt-2 rounded-xl bg-rush-cream/60 p-3 text-center text-xs text-rush-navy/60">
+          <div className="mt-2 rounded-xl bg-rush-cream/60 p-3 text-center text-xs text-rush-ink/60">
             No player found with that username. They need to sign up first!
           </div>
         )}
       </div>
 
       {/* Threads (real DMs from Firestore) */}
-      <div className="mb-2 text-[10px] font-bold uppercase tracking-widest text-rush-navy/50">Conversations</div>
+      <div className="mb-2 text-[10px] font-bold uppercase tracking-widest text-rush-ink/50">Conversations</div>
       <div className="space-y-2">
         {threads.length === 0 && (
           <div className="rounded-2xl bg-white/70 p-6 text-center backdrop-blur-md">
-            <div className="mb-2 text-4xl">💬</div>
-            <div className="text-sm font-bold text-rush-navy">No conversations yet</div>
-            <p className="mt-1 text-xs text-rush-navy/60">Search a username above to start your first chat with another AfroRush player.</p>
+            <div className="mb-2 text-4xl"></div>
+            <div className="text-sm font-bold text-rush-ink">No conversations yet</div>
+            <p className="mt-1 text-xs text-rush-ink/60">Search a username above to start your first chat with another AfroRush player.</p>
           </div>
         )}
         {threads.map((t) => (
@@ -803,11 +805,11 @@ function MessagesApp({ profile, onClose, app }: { profile: PlayerProfile; onClos
             </div>
             <div className="flex-1 text-left">
               <div className="flex items-center justify-between">
-                <span className="text-sm font-bold text-rush-navy">{t.name}</span>
-                <span className="text-[10px] text-rush-navy/40">{t.time}</span>
+                <span className="text-sm font-bold text-rush-ink">{t.name}</span>
+                <span className="text-[10px] text-rush-ink/40">{t.time}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="truncate text-xs text-rush-navy/60">{t.last}</span>
+                <span className="truncate text-xs text-rush-ink/60">{t.last}</span>
                 {t.unread > 0 && (
                   <span className="ml-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-rush-green px-1 text-[10px] font-bold text-white">
                     {t.unread}
@@ -833,14 +835,14 @@ function JobsApp({ profile, onClose, app }: { profile: PlayerProfile; onClose: (
   // Each job has stamina_cost (drains stamina) + hunger_gain (raises hunger)
   // Pay scales with how gruelling the work is.
   const jobs = [
-    { id: "suya-seller", title: "Suya Seller", pay: 300, time: "3 min", emoji: "🍢", desc: "Sell suya at the junction", stamina: 10, hunger: 8 },
-    { id: "okada-rider", title: "Okada Rider", pay: 500, time: "5 min", emoji: "🏍️", desc: "Carry passengers across the city", stamina: 15, hunger: 12 },
-    { id: "phone-repair", title: "Phone Repairer", pay: 1000, time: "8 min", emoji: "📱", desc: "Fix screens and chargers", stamina: 12, hunger: 10 },
-    { id: "delivery", title: "Delivery Boy", pay: 800, time: "10 min", emoji: "📦", desc: "Deliver packages on time", stamina: 20, hunger: 15 },
-    { id: "danfo-driver", title: "Danfo Driver", pay: 1200, time: "15 min", emoji: "🚌", desc: "Drive the yellow bus route", stamina: 25, hunger: 18 },
-    { id: "event-promoter", title: "Event Promoter", pay: 2000, time: "20 min", emoji: "📢", desc: "Promote owambe parties", stamina: 30, hunger: 20 },
-    { id: "agbero", title: "Agbero (Tout)", pay: 1500, time: "10 min", emoji: "🧍", desc: "Collect danfo dues — risky but pays", stamina: 20, hunger: 15 },
-    { id: "tech-hustler", title: "Tech Hustler", pay: 5000, time: "30 min", emoji: "💻", desc: "Remote dev work — clean money", stamina: 35, hunger: 8 },
+    { id: "suya-seller", title: "Suya Seller", pay: 300, time: "3 min", emoji: "", desc: "Sell suya at the junction", stamina: 10, hunger: 8 },
+    { id: "okada-rider", title: "Okada Rider", pay: 500, time: "5 min", emoji: "", desc: "Carry passengers across the city", stamina: 15, hunger: 12 },
+    { id: "phone-repair", title: "Phone Repairer", pay: 1000, time: "8 min", emoji: "", desc: "Fix screens and chargers", stamina: 12, hunger: 10 },
+    { id: "delivery", title: "Delivery Boy", pay: 800, time: "10 min", emoji: "", desc: "Deliver packages on time", stamina: 20, hunger: 15 },
+    { id: "danfo-driver", title: "Danfo Driver", pay: 1200, time: "15 min", emoji: "", desc: "Drive the yellow bus route", stamina: 25, hunger: 18 },
+    { id: "event-promoter", title: "Event Promoter", pay: 2000, time: "20 min", emoji: "", desc: "Promote owambe parties", stamina: 30, hunger: 20 },
+    { id: "agbero", title: "Agbero (Tout)", pay: 1500, time: "10 min", emoji: "", desc: "Collect danfo dues — risky but pays", stamina: 20, hunger: 15 },
+    { id: "tech-hustler", title: "Tech Hustler", pay: 5000, time: "30 min", emoji: "", desc: "Remote dev work — clean money", stamina: 35, hunger: 8 },
   ];
 
   const currentStamina = profile.vitals?.stamina ?? 80;
@@ -875,8 +877,8 @@ function JobsApp({ profile, onClose, app }: { profile: PlayerProfile; onClose: (
         vitalsUpdatedAt: Date.now(),
       });
       await refreshProfile();
-      setMessage(`✓ You hustle as ${job.title}! +₦${job.pay.toLocaleString()} · -${job.stamina} stamina · +${job.hunger} hunger`);
-      toast.success(`💼 Hustled ${job.title} for ₦${job.pay.toLocaleString()}!`);
+      setMessage(` You hustle as ${job.title}! +₦${job.pay.toLocaleString()} · -${job.stamina} stamina · +${job.hunger} hunger`);
+      toast.success(` Hustled ${job.title} for ₦${job.pay.toLocaleString()}!`);
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -887,20 +889,20 @@ function JobsApp({ profile, onClose, app }: { profile: PlayerProfile; onClose: (
   return (
     <div className="rush-bounce-in">
       <div className="mb-4 flex items-center gap-3">
-        <button onClick={onClose} className="flex h-9 w-9 items-center justify-center rounded-full bg-white/80 text-rush-navy backdrop-blur">←</button>
+        <button onClick={onClose} className="flex h-9 w-9 items-center justify-center rounded-full bg-white/80 text-rush-ink backdrop-blur">←</button>
         <div className="flex h-10 w-10 items-center justify-center rounded-2xl text-xl" style={{ background: `linear-gradient(135deg, ${app.from}, ${app.to})` }}>{app.icon}</div>
-        <h2 className="font-display text-xl text-rush-navy">Jobs</h2>
+        <h2 className="font-display text-xl text-rush-ink">Jobs</h2>
       </div>
 
       {/* Vitals indicator */}
       <div className="mb-3 grid grid-cols-2 gap-2">
         <div className={`rounded-xl p-2 text-center ${isExhausted ? "bg-red-100" : "bg-white/70"}`}>
-          <div className="text-[9px] uppercase tracking-wider text-rush-navy/50">Stamina</div>
-          <div className={`text-sm font-bold ${isExhausted ? "text-red-600" : "text-rush-green"}`}>⚡ {Math.round(currentStamina)}</div>
+          <div className="text-[9px] uppercase tracking-wider text-rush-ink/50">Stamina</div>
+          <div className={`text-sm font-bold ${isExhausted ? "text-red-600" : "text-rush-green"}`}> {Math.round(currentStamina)}</div>
         </div>
         <div className={`rounded-xl p-2 text-center ${isStarving ? "bg-red-100" : "bg-white/70"}`}>
-          <div className="text-[9px] uppercase tracking-wider text-rush-navy/50">Hunger</div>
-          <div className={`text-sm font-bold ${isStarving ? "text-red-600" : "text-rush-orange"}`}>🍽️ {Math.round(currentHunger)}</div>
+          <div className="text-[9px] uppercase tracking-wider text-rush-ink/50">Hunger</div>
+          <div className={`text-sm font-bold ${isStarving ? "text-red-600" : "text-rush-orange"}`}> {Math.round(currentHunger)}</div>
         </div>
       </div>
 
@@ -914,11 +916,11 @@ function JobsApp({ profile, onClose, app }: { profile: PlayerProfile; onClose: (
             <div key={job.id} className={`flex items-center gap-3 rounded-2xl bg-white/80 p-3 backdrop-blur ${cantWork ? "opacity-60" : ""}`}>
               <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-rush-cream text-xl">{job.emoji}</div>
               <div className="flex-1">
-                <div className="text-sm font-bold text-rush-navy">{job.title}</div>
-                <div className="text-[10px] text-rush-navy/50">{job.desc}</div>
+                <div className="text-sm font-bold text-rush-ink">{job.title}</div>
+                <div className="text-[10px] text-rush-ink/50">{job.desc}</div>
                 <div className="mt-0.5 flex items-center gap-2 text-[10px]">
                   <span className="font-bold text-rush-gold">₦{job.pay.toLocaleString()}</span>
-                  <span className="text-rush-navy/40">⚡-{job.stamina} · 🍽️+{job.hunger}</span>
+                  <span className="text-rush-ink/40">-{job.stamina} · +{job.hunger}</span>
                 </div>
               </div>
               <button
@@ -946,12 +948,12 @@ function RideApp({ profile, onClose, app }: { profile: PlayerProfile; onClose: (
 
   // Risk = chance of agbero encounter. Safe = BRT/Cab. Risky = Danfo/Keke.
   const rides = [
-    { id: "trek", name: "Trek", emoji: "🚶", fare: 0, time: "Slow but free", risk: 0, staminaCost: 15 },
-    { id: "danfo", name: "Danfo", emoji: "🚌", fare: 100, time: "Cheap but agbero fit show", risk: 0.30, staminaCost: 5 },
-    { id: "keke", name: "Keke", emoji: "🛺", fare: 150, time: "Quick hop, small risk", risk: 0.15, staminaCost: 5 },
-    { id: "okada", name: "Okada", emoji: "🏍️", fare: 250, time: "Fastest in traffic", risk: 0.05, staminaCost: 8 },
-    { id: "brt", name: "BRT Bus", emoji: "🚍", fare: 350, time: "Safe + dedicated lane", risk: 0, staminaCost: 3 },
-    { id: "cab", name: "Cab", emoji: "🚕", fare: 500, time: "Comfortable + AC", risk: 0, staminaCost: 0 },
+    { id: "trek", name: "Trek", emoji: "", fare: 0, time: "Slow but free", risk: 0, staminaCost: 15 },
+    { id: "danfo", name: "Danfo", emoji: "", fare: 100, time: "Cheap but agbero fit show", risk: 0.30, staminaCost: 5 },
+    { id: "keke", name: "Keke", emoji: "", fare: 150, time: "Quick hop, small risk", risk: 0.15, staminaCost: 5 },
+    { id: "okada", name: "Okada", emoji: "", fare: 250, time: "Fastest in traffic", risk: 0.05, staminaCost: 8 },
+    { id: "brt", name: "BRT Bus", emoji: "", fare: 350, time: "Safe + dedicated lane", risk: 0, staminaCost: 3 },
+    { id: "cab", name: "Cab", emoji: "", fare: 500, time: "Comfortable + AC", risk: 0, staminaCost: 0 },
   ];
 
   const travel = async (ride: typeof rides[0]) => {
@@ -968,7 +970,7 @@ function RideApp({ profile, onClose, app }: { profile: PlayerProfile; onClose: (
       if (ride.risk > 0 && Math.random() < ride.risk) {
         const extortAmount = Math.min(profile.cash - ride.fare, 200 + Math.floor(Math.random() * 300));
         finalFare += extortAmount;
-        msg = `🚨 Agbero catch you for ${ride.name}! Dem extort ₦${extortAmount} extra. Total cost: ₦${finalFare}. Next time, take BRT!`;
+        msg = ` Agbero catch you for ${ride.name}! Dem extort ₦${extortAmount} extra. Total cost: ₦${finalFare}. Next time, take BRT!`;
       }
 
       // Apply fare + stamina drain
@@ -992,9 +994,9 @@ function RideApp({ profile, onClose, app }: { profile: PlayerProfile; onClose: (
   return (
     <div className="rush-bounce-in">
       <div className="mb-4 flex items-center gap-3">
-        <button onClick={onClose} className="flex h-9 w-9 items-center justify-center rounded-full bg-white/80 text-rush-navy backdrop-blur">←</button>
+        <button onClick={onClose} className="flex h-9 w-9 items-center justify-center rounded-full bg-white/80 text-rush-ink backdrop-blur">←</button>
         <div className="flex h-10 w-10 items-center justify-center rounded-2xl text-xl" style={{ background: `linear-gradient(135deg, ${app.from}, ${app.to})` }}>{app.icon}</div>
-        <h2 className="font-display text-xl text-rush-navy">Ride</h2>
+        <h2 className="font-display text-xl text-rush-ink">Ride</h2>
       </div>
 
       {message && <div className="mb-3 rounded-xl bg-rush-green/10 px-3 py-2 text-xs text-rush-green">{message}</div>}
@@ -1011,18 +1013,18 @@ function RideApp({ profile, onClose, app }: { profile: PlayerProfile; onClose: (
             <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-rush-cream text-xl">{ride.emoji}</div>
             <div className="flex-1 text-left">
               <div className="flex items-center gap-2">
-                <span className="text-sm font-bold text-rush-navy">{ride.name}</span>
-                {ride.risk > 0 && <span className="rounded-full bg-rush-orange/20 px-1.5 py-0.5 text-[8px] font-bold uppercase text-rush-orange">⚠️ Risk</span>}
-                {ride.risk === 0 && ride.fare > 0 && <span className="rounded-full bg-rush-green/20 px-1.5 py-0.5 text-[8px] font-bold uppercase text-rush-green">✓ Safe</span>}
+                <span className="text-sm font-bold text-rush-ink">{ride.name}</span>
+                {ride.risk > 0 && <span className="rounded-full bg-rush-orange/20 px-1.5 py-0.5 text-[8px] font-bold uppercase text-rush-orange"> Risk</span>}
+                {ride.risk === 0 && ride.fare > 0 && <span className="rounded-full bg-rush-green/20 px-1.5 py-0.5 text-[8px] font-bold uppercase text-rush-green"> Safe</span>}
               </div>
-              <div className="text-[10px] text-rush-navy/50">{ride.time}</div>
-              {ride.staminaCost > 0 && <div className="text-[9px] text-rush-navy/40">⚡-{ride.staminaCost} stamina</div>}
+              <div className="text-[10px] text-rush-ink/50">{ride.time}</div>
+              {ride.staminaCost > 0 && <div className="text-[9px] text-rush-ink/40">-{ride.staminaCost} stamina</div>}
             </div>
             <div className="text-xs font-bold text-rush-gold">{ride.fare === 0 ? "FREE" : `₦${ride.fare}`}</div>
           </button>
         ))}
       </div>
-      <p className="mt-3 text-center text-[9px] text-rush-navy/40">
+      <p className="mt-3 text-center text-[9px] text-rush-ink/40">
         Danfo/Keke get agbero risk (extortion up to ₦500). BRT/Cab/Okada safe.
       </p>
     </div>
@@ -1038,12 +1040,12 @@ function BukaApp({ profile, onClose, app }: { profile: PlayerProfile; onClose: (
   const [error, setError] = useState<string | null>(null);
 
   const menu = [
-    { id: "gala-pure-water", name: "Gala + Pure Water", emoji: "🥤", price: 50, stamina: 10, hunger: 15, desc: "Quick snack. Cheap fix." },
-    { id: "suya-rice", name: "Suya + Rice", emoji: "🍢", price: 200, stamina: 25, hunger: 30, desc: "Spicy suya with jollof." },
-    { id: "amala-shitta", name: "Amala Shitta", emoji: "🍲", price: 300, stamina: 40, hunger: 50, desc: "Smooth amala + ewedu. Big restoration!" },
-    { id: "pounded-yam", name: "Pounded Yam + Egusi", emoji: "🥘", price: 500, stamina: 60, hunger: 70, desc: "Heavyweight. Full restoration." },
-    { id: "pepper-soup", name: "Pepper Soup (Catfish)", emoji: "🐟", price: 800, stamina: 35, hunger: 30, desc: "Calms the soul + small street_cred boost." },
-    { id: "small-chops", name: "Small Chops Platter", emoji: "🍤", price: 1000, stamina: 20, hunger: 15, desc: "Party snacks — for the flex." },
+    { id: "gala-pure-water", name: "Gala + Pure Water", emoji: "", price: 50, stamina: 10, hunger: 15, desc: "Quick snack. Cheap fix." },
+    { id: "suya-rice", name: "Suya + Rice", emoji: "", price: 200, stamina: 25, hunger: 30, desc: "Spicy suya with jollof." },
+    { id: "amala-shitta", name: "Amala Shitta", emoji: "", price: 300, stamina: 40, hunger: 50, desc: "Smooth amala + ewedu. Big restoration!" },
+    { id: "pounded-yam", name: "Pounded Yam + Egusi", emoji: "", price: 500, stamina: 60, hunger: 70, desc: "Heavyweight. Full restoration." },
+    { id: "pepper-soup", name: "Pepper Soup (Catfish)", emoji: "", price: 800, stamina: 35, hunger: 30, desc: "Calms the soul + small street_cred boost." },
+    { id: "small-chops", name: "Small Chops Platter", emoji: "", price: 1000, stamina: 20, hunger: 15, desc: "Party snacks — for the flex." },
   ];
 
   const buy = async (item: typeof menu[0]) => {
@@ -1063,7 +1065,7 @@ function BukaApp({ profile, onClose, app }: { profile: PlayerProfile; onClose: (
         vitalsUpdatedAt: Date.now(),
       });
       await refreshProfile();
-      setMessage(`✓ You chop ${item.name}! +${item.stamina} stamina · -${item.hunger} hunger${credBoost ? ` · +${credBoost} street_cred` : ""}`);
+      setMessage(` You chop ${item.name}! +${item.stamina} stamina · -${item.hunger} hunger${credBoost ? ` · +${credBoost} street_cred` : ""}`);
       toast.success(`${item.emoji} Chopped ${item.name}! +${item.stamina} stamina`);
     } catch (e) {
       setError((e as Error).message);
@@ -1073,20 +1075,20 @@ function BukaApp({ profile, onClose, app }: { profile: PlayerProfile; onClose: (
   return (
     <div className="rush-bounce-in">
       <div className="mb-4 flex items-center gap-3">
-        <button onClick={onClose} className="flex h-9 w-9 items-center justify-center rounded-full bg-white/80 text-rush-navy backdrop-blur">←</button>
+        <button onClick={onClose} className="flex h-9 w-9 items-center justify-center rounded-full bg-white/80 text-rush-ink backdrop-blur">←</button>
         <div className="flex h-10 w-10 items-center justify-center rounded-2xl text-xl" style={{ background: `linear-gradient(135deg, ${app.from}, ${app.to})` }}>{app.icon}</div>
-        <h2 className="font-display text-xl text-rush-navy">Buka</h2>
+        <h2 className="font-display text-xl text-rush-ink">Buka</h2>
       </div>
 
       {/* Vitals */}
       <div className="mb-3 grid grid-cols-2 gap-2">
         <div className="rounded-xl bg-white/70 p-2 text-center">
-          <div className="text-[9px] uppercase tracking-wider text-rush-navy/50">Stamina</div>
-          <div className="text-sm font-bold text-rush-green">⚡ {Math.round(profile.vitals?.stamina ?? 80)}</div>
+          <div className="text-[9px] uppercase tracking-wider text-rush-ink/50">Stamina</div>
+          <div className="text-sm font-bold text-rush-green"> {Math.round(profile.vitals?.stamina ?? 80)}</div>
         </div>
         <div className="rounded-xl bg-white/70 p-2 text-center">
-          <div className="text-[9px] uppercase tracking-wider text-rush-navy/50">Hunger</div>
-          <div className="text-sm font-bold text-rush-orange">🍽️ {Math.round(profile.vitals?.hunger ?? 20)}</div>
+          <div className="text-[9px] uppercase tracking-wider text-rush-ink/50">Hunger</div>
+          <div className="text-sm font-bold text-rush-orange"> {Math.round(profile.vitals?.hunger ?? 20)}</div>
         </div>
       </div>
 
@@ -1098,11 +1100,11 @@ function BukaApp({ profile, onClose, app }: { profile: PlayerProfile; onClose: (
           <div key={item.id} className="flex items-center gap-3 rounded-2xl bg-white/80 p-3 backdrop-blur">
             <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-rush-cream text-xl">{item.emoji}</div>
             <div className="flex-1">
-              <div className="text-sm font-bold text-rush-navy">{item.name}</div>
-              <div className="text-[10px] text-rush-navy/50">{item.desc}</div>
+              <div className="text-sm font-bold text-rush-ink">{item.name}</div>
+              <div className="text-[10px] text-rush-ink/50">{item.desc}</div>
               <div className="mt-0.5 flex items-center gap-2 text-[10px]">
                 <span className="font-bold text-rush-gold">₦{item.price.toLocaleString()}</span>
-                <span className="text-rush-navy/40">⚡+{item.stamina} · 🍽️-{item.hunger}</span>
+                <span className="text-rush-ink/40">+{item.stamina} · -{item.hunger}</span>
               </div>
             </div>
             <button
@@ -1131,11 +1133,11 @@ function QuiloxApp({ profile, onClose, app }: { profile: PlayerProfile; onClose:
   const COVER_FEE = 1000;
 
   const drinks = [
-    { id: "star", name: "Star Beer", emoji: "🍺", price: 500, cred: 5 },
-    { id: "hennessy", name: "Hennessy Shot", emoji: "🥃", price: 2000, cred: 15 },
-    { id: "champagne", name: "Moët Bottle", emoji: "🍾", price: 15000, cred: 50 },
-    { id: "hennesy-bottle", name: "Hennessy Bottle", emoji: "🥃", price: 25000, cred: 70 },
-    { id: "azul", name: "Azul Bottle", emoji: "💙", price: 40000, cred: 90 },
+    { id: "star", name: "Star Beer", emoji: "", price: 500, cred: 5 },
+    { id: "hennessy", name: "Hennessy Shot", emoji: "", price: 2000, cred: 15 },
+    { id: "champagne", name: "Moët Bottle", emoji: "", price: 15000, cred: 50 },
+    { id: "hennesy-bottle", name: "Hennessy Bottle", emoji: "", price: 25000, cred: 70 },
+    { id: "azul", name: "Azul Bottle", emoji: "", price: 40000, cred: 90 },
   ];
 
   const payCover = async () => {
@@ -1147,7 +1149,7 @@ function QuiloxApp({ profile, onClose, app }: { profile: PlayerProfile; onClose:
       await updateProfile(profile.uid, { cash: profile.cash - COVER_FEE });
       await refreshProfile();
       setInside(true);
-      setMessage("✓ You don enter Quilox! Order drinks to flex street_cred 🥂");
+      setMessage(" You don enter Quilox! Order drinks to flex street_cred ");
     } catch (e) { setError((e as Error).message); }
     finally { setBusy(null); }
   };
@@ -1169,7 +1171,7 @@ function QuiloxApp({ profile, onClose, app }: { profile: PlayerProfile; onClose:
         vitalsUpdatedAt: Date.now(),
       });
       await refreshProfile();
-      setMessage(`🥂 You pop ${drink.name}! +${drink.cred} street_cred. Total cred: ${newCred}`);
+      setMessage(` You pop ${drink.name}! +${drink.cred} street_cred. Total cred: ${newCred}`);
     } catch (e) { setError((e as Error).message); }
     finally { setBusy(null); }
   };
@@ -1177,15 +1179,15 @@ function QuiloxApp({ profile, onClose, app }: { profile: PlayerProfile; onClose:
   return (
     <div className="rush-bounce-in">
       <div className="mb-4 flex items-center gap-3">
-        <button onClick={onClose} className="flex h-9 w-9 items-center justify-center rounded-full bg-white/80 text-rush-navy backdrop-blur">←</button>
+        <button onClick={onClose} className="flex h-9 w-9 items-center justify-center rounded-full bg-white/80 text-rush-ink backdrop-blur">←</button>
         <div className="flex h-10 w-10 items-center justify-center rounded-2xl text-xl" style={{ background: `linear-gradient(135deg, ${app.from}, ${app.to})` }}>{app.icon}</div>
-        <h2 className="font-display text-xl text-rush-navy">Quilox</h2>
+        <h2 className="font-display text-xl text-rush-ink">Quilox</h2>
       </div>
 
       {/* Premium dark gradient card */}
       <div className="mb-4 overflow-hidden rounded-3xl ar-hero-sunset ar-glow-pulse p-4">
         <div className="mb-2 text-[10px] font-bold uppercase tracking-widest text-white/50">V/I Nightclub</div>
-        <div className="font-display text-lg">🎉 AfroRush Quilox</div>
+        <div className="font-display text-lg"> AfroRush Quilox</div>
         <div className="mt-2 text-[10px] text-white/70">Street Cred: <span className="font-bold text-rush-gold">{Math.round(profile.vitals?.street_cred ?? 10)}/100</span></div>
       </div>
 
@@ -1194,22 +1196,22 @@ function QuiloxApp({ profile, onClose, app }: { profile: PlayerProfile; onClose:
 
       {!inside ? (
         <div className="rounded-2xl bg-white/80 p-4 text-center backdrop-blur">
-          <div className="mb-2 text-4xl">🚪</div>
-          <div className="text-sm font-bold text-rush-navy">Cover Fee: ₦{COVER_FEE.toLocaleString()}</div>
-          <p className="mt-1 text-[10px] text-rush-navy/60">Pay make you enter. Inside, you fit buy drinks to boost your street_cred.</p>
+          <div className="mb-2 text-4xl"></div>
+          <div className="text-sm font-bold text-rush-ink">Cover Fee: ₦{COVER_FEE.toLocaleString()}</div>
+          <p className="mt-1 text-[10px] text-rush-ink/60">Pay make you enter. Inside, you fit buy drinks to boost your street_cred.</p>
           <button onClick={payCover} disabled={busy !== null} className="mt-3 w-full rounded-2xl bg-rush-purple px-4 py-3 text-sm font-bold uppercase tracking-wider text-white disabled:opacity-50">
             {busy === "cover" ? "Paying…" : "Pay & Enter"}
           </button>
         </div>
       ) : (
         <div className="space-y-2">
-          <div className="mb-2 text-[10px] font-bold uppercase tracking-wider text-rush-navy/60">Drinks Menu</div>
+          <div className="mb-2 text-[10px] font-bold uppercase tracking-wider text-rush-ink/60">Drinks Menu</div>
           {drinks.map((drink) => (
             <div key={drink.id} className="flex items-center gap-3 rounded-2xl bg-white/80 p-3 backdrop-blur">
               <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-rush-cream text-xl">{drink.emoji}</div>
               <div className="flex-1">
-                <div className="text-sm font-bold text-rush-navy">{drink.name}</div>
-                <div className="text-[10px] text-rush-navy/50">+{drink.cred} street_cred</div>
+                <div className="text-sm font-bold text-rush-ink">{drink.name}</div>
+                <div className="text-[10px] text-rush-ink/50">+{drink.cred} street_cred</div>
                 <div className="font-bold text-rush-gold">₦{drink.price.toLocaleString()}</div>
               </div>
               <button
@@ -1244,8 +1246,8 @@ function LoanApp({ profile, onClose, app }: { profile: PlayerProfile; onClose: (
       const { takeMicroLoan } = await import("@/lib/firestore");
       await takeMicroLoan(profile, amt);
       await refreshProfile();
-      setMessage(`✓ You don borrow ₦${amt.toLocaleString()}. Interest na 5% per hour. Pay quick before e grow!`);
-      toast.success(`💸 Borrowed ₦${amt.toLocaleString()}. Pay quick!`);
+      setMessage(` You don borrow ₦${amt.toLocaleString()}. Interest na 5% per hour. Pay quick before e grow!`);
+      toast.success(` Borrowed ₦${amt.toLocaleString()}. Pay quick!`);
       setLoanAmount("");
     } catch (e) { setError((e as Error).message); }
     finally { setBusy(null); }
@@ -1257,7 +1259,7 @@ function LoanApp({ profile, onClose, app }: { profile: PlayerProfile; onClose: (
       const { repayMicroLoan } = await import("@/lib/firestore");
       await repayMicroLoan(profile, amount);
       await refreshProfile();
-      setMessage(`✓ You don repay ₦${amount.toLocaleString()}.`);
+      setMessage(` You don repay ₦${amount.toLocaleString()}.`);
     } catch (e) { setError((e as Error).message); }
     finally { setBusy(null); }
   };
@@ -1267,9 +1269,9 @@ function LoanApp({ profile, onClose, app }: { profile: PlayerProfile; onClose: (
   return (
     <div className="rush-bounce-in">
       <div className="mb-4 flex items-center gap-3">
-        <button onClick={onClose} className="flex h-9 w-9 items-center justify-center rounded-full bg-white/80 text-rush-navy backdrop-blur">←</button>
+        <button onClick={onClose} className="flex h-9 w-9 items-center justify-center rounded-full bg-white/80 text-rush-ink backdrop-blur">←</button>
         <div className="flex h-10 w-10 items-center justify-center rounded-2xl text-xl" style={{ background: `linear-gradient(135deg, ${app.from}, ${app.to})` }}>{app.icon}</div>
-        <h2 className="font-display text-xl text-rush-navy">Micro-Loan</h2>
+        <h2 className="font-display text-xl text-rush-ink">Micro-Loan</h2>
       </div>
 
       {/* Loan status card */}
@@ -1298,7 +1300,7 @@ function LoanApp({ profile, onClose, app }: { profile: PlayerProfile; onClose: (
           </>
         ) : (
           <>
-            <div className="mt-1 font-display text-lg text-white/90">No active loan ✓</div>
+            <div className="mt-1 font-display text-lg text-white/90">No active loan </div>
             <p className="mt-1 text-[10px] text-white/60">Borrow quick Naira when things tight. But interest na 5% per hour — pay quick!</p>
           </>
         )}
@@ -1310,10 +1312,10 @@ function LoanApp({ profile, onClose, app }: { profile: PlayerProfile; onClose: (
       {/* Take new loan — only if no active loan */}
       {!loan && (
         <div className="rush-glass rounded-3xl p-4">
-          <div className="mb-3 text-[10px] font-bold uppercase tracking-wider text-rush-navy/60">Take Loan</div>
+          <div className="mb-3 text-[10px] font-bold uppercase tracking-wider text-rush-ink/60">Take Loan</div>
           <div className="mb-2 flex gap-1.5">
             {[1000, 5000, 10000, 25000].map((a) => (
-              <button key={a} onClick={() => setLoanAmount(String(a))} className="flex-1 rounded-lg bg-rush-cream/60 py-1.5 text-[10px] font-bold text-rush-navy active:scale-95">
+              <button key={a} onClick={() => setLoanAmount(String(a))} className="flex-1 rounded-lg bg-rush-cream/60 py-1.5 text-[10px] font-bold text-rush-ink active:scale-95">
                 ₦{a >= 1000 ? `${a / 1000}k` : a}
               </button>
             ))}
@@ -1323,12 +1325,12 @@ function LoanApp({ profile, onClose, app }: { profile: PlayerProfile; onClose: (
             value={loanAmount}
             onChange={(e) => setLoanAmount(e.target.value)}
             placeholder="Amount (₦)"
-            className="mb-2 w-full rounded-xl border border-rush-cream bg-white px-3 py-2.5 text-sm text-rush-navy"
+            className="mb-2 w-full rounded-xl border border-rush-cream bg-white px-3 py-2.5 text-sm text-rush-ink"
           />
           <button onClick={takeLoan} disabled={busy !== null} className="w-full rounded-xl bg-rush-orange px-4 py-3 text-sm font-bold uppercase tracking-wider text-white disabled:opacity-50">
             {busy === "take" ? "Processing…" : "Borrow Now"}
           </button>
-          <p className="mt-2 text-[9px] text-rush-navy/40">⚠️ Interest compounds at 5% per hour. Cash go auto-deduct as you earn. Borrow wisely!</p>
+          <p className="mt-2 text-[9px] text-rush-ink/40"> Interest compounds at 5% per hour. Cash go auto-deduct as you earn. Borrow wisely!</p>
         </div>
       )}
     </div>
@@ -1385,14 +1387,14 @@ function StreetApp({ profile, onClose, app }: { profile: PlayerProfile; onClose:
   return (
     <div className="rush-bounce-in">
       <div className="mb-4 flex items-center gap-3">
-        <button onClick={onClose} className="flex h-9 w-9 items-center justify-center rounded-full bg-white/80 text-rush-navy backdrop-blur">←</button>
+        <button onClick={onClose} className="flex h-9 w-9 items-center justify-center rounded-full bg-white/80 text-rush-ink backdrop-blur">←</button>
         <div className="flex h-10 w-10 items-center justify-center rounded-2xl text-xl" style={{ background: `linear-gradient(135deg, ${app.from}, ${app.to})` }}>{app.icon}</div>
-        <h2 className="font-display text-xl text-rush-navy">Street</h2>
+        <h2 className="font-display text-xl text-rush-ink">Street</h2>
       </div>
 
       {isJailed && (
         <div className="mb-3 rounded-2xl bg-red-50 p-3 text-center">
-          <div className="text-2xl">🚔</div>
+          <div className="text-2xl"></div>
           <div className="text-xs font-bold text-red-600">You dey inside cell!</div>
           <div className="text-[10px] text-red-600/80">{profile.jailedReason}</div>
           <div className="mt-1 text-[9px] text-red-600/60">Release in: {Math.ceil((profile.jailedUntil! - Date.now()) / 60000)} min</div>
@@ -1402,57 +1404,57 @@ function StreetApp({ profile, onClose, app }: { profile: PlayerProfile; onClose:
       {/* Stats */}
       <div className="mb-3 grid grid-cols-3 gap-2">
         <div className="rounded-xl bg-white/70 p-2 text-center">
-          <div className="text-[8px] uppercase tracking-wider text-rush-navy/50">Street Cred</div>
-          <div className="text-sm font-bold text-rush-purple">💯 {Math.round(profile.vitals?.street_cred ?? 10)}</div>
+          <div className="text-[8px] uppercase tracking-wider text-rush-ink/50">Street Cred</div>
+          <div className="text-sm font-bold text-rush-purple"> {Math.round(profile.vitals?.street_cred ?? 10)}</div>
         </div>
         <div className="rounded-xl bg-white/70 p-2 text-center">
-          <div className="text-[8px] uppercase tracking-wider text-rush-navy/50">Cash</div>
+          <div className="text-[8px] uppercase tracking-wider text-rush-ink/50">Cash</div>
           <div className="text-sm font-bold text-rush-gold">₦{profile.cash.toLocaleString()}</div>
         </div>
         <div className="rounded-xl bg-white/70 p-2 text-center">
-          <div className="text-[8px] uppercase tracking-wider text-rush-navy/50">Status</div>
-          <div className="text-sm font-bold text-rush-navy">{isJailed ? "Jailed" : "Free"}</div>
+          <div className="text-[8px] uppercase tracking-wider text-rush-ink/50">Status</div>
+          <div className="text-sm font-bold text-rush-ink">{isJailed ? "Jailed" : "Free"}</div>
         </div>
       </div>
 
       {message && <div className="mb-3 rounded-xl bg-rush-green/10 px-3 py-2 text-xs text-rush-green">{message}</div>}
       {error && <div className="mb-3 rounded-xl bg-red-50 px-3 py-2 text-xs text-red-600">{error}</div>}
 
-      <div className="mb-2 text-[10px] font-bold uppercase tracking-widest text-rush-navy/50">Online Players ({players.length})</div>
+      <div className="mb-2 text-[10px] font-bold uppercase tracking-widest text-rush-ink/50">Online Players ({players.length})</div>
       {players.length === 0 ? (
-        <div className="rounded-2xl bg-white/70 p-4 text-center text-xs text-rush-navy/50">
+        <div className="rounded-2xl bg-white/70 p-4 text-center text-xs text-rush-ink/50">
           No other players online right now. Share your handle to bring friends!
         </div>
       ) : (
         <div className="space-y-2">
           {players.map((p) => (
             <div key={p.uid} className="flex items-center gap-2 rounded-2xl bg-white/80 p-2.5 backdrop-blur">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-rush-cream text-sm font-bold text-rush-navy">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-rush-cream text-sm font-bold text-rush-ink">
                 {p.username.charAt(0).toUpperCase()}
               </div>
               <div className="flex-1 text-left">
-                <div className="text-xs font-bold text-rush-navy">@{p.username}</div>
-                {p.crewTag && <div className="text-[9px] text-rush-navy/50">[{p.crewTag}]</div>}
+                <div className="text-xs font-bold text-rush-ink">@{p.username}</div>
+                {p.crewTag && <div className="text-[9px] text-rush-ink/50">[{p.crewTag}]</div>}
               </div>
               <button
                 onClick={() => doPickpocket(p.uid, p.username)}
                 disabled={busy !== null || isJailed === true}
                 className="rounded-lg bg-rush-orange px-2.5 py-1.5 text-[9px] font-bold uppercase tracking-wider text-white active:scale-95 disabled:opacity-50"
               >
-                {busy === `pick-${p.uid}` ? "…" : "🤏 Rob"}
+                {busy === `pick-${p.uid}` ? "…" : " Rob"}
               </button>
               <button
                 onClick={() => doReport(p.uid, p.username)}
                 disabled={busy !== null}
                 className="rounded-lg bg-rush-navy px-2.5 py-1.5 text-[9px] font-bold uppercase tracking-wider text-white active:scale-95 disabled:opacity-50"
               >
-                {busy === `report-${p.uid}` ? "…" : "🚔 Report"}
+                {busy === `report-${p.uid}` ? "…" : " Report"}
               </button>
             </div>
           ))}
         </div>
       )}
-      <p className="mt-3 text-center text-[9px] text-rush-navy/40">
+      <p className="mt-3 text-center text-[9px] text-rush-ink/40">
         Pickpocket success based on your street_cred vs target. Fail = 5 min jail. Report = jail target 10 min.
       </p>
     </div>
@@ -1465,11 +1467,11 @@ function CalendarApp({ profile, onClose, app }: { profile: PlayerProfile; onClos
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
 
   const events = [
-    { day: "Mon", title: "Business Summit", venue: "Hamdala Hotel", time: "6:00 PM", reward: "₦5,000 + rep", emoji: "💼", color: "var(--ar-indigo)" },
-    { day: "Wed", title: "Matchday", venue: "Murtala Square", time: "6:00 PM", reward: "₦2,500 if GCFC win", emoji: "⚽", color: "var(--ar-emerald)" },
-    { day: "Fri", title: "Beach Party", venue: "Riverside Beach", time: "8:00 PM", reward: "+20 cred", emoji: "🏖️", color: "var(--ar-terracotta)" },
-    { day: "Sat", title: "Owambe", venue: "Event Centre", time: "4:00 PM", reward: "Spray ₦+vibes", emoji: "🎉", color: "var(--ar-gold)" },
-    { day: "Sun", title: "Beach Party II", venue: "Riverside Beach", time: "5:00 PM", reward: "+15 cred", emoji: "🏖️", color: "var(--ar-terracotta)" },
+    { day: "Mon", title: "Business Summit", venue: "Hamdala Hotel", time: "6:00 PM", reward: "₦5,000 + rep", emoji: "", color: "var(--ar-indigo)" },
+    { day: "Wed", title: "Matchday", venue: "Murtala Square", time: "6:00 PM", reward: "₦2,500 if GCFC win", emoji: "", color: "var(--ar-emerald)" },
+    { day: "Fri", title: "Beach Party", venue: "Riverside Beach", time: "8:00 PM", reward: "+20 cred", emoji: "", color: "var(--ar-terracotta)" },
+    { day: "Sat", title: "Owambe", venue: "Event Centre", time: "4:00 PM", reward: "Spray ₦+vibes", emoji: "", color: "var(--ar-gold)" },
+    { day: "Sun", title: "Beach Party II", venue: "Riverside Beach", time: "5:00 PM", reward: "+15 cred", emoji: "", color: "var(--ar-terracotta)" },
   ];
 
   return (
@@ -1494,7 +1496,7 @@ function CalendarApp({ profile, onClose, app }: { profile: PlayerProfile; onClos
                 <span className="text-xs text-rush-ink-soft">· {e.time}</span>
               </div>
               <div className="text-sm font-bold text-rush-ink">{e.title}</div>
-              <div className="text-[10px] text-rush-ink-soft">📍 {e.venue} · {e.reward}</div>
+              <div className="text-[10px] text-rush-ink-soft"> {e.venue} · {e.reward}</div>
             </div>
             <span className="text-[10px] text-rush-ink-soft">→</span>
           </button>
@@ -1586,8 +1588,8 @@ function PhotoBoothApp({ profile, onClose, app }: { profile: PlayerProfile; onCl
       const reward = 100 + Math.floor(Math.random() * 200);
       await updateProfile(profile.uid, { cash: (profile.cash - BOOTH_FEE) + reward });
       await refreshProfile();
-      setMessage(`📸 Photo taken! +₦${reward} for the shot. Saved to your gallery.`);
-      toast.success(`📸 Photo taken! +₦${reward}`);
+      setMessage(` Photo taken! +₦${reward} for the shot. Saved to your gallery.`);
+      toast.success(` Photo taken! +₦${reward}`);
     } catch (e) { setError((e as Error).message); }
     finally { setBusy(false); }
   };
@@ -1632,7 +1634,7 @@ function PhotoBoothApp({ profile, onClose, app }: { profile: PlayerProfile; onCl
         disabled={busy}
         className="ar-btn-primary btn-press mt-4 w-full rounded-2xl px-4 py-3 text-sm font-bold uppercase tracking-wider text-white disabled:opacity-50"
       >
-        {busy ? "Snapping…" : `📸 Take Photos (₦${BOOTH_FEE})`}
+        {busy ? "Snapping…" : ` Take Photos (₦${BOOTH_FEE})`}
       </button>
     </div>
   );
@@ -1685,7 +1687,7 @@ function DraughtsApp({ profile, onClose, app }: { profile: PlayerProfile; onClos
       <div className="ar-card mb-3 p-3 text-center">
         <div className="text-[10px] font-bold uppercase tracking-widest text-rush-ink-soft">Turn</div>
         <div className="text-sm font-bold" style={{ color: turn === "p" ? "var(--ar-indigo-deep)" : "var(--ar-terracotta-deep)" }}>
-          {turn === "p" ? "🔵 You (Indigo)" : "🟠 Opponent (Terracotta)"}
+          {turn === "p" ? " You (Indigo)" : "🟠 Opponent (Terracotta)"}
         </div>
       </div>
 
@@ -1725,14 +1727,14 @@ function DraughtsApp({ profile, onClose, app }: { profile: PlayerProfile; onClos
 // ---------- Stickers Picker (used inside Messages) ----------
 
 const STICKERS = [
-  { id: "odogwu", emoji: "💪", label: "Odogwu", caption: "Big man" },
-  { id: "wahala", emoji: "😅", label: "Wahala", caption: "Problem" },
-  { id: "echoke", emoji: "😲", label: "E Choke", caption: "E shock you" },
-  { id: "nawa", emoji: "🤦🏾", label: "Nawa", caption: "Disappointing" },
-  { id: "sharp", emoji: "⚡", label: "Sharp Guy", caption: "Quick thinker" },
-  { id: "owambe", emoji: "🎉", label: "Owambe", caption: "Party time" },
-  { id: "sapa", emoji: "💸", label: "Sapa", caption: "Broke" },
-  { id: "soft", emoji: "🥰", label: "Soft Life", caption: "Easy living" },
+  { id: "odogwu", emoji: "", label: "Odogwu", caption: "Big man" },
+  { id: "wahala", emoji: "", label: "Wahala", caption: "Problem" },
+  { id: "echoke", emoji: "", label: "E Choke", caption: "E shock you" },
+  { id: "nawa", emoji: "", label: "Nawa", caption: "Disappointing" },
+  { id: "sharp", emoji: "", label: "Sharp Guy", caption: "Quick thinker" },
+  { id: "owambe", emoji: "", label: "Owambe", caption: "Party time" },
+  { id: "sapa", emoji: "", label: "Sapa", caption: "Broke" },
+  { id: "soft", emoji: "", label: "Soft Life", caption: "Easy living" },
 ];
 
 export function StickerPicker({ onPick }: { onPick: (sticker: typeof STICKERS[0]) => void }) {
