@@ -1,12 +1,15 @@
 import type { Metadata, Viewport } from "next";
-import { Bungee, Plus_Jakarta_Sans, JetBrains_Mono } from "next/font/google";
+import { Fredoka, Plus_Jakarta_Sans, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import CookieConsent from "@/components/CookieConsent";
+import { Toaster } from "@/components/ui/sonner";
 
-const bungee = Bungee({
-  variable: "--font-bungee",
+// Fredoka — rounded, friendly geometric display font (matches Lagos Life).
+// Used for hero headings, big numbers, wordmark. 600 weight for headings.
+const fredoka = Fredoka({
+  variable: "--font-display",
   subsets: ["latin"],
-  weight: "400",
+  weight: ["400", "500", "600", "700"],
   display: "swap",
 });
 
@@ -129,10 +132,11 @@ export default function RootLayout({
         />
       </head>
       <body
-        className={`${bungee.variable} ${jakarta.variable} ${jetbrains.variable} antialiased bg-background text-foreground`}
+        className={`${fredoka.variable} ${jakarta.variable} ${jetbrains.variable} antialiased bg-background text-foreground`}
       >
         {children}
         <CookieConsent />
+        <Toaster />
 
         {/* noscript fallback — shown when JavaScript is disabled OR when an
             AI crawler fetches the HTML without executing JS. Describes the
