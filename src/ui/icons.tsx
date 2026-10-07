@@ -403,6 +403,257 @@ export function HeartIcon({ size, ...p }: IconProps) {
   );
 }
 
+/* ---------- Need-specific icons ---------- */
+
+export function FoodIcon({ size, ...p }: IconProps) {
+  return (
+    <svg {...base(size)} {...p}>
+      <path d="M4 8c0-2 1-3 2-3s2 1 2 3v8M8 8v8M12 5v11" />
+      <path d="M3 16h10v2a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-2z" />
+      <path d="M16 8c0-2 2-4 4-4v12c-2 0-4-2-4-4" />
+    </svg>
+  );
+}
+
+export function EnergyIcon({ size, ...p }: IconProps) {
+  return (
+    <svg {...base(size)} {...p}>
+      <path d="M13 2L4 14h7l-2 8 9-12h-7l2-8z" />
+    </svg>
+  );
+}
+
+export function FunIcon({ size, ...p }: IconProps) {
+  return (
+    <svg {...base(size)} {...p}>
+      <path d="M3 12c0-5 4-9 9-9 2 0 3 0 4 1l-2 2-1 3 3 1 2-2c1 1 1 2 1 4 0 5-4 9-9 9s-9-4-9-9z" />
+      <circle cx="9" cy="11" r="1" fill="currentColor" stroke="none" />
+      <circle cx="14" cy="13" r="1" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
+export function SocialIcon({ size, ...p }: IconProps) {
+  return (
+    <svg {...base(size)} {...p}>
+      <path d="M3 5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H8l-5 4V5z" />
+      <circle cx="8" cy="10" r="1" fill="currentColor" stroke="none" />
+      <circle cx="12" cy="10" r="1" fill="currentColor" stroke="none" />
+      <circle cx="16" cy="10" r="1" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
+export function HygieneIcon({ size, ...p }: IconProps) {
+  return (
+    <svg {...base(size)} {...p}>
+      <path d="M12 3v6" />
+      <path d="M8 9h8v2a4 4 0 0 1-8 0V9z" />
+      <path d="M10 15v6M14 15v6" />
+      <path d="M9 21h6" />
+    </svg>
+  );
+}
+
+export function ToiletIcon({ size, ...p }: IconProps) {
+  return (
+    <svg {...base(size)} {...p}>
+      <path d="M6 3h12v4H6z" />
+      <path d="M7 7v6a4 4 0 0 0 4 4h2a4 4 0 0 0 4-4V7" />
+      <path d="M9 17v4M15 17v4M7 21h10" />
+    </svg>
+  );
+}
+
+/* ---------- Place-specific icons ---------- */
+
+export function GraduationCapIcon({ size, ...p }: IconProps) {
+  return (
+    <svg {...base(size)} {...p}>
+      <path d="M12 3L2 8l10 5 10-5-10-5z" />
+      <path d="M6 10v5c0 1 3 3 6 3s6-2 6-3v-5" />
+      <path d="M22 8v5" />
+    </svg>
+  );
+}
+
+export function ChurchIcon({ size, ...p }: IconProps) {
+  return (
+    <svg {...base(size)} {...p}>
+      <path d="M12 2v4M10 4h4" />
+      <path d="M5 22V10l7-4 7 4v12" />
+      <path d="M9 22v-6h6v6" />
+      <path d="M5 14h14" />
+    </svg>
+  );
+}
+
+export function MosqueIcon({ size, ...p }: IconProps) {
+  return (
+    <svg {...base(size)} {...p}>
+      <path d="M4 22V12c0-4 3-8 8-8s8 4 8 8v10" />
+      <path d="M4 12h16" />
+      <path d="M9 22v-4a3 3 0 0 1 6 0v4" />
+      <path d="M12 4v2" />
+    </svg>
+  );
+}
+
+export function BridgeIcon({ size, ...p }: IconProps) {
+  return (
+    <svg {...base(size)} {...p}>
+      <path d="M2 16h20" />
+      <path d="M2 16v4M22 16v4M6 16v4M18 16v4M10 16v4M14 16v4" />
+      <path d="M2 12c4-4 8-4 10-4s6 0 10 4" />
+    </svg>
+  );
+}
+
+export function MonumentIcon({ size, ...p }: IconProps) {
+  return (
+    <svg {...base(size)} {...p}>
+      <path d="M12 2L4 22h16L12 2z" />
+      <path d="M8 14h8" />
+    </svg>
+  );
+}
+
+export function HospitalIcon({ size, ...p }: IconProps) {
+  return (
+    <svg {...base(size)} {...p}>
+      <rect x="4" y="6" width="16" height="16" rx="1" />
+      <path d="M12 10v8M8 14h8" />
+    </svg>
+  );
+}
+
+export function BuildingIcon({ size, ...p }: IconProps) {
+  return (
+    <svg {...base(size)} {...p}>
+      <rect x="4" y="3" width="16" height="18" rx="1" />
+      <path d="M8 7h2M14 7h2M8 11h2M14 11h2M8 15h2M14 15h2" />
+      <path d="M10 21v-3h4v3" />
+    </svg>
+  );
+}
+
+export function LockIcon({ size, ...p }: IconProps) {
+  return (
+    <svg {...base(size)} {...p}>
+      <rect x="5" y="11" width="14" height="10" rx="2" />
+      <path d="M8 11V7a4 4 0 0 1 8 0v4" />
+      <path d="M12 15v2" />
+    </svg>
+  );
+}
+
+export function StarIcon({ size, ...p }: IconProps) {
+  return (
+    <svg {...base(size)} {...p}>
+      <path d="M12 3l2.5 5 5.5.8-4 4 1 5.5-5-3-5 3 1-5.5-4-4 5.5-.8L12 3z" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
+/* ---------- Shop item icons ---------- */
+
+export function BikeIcon({ size, ...p }: IconProps) {
+  return (
+    <svg {...base(size)} {...p}>
+      <circle cx="6" cy="17" r="3" />
+      <circle cx="18" cy="17" r="3" />
+      <path d="M6 17l4-8h4l4 8M10 9l3-3M14 9V6" />
+    </svg>
+  );
+}
+
+export function ShirtIcon({ size, ...p }: IconProps) {
+  return (
+    <svg {...base(size)} {...p}>
+      <path d="M8 3l-5 4 2 3 3-2v13h12V8l3 2 2-3-5-4-3 2-3-2-3 2z" />
+    </svg>
+  );
+}
+
+export function HomeIcon2({ size, ...p }: IconProps) {
+  return (
+    <svg {...base(size)} {...p}>
+      <path d="M3 12l9-8 9 8" />
+      <path d="M5 10v10h14V10" />
+      <path d="M10 20v-5h4v5" />
+    </svg>
+  );
+}
+
+export function BedIcon({ size, ...p }: IconProps) {
+  return (
+    <svg {...base(size)} {...p}>
+      <path d="M3 7v14M3 13h18v8M21 13v-2a4 4 0 0 0-4-4h-7v6" />
+      <circle cx="7" cy="11" r="2" />
+    </svg>
+  );
+}
+
+export function FlameIcon({ size, ...p }: IconProps) {
+  return (
+    <svg {...base(size)} {...p}>
+      <path d="M12 2c1 3-1 5-2 6-1-1-1-3-1-3s-3 2-3 7a6 6 0 0 0 12 0c0-3-2-5-3-7-1 2-2 2-2 2s0-3-1-5z" />
+    </svg>
+  );
+}
+
+export function WaterIcon({ size, ...p }: IconProps) {
+  return (
+    <svg {...base(size)} {...p}>
+      <path d="M12 2c-4 6-7 9-7 13a7 7 0 0 0 14 0c0-4-3-7-7-13z" />
+    </svg>
+  );
+}
+
+export function TvIcon({ size, ...p }: IconProps) {
+  return (
+    <svg {...base(size)} {...p}>
+      <rect x="3" y="8" width="18" height="12" rx="2" />
+      <path d="M8 4l4 4 4-4" />
+    </svg>
+  );
+}
+
+export function PlaneIcon({ size, ...p }: IconProps) {
+  return (
+    <svg {...base(size)} {...p}>
+      <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" />
+    </svg>
+  );
+}
+
+export function CarIcon({ size, ...p }: IconProps) {
+  return (
+    <svg {...base(size)} {...p}>
+      <path d="M5 17h14M3 17l2-7h14l2 7v3h-3v-2H6v2H3v-3z" />
+      <circle cx="7" cy="17" r="1.5" fill="currentColor" stroke="none" />
+      <circle cx="17" cy="17" r="1.5" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
+/* ---------- Category → Icon mapping ---------- */
+
+export function getCategoryIcon(category: string): typeof HomeIcon {
+  switch (category) {
+    case "work": return BankIcon;
+    case "social": return ClubIcon;
+    case "justice": return CourtIcon;
+    case "recreation": return StadiumIcon;
+    case "market": return BagIcon;
+    case "campus": return GraduationCapIcon;
+    case "religious": return ChurchIcon;
+    case "transport": return RideIcon;
+    case "landmark": return BridgeIcon;
+    default: return MapIcon;
+  }
+}
+
 /* ---------- Hausa geometric decorative pattern (for card borders) ---------- */
 
 export function HausaPattern({ width = 200, height = 8, ...p }: IconProps & { width?: number; height?: number }) {
@@ -444,8 +695,14 @@ export const ICONS = {
   buka: BukaIcon,
   club: ClubIcon,
   stamina: StaminaIcon,
+  energy: EnergyIcon,
+  food: FoodIcon,
   hunger: HungerIcon,
+  fun: FunIcon,
   cred: CredIcon,
+  social: SocialIcon,
+  hygiene: HygieneIcon,
+  toilet: ToiletIcon,
   chat: ChatIcon,
   crew: CrewIcon,
   street: StreetIcon,
@@ -470,6 +727,26 @@ export const ICONS = {
   send: SendIcon,
   share: ShareIcon,
   heart: HeartIcon,
+  // Place icons
+  graduation: GraduationCapIcon,
+  church: ChurchIcon,
+  mosque: MosqueIcon,
+  bridge: BridgeIcon,
+  monument: MonumentIcon,
+  hospital: HospitalIcon,
+  building: BuildingIcon,
+  lock: LockIcon,
+  star: StarIcon,
+  // Shop icons
+  bike: BikeIcon,
+  shirt: ShirtIcon,
+  home2: HomeIcon2,
+  bed: BedIcon,
+  flame: FlameIcon,
+  water: WaterIcon,
+  tv: TvIcon,
+  plane: PlaneIcon,
+  car: CarIcon,
 } as const;
 
 export type IconName = keyof typeof ICONS;
