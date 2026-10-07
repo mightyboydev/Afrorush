@@ -225,13 +225,15 @@ export function levelTitle(lvl: number): string {
 }
 
 // Cities selectable during onboarding.
+// Aligned with src/data/places.ts STATES so the Map tab can filter places.
 export const CITIES = [
-  { id: "lagos",   name: "Lagos",   country: "Nigeria",   accent: "#1fb86f", desc: "Centre of Excellence · okadas, danfos, suya" },
-  { id: "kaduna",  name: "Kaduna",  country: "Nigeria",   accent: "#7c3aed", desc: "Crocodile City · sun, gyara, north flavour" },
-  { id: "abuja",   name: "Abuja",   country: "Nigeria",   accent: "#16a3b1", desc: "Capital · clean roads, big money" },
-  { id: "kano",    name: "Kano",    country: "Nigeria",   accent: "#ff6a1a", desc: "Ancient city · commerce + durbar" },
-  { id: "accra",   name: "Accra",   country: "Ghana",     accent: "#ffc531", desc: "Gold Coast · trotros + jollof" },
-  { id: "nairobi", name: "Nairobi", country: "Kenya",     accent: "#c026d3", desc: "Green City in the Sun · matatus" },
+  { id: "kaduna",  name: "Kaduna",        country: "Nigeria",   accent: "#7c3aed", desc: "Crocodile City · Hausa-Fulani north" },
+  { id: "abuja",   name: "Abuja",         country: "Nigeria",   accent: "#0d7c4a", desc: "Federal Capital · Aso Rock · power" },
+  { id: "lagos",   name: "Lagos",         country: "Nigeria",   accent: "#c87f3f", desc: "Centre of Excellence · Eko · loud" },
+  { id: "rivers",  name: "Port Harcourt", country: "Nigeria",   accent: "#d4a017", desc: "Garden City · oil capital · creeks" },
+  { id: "kano",    name: "Kano",          country: "Nigeria",   accent: "#ff6a1a", desc: "Ancient city · commerce + durbar" },
+  { id: "accra",   name: "Accra",         country: "Ghana",     accent: "#ffc531", desc: "Gold Coast · trotros + jollof" },
+  { id: "nairobi", name: "Nairobi",       country: "Kenya",     accent: "#c026d3", desc: "Green City in the Sun · matatus" },
 ] as const;
 
 // Avatar options shown in onboarding.
