@@ -1,10 +1,11 @@
 "use client";
 
-// src/components/BottomNav.tsx — 4-tab bottom navigation (Home, Map, Phone, Buy).
-// Lagos Life-inspired: glassmorphism dock (rounded-[26px]) with Lucide SVG
-// icons (instead of emoji), active state = solid dark bg + thicker icon stroke.
+// src/components/BottomNav.tsx — 4-tab bottom navigation.
+// Harmattan Sun styling: glassmorphism dock (rounded-3xl) with custom
+// AfroRush SVG icons (HomeIcon, MapIcon, PhoneIcon, BagIcon).
+// Active state = solid indigo bg + thicker icon stroke.
 
-import { House, Map, Smartphone, ShoppingBag, type LucideIcon } from "lucide-react";
+import { HomeIcon, MapIcon, PhoneIcon, BagIcon } from "@/ui/icons";
 
 export type Tab = "home" | "map" | "phone" | "buy";
 
@@ -15,11 +16,11 @@ export interface BottomNavProps {
   unreadNotifications?: number;
 }
 
-const TABS: { id: Tab; label: string; icon: LucideIcon }[] = [
-  { id: "home", label: "Home", icon: House },
-  { id: "map", label: "Map", icon: Map },
-  { id: "phone", label: "Phone", icon: Smartphone },
-  { id: "buy", label: "Buy", icon: ShoppingBag },
+const TABS: { id: Tab; label: string; Icon: typeof HomeIcon }[] = [
+  { id: "home", label: "Home", Icon: HomeIcon },
+  { id: "map", label: "Map", Icon: MapIcon },
+  { id: "phone", label: "Phone", Icon: PhoneIcon },
+  { id: "buy", label: "Buy", Icon: BagIcon },
 ];
 
 export default function BottomNav({ active, onChange, unreadNotifications = 0 }: BottomNavProps) {
@@ -28,33 +29,26 @@ export default function BottomNav({ active, onChange, unreadNotifications = 0 }:
       <div className="rush-dock grid w-full max-w-md grid-cols-4 gap-1 p-1.5">
         {TABS.map((tab) => {
           const isActive = active === tab.id;
-          const Icon = tab.icon;
+          const { Icon } = tab;
           return (
             <button
               key={tab.id}
               onClick={() => onChange(tab.id)}
               className="btn-press relative flex h-13 flex-col items-center justify-center gap-0.5 rounded-[20px] transition-colors"
               style={{
-                background: isActive ? "var(--color-rush-ink)" : "transparent",
-                color: isActive ? "#ffffff" : "var(--color-rush-ink-soft)",
+                background: isActive ? "var(--ar-indigo-deep)" : "transparent",
+                color: isActive ? "#ffffff" : "var(--ar-ink-soft)",
               }}
               aria-label={tab.label}
               aria-current={isActive ? "page" : undefined}
             >
-              {/* Notification badge */}
               {tab.id === "phone" && unreadNotifications > 0 && (
-                <span className="absolute right-3 top-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-rush-rose px-1 text-[9px] font-bold text-white">
+                <span className="ar-pop absolute right-3 top-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-rush-rose px-1 text-[9px] font-bold text-white">
                   {unreadNotifications > 9 ? "9+" : unreadNotifications}
                 </span>
               )}
-              {/* Lucide icon — thicker stroke when active (2.4 vs 2) */}
-              <Icon
-                size={20}
-                strokeWidth={isActive ? 2.4 : 2}
-                className="shrink-0"
-              />
-              {/* Label */}
-              <span className="text-[11px] font-semibold tabular-nums">{tab.label}</span>
+              <Icon size={22} strokeWidth={isActive ? 2.5 : 2} className="shrink-0" />
+              <span className="text-[10px] font-semibold tabular-nums">{tab.label}</span>
             </button>
           );
         })}

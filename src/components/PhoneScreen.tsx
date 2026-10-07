@@ -32,22 +32,26 @@ interface App {
 }
 
 const APPS: App[] = [
-  { id: "jobs", label: "Jobs", icon: "💼", from: "#1fb86f", to: "#178a55" },
-  { id: "messages", label: "Messages", icon: "💬", from: "#16a3b1", to: "#0d9488", badge: 3 },
-  { id: "bank", label: "Bank", icon: "🏦", from: "#ffc531", to: "#e8a217" },
-  { id: "buka", label: "Buka", icon: "🍲", from: "#ff6a1a", to: "#c2410c" },
+  { id: "jobs", label: "Jobs", icon: "💼", from: "#0d7c4a", to: "#07543a" },
+  { id: "messages", label: "Messages", icon: "💬", from: "#1e3a8a", to: "#0f1f4d", badge: 3 },
+  { id: "bank", label: "Bank", icon: "🏦", from: "#d4a017", to: "#9c7510" },
+  { id: "buka", label: "Buka", icon: "🍲", from: "#c87f3f", to: "#9c5a26" },
   { id: "quilox", label: "Quilox", icon: "🎉", from: "#7c3aed", to: "#5b21b6" },
-  { id: "loan", label: "Loan", icon: "💸", from: "#ef4444", to: "#dc2626" },
-  { id: "street", label: "Street", icon: "🚶", from: "#14213d", to: "#1e293b" },
+  { id: "loan", label: "Loan", icon: "💸", from: "#c8463d", to: "#9c352d" },
+  { id: "street", label: "Street", icon: "🚶", from: "#1e3a8a", to: "#0f1f4d" },
   { id: "crew", label: "Crew", icon: "👥", from: "#7c3aed", to: "#5b21b6" },
-  { id: "leaderboard", label: "Ranks", icon: "🏆", from: "#ff6a1a", to: "#c2410c" },
-  { id: "ride", label: "Ride", icon: "🛺", from: "#1fb86f", to: "#16a34a" },
-  { id: "health", label: "Health", icon: "❤️", from: "#ef4444", to: "#dc2626" },
-  { id: "camera", label: "Camera", icon: "📷", from: "#14213d", to: "#1e293b" },
+  { id: "leaderboard", label: "Ranks", icon: "🏆", from: "#d4a017", to: "#9c7510" },
+  { id: "ride", label: "Ride", icon: "🛺", from: "#0d7c4a", to: "#07543a" },
+  { id: "health", label: "Health", icon: "❤️", from: "#c8463d", to: "#9c352d" },
+  { id: "camera", label: "Camera", icon: "📷", from: "#1e3a8a", to: "#0f1f4d" },
+  { id: "calendar", label: "Events", icon: "📅", from: "#c87f3f", to: "#9c5a26", badge: 1 },
+  { id: "paper", label: "Gist", icon: "📰", from: "#6b4f3f", to: "#4a3525" },
+  { id: "photo-booth", label: "Booth", icon: "📸", from: "#7c3aed", to: "#5b21b6" },
+  { id: "draughts", label: "Draughts", icon: "♟️", from: "#1e3a8a", to: "#0f1f4d" },
   { id: "games", label: "Games", icon: "🎮", from: "#c026d3", to: "#a21caf" },
-  { id: "nollywood", label: "Nollywood", icon: "🎬", from: "#ff6a1a", to: "#ea580c", locked: true },
+  { id: "nollywood", label: "Nollywood", icon: "🎬", from: "#c87f3f", to: "#9c5a26", locked: true },
   { id: "settings", label: "Settings", icon: "⚙️", from: "#6b7280", to: "#4b5563" },
-  { id: "more", label: "More", icon: "•••", from: "#9ca3af", to: "#6b7280" },
+  { id: "more", label: "More", icon: "•••", from: "#a08878", to: "#6b4f3f" },
 ];
 
 export default function PhoneScreen({ profile }: { profile: PlayerProfile }) {
@@ -184,6 +188,22 @@ function AppContent({ appId, profile, onClose }: { appId: string; profile: Playe
   // Street app — pickpocket + report other online players
   if (appId === "street") {
     return <StreetApp profile={profile} onClose={onClose} app={app} />;
+  }
+  // Calendar app — weekly events (Phase 4)
+  if (appId === "calendar") {
+    return <CalendarApp profile={profile} onClose={onClose} app={app} />;
+  }
+  // Paper app — daily gist (Phase 4)
+  if (appId === "paper") {
+    return <PaperApp profile={profile} onClose={onClose} app={app} />;
+  }
+  // Photo Booth app (Phase 5)
+  if (appId === "photo-booth") {
+    return <PhotoBoothApp profile={profile} onClose={onClose} app={app} />;
+  }
+  // Draughts board game (Phase 5)
+  if (appId === "draughts") {
+    return <DraughtsApp profile={profile} onClose={onClose} app={app} />;
   }
   // Ride app — fast travel
   if (appId === "ride") {
@@ -1435,6 +1455,299 @@ function StreetApp({ profile, onClose, app }: { profile: PlayerProfile; onClose:
       <p className="mt-3 text-center text-[9px] text-rush-navy/40">
         Pickpocket success based on your street_cred vs target. Fail = 5 min jail. Report = jail target 10 min.
       </p>
+    </div>
+  );
+}
+
+// ---------- Calendar App (Phase 4 — weekly events) ----------
+
+function CalendarApp({ profile, onClose, app }: { profile: PlayerProfile; onClose: () => void; app: App }) {
+  const [selectedDay, setSelectedDay] = useState<string | null>(null);
+
+  const events = [
+    { day: "Mon", title: "Business Summit", venue: "Hamdala Hotel", time: "6:00 PM", reward: "₦5,000 + rep", emoji: "💼", color: "var(--ar-indigo)" },
+    { day: "Wed", title: "Matchday", venue: "Murtala Square", time: "6:00 PM", reward: "₦2,500 if GCFC win", emoji: "⚽", color: "var(--ar-emerald)" },
+    { day: "Fri", title: "Beach Party", venue: "Riverside Beach", time: "8:00 PM", reward: "+20 cred", emoji: "🏖️", color: "var(--ar-terracotta)" },
+    { day: "Sat", title: "Owambe", venue: "Event Centre", time: "4:00 PM", reward: "Spray ₦+vibes", emoji: "🎉", color: "var(--ar-gold)" },
+    { day: "Sun", title: "Beach Party II", venue: "Riverside Beach", time: "5:00 PM", reward: "+15 cred", emoji: "🏖️", color: "var(--ar-terracotta)" },
+  ];
+
+  return (
+    <div className="rush-bounce-in">
+      <div className="mb-4 flex items-center gap-3">
+        <button onClick={onClose} className="btn-press flex h-9 w-9 items-center justify-center rounded-full bg-rush-paper text-rush-ink rush-soft-shadow">←</button>
+        <div className="flex h-10 w-10 items-center justify-center rounded-2xl text-xl" style={{ background: `linear-gradient(145deg, ${app.from}, ${app.to})` }}>{app.icon}</div>
+        <h2 className="font-display text-xl text-rush-ink">This Week</h2>
+      </div>
+
+      <div className="space-y-2">
+        {events.map((e) => (
+          <button
+            key={e.day}
+            onClick={() => setSelectedDay(e.day)}
+            className="ar-card btn-press flex w-full items-center gap-3 p-3 text-left"
+          >
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl text-2xl" style={{ background: `${e.color}22` }}>{e.emoji}</div>
+            <div className="flex-1">
+              <div className="flex items-center gap-2">
+                <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: e.color }}>{e.day}</span>
+                <span className="text-xs text-rush-ink-soft">· {e.time}</span>
+              </div>
+              <div className="text-sm font-bold text-rush-ink">{e.title}</div>
+              <div className="text-[10px] text-rush-ink-soft">📍 {e.venue} · {e.reward}</div>
+            </div>
+            <span className="text-[10px] text-rush-ink-soft">→</span>
+          </button>
+        ))}
+      </div>
+
+      {selectedDay && (
+        <div className="ar-panel mt-4 rounded-2xl p-4 text-center">
+          <div className="text-[10px] font-bold uppercase tracking-wider text-rush-ink-soft">Event Locked</div>
+          <div className="mt-1 text-sm font-bold text-rush-ink">Coming Phase 4</div>
+          <p className="mt-2 text-xs text-rush-ink-soft">
+            Tap an event in-world when the day comes to enter. For now, plan your week!
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ---------- Paper App (Phase 4 — daily gist) ----------
+
+function PaperApp({ profile, onClose, app }: { profile: PlayerProfile; onClose: () => void; app: App }) {
+  const today = new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
+
+  const headlines = [
+    { tag: "TOP STORY", title: "Kaduna Okada Riders Declare 'No Work Tuesday'", body: "Riders protest new levy at Ahmadu Bello Way. Roads quiet, danfos overload ×3." },
+    { tag: "SPORTS", title: "GCFC Thrash Rivals 3-0 at Murtala Square", body: "Hat-trick hero fires Kaduna top of the table. Fans spray ₦50k at the stadium." },
+    { tag: "AROUND TOWN", title: "Suya Spot Sets Record: 200 Plates in 1 Hour", body: "Mama Nkechi's buka overwhelmed as harmattan hungry crowd descends." },
+    { tag: "CLASSIFIEDS", title: "Room to Let — Hamdala Way", body: "Self-con, ₦120k/year. Water + prepaid. Call @LandlordTunde." },
+    { tag: "WEATHER", title: "Harmattan Intensifies This Week", body: "Visibility 200m mornings. Wear something thick. Drink tea." },
+  ];
+
+  return (
+    <div className="rush-bounce-in">
+      <div className="mb-4 flex items-center gap-3">
+        <button onClick={onClose} className="btn-press flex h-9 w-9 items-center justify-center rounded-full bg-rush-paper text-rush-ink rush-soft-shadow">←</button>
+        <div className="flex h-10 w-10 items-center justify-center rounded-2xl text-xl" style={{ background: `linear-gradient(145deg, ${app.from}, ${app.to})` }}>{app.icon}</div>
+        <div>
+          <h2 className="font-display text-xl text-rush-ink">The Kaduna Gist</h2>
+          <div className="text-[9px] uppercase tracking-wider text-rush-ink-soft">{today}</div>
+        </div>
+      </div>
+
+      <div className="ar-card ar-pattern-top mb-3 overflow-hidden">
+        <div className="p-4">
+          <div className="text-[10px] font-bold uppercase tracking-widest text-rush-terracotta">{headlines[0].tag}</div>
+          <h3 className="mt-1 font-display text-lg text-rush-ink">{headlines[0].title}</h3>
+          <p className="mt-2 text-xs text-rush-ink-soft">{headlines[0].body}</p>
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        {headlines.slice(1).map((h, i) => (
+          <div key={i} className="ar-card flex gap-3 p-3">
+            <div className="w-1 self-stretch rounded-full bg-rush-terracotta/40" />
+            <div className="flex-1">
+              <div className="text-[9px] font-bold uppercase tracking-widest text-rush-ink-soft">{h.tag}</div>
+              <div className="text-sm font-bold text-rush-ink">{h.title}</div>
+              <p className="mt-0.5 text-[11px] text-rush-ink-soft">{h.body}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <p className="mt-4 text-center text-[9px] uppercase tracking-widest text-rush-ink-soft">
+        Auto-compiled · 6:00 AM daily
+      </p>
+    </div>
+  );
+}
+
+// ---------- Photo Booth App (Phase 5) ----------
+
+function PhotoBoothApp({ profile, onClose, app }: { profile: PlayerProfile; onClose: () => void; app: App }) {
+  const BOOTH_FEE = 500;
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const { refreshProfile } = useAuth();
+
+  const take = async () => {
+    if (busy) return;
+    if (profile.cash < BOOTH_FEE) { setError(`Booth fee na ₦${BOOTH_FEE}. You no get enough.`); return; }
+    setBusy(true); setError(null); setMessage(null);
+    try {
+      const { updateProfile } = await import("@/lib/firestore");
+      await updateProfile(profile.uid, { cash: profile.cash - BOOTH_FEE });
+      await refreshProfile();
+      const reward = 100 + Math.floor(Math.random() * 200);
+      await updateProfile(profile.uid, { cash: (profile.cash - BOOTH_FEE) + reward });
+      await refreshProfile();
+      setMessage(`📸 Photo taken! +₦${reward} for the shot. Saved to your gallery.`);
+      toast.success(`📸 Photo taken! +₦${reward}`);
+    } catch (e) { setError((e as Error).message); }
+    finally { setBusy(false); }
+  };
+
+  const backdrops = [
+    { name: "Harmattan Sunset", color: "linear-gradient(135deg, #c87f3f, #d4a017, #f5d77a)" },
+    { name: "Indigo Night", color: "linear-gradient(135deg, #0f1f4d, #1e3a8a, #2f7de1)" },
+    { name: "Emerald Garden", color: "linear-gradient(135deg, #07543a, #0d7c4a, #b8e6cf)" },
+    { name: "Rose Pottery", color: "linear-gradient(135deg, #9c352d, #c8463d, #f0c2bc)" },
+    { name: "Gold Royal", color: "linear-gradient(135deg, #9c7510, #d4a017, #f5d77a)" },
+  ];
+
+  return (
+    <div className="rush-bounce-in">
+      <div className="mb-4 flex items-center gap-3">
+        <button onClick={onClose} className="btn-press flex h-9 w-9 items-center justify-center rounded-full bg-rush-paper text-rush-ink rush-soft-shadow">←</button>
+        <div className="flex h-10 w-10 items-center justify-center rounded-2xl text-xl" style={{ background: `linear-gradient(145deg, ${app.from}, ${app.to})` }}>{app.icon}</div>
+        <h2 className="font-display text-xl text-rush-ink">Photo Booth</h2>
+      </div>
+
+      {message && <div className="mb-3 rounded-xl bg-rush-leaf/15 px-3 py-2 text-xs text-rush-leaf-deep">{message}</div>}
+      {error && <div className="mb-3 rounded-xl bg-rush-rose/15 px-3 py-2 text-xs text-rush-rose">{error}</div>}
+
+      <div className="ar-card mb-4 overflow-hidden p-4 text-center">
+        <div className="text-[10px] font-bold uppercase tracking-widest text-rush-ink-soft">Booth Fee</div>
+        <div className="font-display text-3xl text-rush-gold-deep tabular-nums">₦{BOOTH_FEE}</div>
+        <p className="mt-1 text-[10px] text-rush-ink-soft">5 shots · countdown timer · earn back ₦100-300 per shoot</p>
+      </div>
+
+      <div className="mb-3 text-[10px] font-bold uppercase tracking-widest text-rush-ink-soft">Backdrops</div>
+      <div className="grid grid-cols-2 gap-2">
+        {backdrops.map((b) => (
+          <div key={b.name} className="ar-card overflow-hidden p-2">
+            <div className="mb-2 h-16 rounded-xl" style={{ background: b.color }} />
+            <div className="text-[10px] font-bold text-rush-ink">{b.name}</div>
+          </div>
+        ))}
+      </div>
+
+      <button
+        onClick={take}
+        disabled={busy}
+        className="ar-btn-primary btn-press mt-4 w-full rounded-2xl px-4 py-3 text-sm font-bold uppercase tracking-wider text-white disabled:opacity-50"
+      >
+        {busy ? "Snapping…" : `📸 Take Photos (₦${BOOTH_FEE})`}
+      </button>
+    </div>
+  );
+}
+
+// ---------- Draughts App (Phase 5 — board game) ----------
+
+function DraughtsApp({ profile, onClose, app }: { profile: PlayerProfile; onClose: () => void; app: App }) {
+  // 10x10 board with simplified state — clickable demo
+  const SIZE = 8; // simplified to 8x8 for screen fit
+  const [board, setBoard] = useState<(null | "p" | "o")[]>(() => {
+    const b: (null | "p" | "o")[] = Array(SIZE * SIZE).fill(null);
+    for (let r = 0; r < 3; r++) for (let c = 0; c < SIZE; c++) if ((r + c) % 2 === 1) b[r * SIZE + c] = "o";
+    for (let r = SIZE - 3; r < SIZE; r++) for (let c = 0; c < SIZE; c++) if ((r + c) % 2 === 1) b[r * SIZE + c] = "p";
+    return b;
+  });
+  const [turn, setTurn] = useState<"p" | "o">("p");
+  const [selected, setSelected] = useState<number | null>(null);
+
+  const handleClick = (idx: number) => {
+    const piece = board[idx];
+    if (piece === turn) { setSelected(idx); return; }
+    if (selected !== null && piece === null) {
+      // try move (simplified: any diagonal move forward by 1)
+      const fromRow = Math.floor(selected / SIZE);
+      const fromCol = selected % SIZE;
+      const toRow = Math.floor(idx / SIZE);
+      const toCol = idx % SIZE;
+      const dr = toRow - fromRow;
+      const dc = Math.abs(toCol - fromCol);
+      if (dc === 1 && Math.abs(dr) === 1 && ((turn === "p" && dr === -1) || (turn === "o" && dr === 1))) {
+        const newBoard = [...board];
+        newBoard[idx] = turn;
+        newBoard[selected] = null;
+        setBoard(newBoard);
+        setSelected(null);
+        setTurn(turn === "p" ? "o" : "p");
+      }
+    }
+  };
+
+  return (
+    <div className="rush-bounce-in">
+      <div className="mb-4 flex items-center gap-3">
+        <button onClick={onClose} className="btn-press flex h-9 w-9 items-center justify-center rounded-full bg-rush-paper text-rush-ink rush-soft-shadow">←</button>
+        <div className="flex h-10 w-10 items-center justify-center rounded-2xl text-xl" style={{ background: `linear-gradient(145deg, ${app.from}, ${app.to})` }}>{app.icon}</div>
+        <h2 className="font-display text-xl text-rush-ink">Draughts</h2>
+      </div>
+
+      <div className="ar-card mb-3 p-3 text-center">
+        <div className="text-[10px] font-bold uppercase tracking-widest text-rush-ink-soft">Turn</div>
+        <div className="text-sm font-bold" style={{ color: turn === "p" ? "var(--ar-indigo-deep)" : "var(--ar-terracotta-deep)" }}>
+          {turn === "p" ? "🔵 You (Indigo)" : "🟠 Opponent (Terracotta)"}
+        </div>
+      </div>
+
+      <div className="ar-card mx-auto aspect-square w-full max-w-xs p-2">
+        <div className="grid h-full w-full" style={{ gridTemplateColumns: `repeat(${SIZE}, 1fr)` }}>
+          {board.map((cell, i) => {
+            const row = Math.floor(i / SIZE);
+            const col = i % SIZE;
+            const isDark = (row + col) % 2 === 1;
+            const isSelected = selected === i;
+            return (
+              <button
+                key={i}
+                onClick={() => handleClick(i)}
+                className="flex items-center justify-center"
+                style={{
+                  background: isDark ? "var(--ar-terracotta-deep)" : "var(--ar-cream)",
+                  outline: isSelected ? "3px solid var(--ar-gold)" : "none",
+                  outlineOffset: "-3px",
+                }}
+              >
+                {cell === "p" && <div className="h-3/4 w-3/4 rounded-full" style={{ background: "var(--ar-indigo-deep)", boxShadow: "inset 0 1px rgba(255,255,255,0.3)" }} />}
+                {cell === "o" && <div className="h-3/4 w-3/4 rounded-full" style={{ background: "var(--ar-terracotta)", boxShadow: "inset 0 1px rgba(255,255,255,0.3)" }} />}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <p className="mt-3 text-center text-[9px] text-rush-ink-soft">
+        Tap your piece, then tap a dark square diagonally forward. Multiplayer coming Phase 5.
+      </p>
+    </div>
+  );
+}
+
+// ---------- Stickers Picker (used inside Messages) ----------
+
+const STICKERS = [
+  { id: "odogwu", emoji: "💪", label: "Odogwu", caption: "Big man" },
+  { id: "wahala", emoji: "😅", label: "Wahala", caption: "Problem" },
+  { id: "echoke", emoji: "😲", label: "E Choke", caption: "E shock you" },
+  { id: "nawa", emoji: "🤦🏾", label: "Nawa", caption: "Disappointing" },
+  { id: "sharp", emoji: "⚡", label: "Sharp Guy", caption: "Quick thinker" },
+  { id: "owambe", emoji: "🎉", label: "Owambe", caption: "Party time" },
+  { id: "sapa", emoji: "💸", label: "Sapa", caption: "Broke" },
+  { id: "soft", emoji: "🥰", label: "Soft Life", caption: "Easy living" },
+];
+
+export function StickerPicker({ onPick }: { onPick: (sticker: typeof STICKERS[0]) => void }) {
+  return (
+    <div className="ar-panel grid grid-cols-4 gap-2 rounded-2xl p-3">
+      {STICKERS.map((s) => (
+        <button
+          key={s.id}
+          onClick={() => onPick(s)}
+          className="btn-press flex flex-col items-center gap-0.5 rounded-xl bg-rush-paper p-2 active:scale-95"
+        >
+          <span className="text-2xl">{s.emoji}</span>
+          <span className="text-[8px] font-bold text-rush-ink">{s.label}</span>
+        </button>
+      ))}
     </div>
   );
 }

@@ -9,8 +9,10 @@ import dynamic from "next/dynamic";
 import { useAuth } from "@/lib/auth";
 import { SKIN_TONES, HAIR_STYLES, HAIR_COLORS, DEFAULT_AVATAR, type AvatarConfig } from "@/lib/storage";
 import SafeCanvas from "@/components/SafeCanvas";
+import { HarmattanHero, OkadaMascot, MascotHead } from "@/ui/mascot";
+import { HausaPattern, ShareIcon, ChevronRightIcon } from "@/ui/icons";
 
-// 3D character preview — ssr:false
+// 3D character preview — ssr:false (kept for fallback; HarmattanHero is the new primary)
 const CharacterPreview3D = dynamic(() => import("@/components/CharacterPreview"), { ssr: false });
 
 const SHIRT_COLORS = ["#ffffff", "#1a1a1a", "#1e3a5f", "#87ceeb", "#1fb86f", "#e94f37", "#ffc531", "#7c3aed"];
@@ -81,34 +83,31 @@ export default function Landing() {
   };
 
   return (
-    <main className="relative min-h-screen w-full overflow-hidden bg-gradient-to-b from-[#b3e5fc] via-[#fff8e7] to-[#fff8e7]">
-      {/* Decorative clouds */}
-      <div className="pointer-events-none absolute inset-0">
-        <div className="absolute left-[10%] top-[8%] h-16 w-32 rounded-full bg-white/80 blur-md rush-float" />
-        <div className="absolute right-[15%] top-[15%] h-12 w-24 rounded-full bg-white/70 blur-md rush-float" style={{ animationDelay: "1s" }} />
-        <div className="absolute left-[60%] top-[5%] h-20 w-40 rounded-full bg-white/60 blur-md rush-float" style={{ animationDelay: "2s" }} />
-      </div>
+    <main className="page-bg-day relative min-h-screen w-full overflow-hidden">
+      {/* === Harmattan hero scene (replaces the 3D preview that crashed on phones) === */}
+      <HarmattanHero className="pointer-events-none absolute inset-0 z-0 h-full w-full" />
 
       {/* Top header */}
       <header className="relative z-10 flex items-center justify-between px-4 pt-4 safe-pt sm:px-6">
         <div className="flex items-center gap-2">
           <img src="/afrorush-logo.jpg" alt="AfroRush" width={40} height={40} className="h-10 w-10 rounded-xl border-2 border-white rush-soft-shadow" />
-          <span className="font-display text-xl text-rush-navy">
-            Afro<span className="text-rush-green">Rush</span>
+          <span className="font-display text-xl text-rush-ink">
+            Afro<span className="text-rush-leaf">Rush</span>
           </span>
         </div>
         <div className="flex gap-2">
           <button
             onClick={() => setMode("login")}
-            className={`rounded-full px-4 py-2 text-xs font-bold uppercase tracking-wider transition-all ${
-              mode === "login" ? "bg-rush-navy text-white" : "bg-white/80 text-rush-navy"
+            className={`ar-pill btn-press px-4 py-2 text-xs font-bold uppercase tracking-wider transition-all ${
+              mode === "login" ? "bg-rush-indigo-deep text-white" : "text-rush-ink"
             }`}
+            style={mode === "login" ? { background: "var(--ar-indigo-deep)", color: "#fff" } : undefined}
           >
             Log in
           </button>
           <button
             onClick={() => setMode("signup")}
-            className="rounded-full bg-rush-green px-4 py-2 text-xs font-bold uppercase tracking-wider text-white shadow-lg shadow-rush-green/30"
+            className="ar-btn-primary btn-press px-4 py-2 text-xs font-bold uppercase tracking-wider text-white"
           >
             Sign up free
           </button>
@@ -158,33 +157,26 @@ export default function Landing() {
 
             {mode === "signup" ? (
               <div className="space-y-3">
-                {/* Character preview + form layout (like phlifestyle) */}
+                {/* Character preview + form layout */}
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                  {/* Left: 3D character preview (wrapped in SafeCanvas — never crashes the page) */}
+                  {/* Left: 2D mascot (no crash, always works, original AfroRush art) */}
                   <div className="relative">
-                    <div className="overflow-hidden rounded-2xl bg-gradient-to-b from-[#b3e5fc]/30 to-[#fff8e7]/30">
-                      <SafeCanvas
-                        fallback={
-                          <div className="flex h-[200px] w-full flex-col items-center justify-center bg-gradient-to-b from-[#b3e5fc]/60 to-[#fff8e7]/60 text-center">
-                            <div className="text-7xl" style={{ filter: "drop-shadow(0 8px 12px rgba(20,33,61,0.2))" }}>🧑🏾</div>
-                            <p className="mt-2 px-4 text-[10px] text-rush-navy/50">
-                              3D no dey your phone, but you fit still sign up and play!
-                            </p>
-                          </div>
-                        }
-                      >
-                        <CharacterPreview3D avatar={previewAvatar} height={200} />
-                      </SafeCanvas>
+                    <div className="ar-panel flex h-[200px] flex-col items-center justify-center overflow-hidden rounded-2xl p-4">
+                      <div className="ar-bob">
+                        <OkadaMascot size={140} />
+                      </div>
+                      <div className="mt-1 text-center text-[10px] font-bold uppercase tracking-wider text-rush-ink-soft">
+                        Your AfroRush rider
+                      </div>
                     </div>
-                    {/* Shuffle button */}
+                    {/* Shuffle button — picks random avatar */}
                     <button
                       onClick={shuffle}
-                      className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-sm rush-soft-shadow active:scale-90"
+                      className="btn-press absolute right-2 top-2 flex h-9 w-9 items-center justify-center rounded-full bg-rush-paper text-rush-terracotta rush-soft-shadow active:scale-90"
                       aria-label="Shuffle look"
                     >
                       🎲
                     </button>
-                    <div className="mt-1 text-center text-[9px] text-rush-navy/40">Drag to rotate</div>
                   </div>
 
                   {/* Right: Form fields */}
