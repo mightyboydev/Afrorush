@@ -8,6 +8,7 @@ import { useState } from "react";
 import { useAuth } from "@/lib/auth";
 import { BIKE_CATALOG, OUTFIT_CATALOG, formatNaira, type PlayerProfile } from "@/lib/storage";
 import { purchaseItem, updateLoadout, updateProfile } from "@/lib/firestore";
+import { callBuyApi } from "@/systems/economy";
 import { Panel, Pill, PrimaryButton, AnimatedCounter } from "@/ui/kit";
 import {
   BikeIcon, ShirtIcon, HomeIcon2, BedIcon, FlameIcon, WaterIcon, TvIcon, PlaneIcon, CarIcon,
@@ -113,18 +114,18 @@ export default function BuyScreen({ profile, unlocked }: { profile: PlayerProfil
   const handleBuy = async (item: ShopItem) => {
     setError(null); setSuccess(null);
     if (unlocked.includes(item.id)) return;
-    const balance = item.currency === "gold" ? profile.gold : profile.cash;
-    if (balance < item.price) { setError(`Need ${item.currency === "gold" ? "gold" : "naira"} ${item.price - balance} more`); return; }
     setBusy(item.id);
     try {
-      if (item.id.startsWith("home-")) {
-        const homeType = item.id.replace("home-", "") as "room" | "selfcon" | "flat" | "duplex" | "seaplot";
-        await updateProfile(profile.uid, { homeType, cash: profile.cash - item.price });
-        setSuccess(`Upgraded to ${item.name}!`);
-      } else {
-        await purchaseItem(profile.uid, item.id, item.price);
+      // Call server API — server looks up price, validates balance, writes cash + unlocked
+      const result = await callBuyApi(item.id);
+      if (result.error) { setError(result.error); return; }
+      // Update loadout client-side (loadout is player-writable)
+      const realItem = getItem(item.id);
+      if (realItem && !item.id.startsWith("home-")) {
+        await updateLoadout(profile.uid, { ...profile.loadout, [`${realItem.category}Id`]: item.id });
       }
       await refreshProfile();
+      setSuccess(`Bought ${item.name}!`);
     } catch (e) { setError((e as Error).message); }
     finally { setBusy(null); }
   };

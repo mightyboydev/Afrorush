@@ -9,6 +9,7 @@ import { useAuth } from "@/lib/auth";
 import { formatNaira, type PlayerProfile } from "@/lib/storage";
 import { Panel, Pill, PrimaryButton, AnimatedCounter } from "@/ui/kit";
 import { ShareIcon } from "@/ui/icons";
+import { callJobApi, callBukaApi, callQuiloxApi, callLoanApi, callRideApi, callPickpocketApi, callReportApi, callTransferApi, findPlayerByUsername } from "@/systems/economy";
 import {
   updateProfile,
   sendDm,
@@ -417,10 +418,15 @@ function BankApp({ profile, onClose, app }: { profile: PlayerProfile; onClose: (
     if (amt > profile.cash) { setError("You no get enough cash for this transfer"); return; }
     setBusy(true);
     try {
-      const { recipientName } = await transferCash(profile, recipient.trim(), amt, note.trim() || undefined);
+      // Find recipient by username (read-only client query)
+      const recipientProfile = await findPlayerByUsername(recipient.trim());
+      if (!recipientProfile) { setError(`No player called "${recipient.trim()}"`); return; }
+      // Call server API — server handles the actual cash transfer atomically
+      const result = await callTransferApi(recipientProfile.uid, amt, note.trim() || "");
+      if (result.error) { setError(result.error); return; }
       await refreshProfile();
-      setMessage(` Sent ₦${amt.toLocaleString()} to @${recipientName}! Dem go see am for Messages.`);
-      toast.success(` Sent ₦${amt.toLocaleString()} to @${recipientName}!`);
+      setMessage(`Sent ${amt.toLocaleString()} naira to @${recipientProfile.username}!`);
+      toast.success(`Sent ${amt.toLocaleString()} naira to @${recipientProfile.username}!`);
       setRecipient(""); setAmount(""); setNote("");
     } catch (e) { setError((e as Error).message); }
     finally { setBusy(false); }
@@ -863,12 +869,14 @@ function JobsApp({ profile, onClose, app }: { profile: PlayerProfile; onClose: (
     }
     setBusy(job.id);
     try {
+      // Call server API — server looks up pay, validates cooldown, writes cash
+      const result = await callJobApi(job.id);
+      if (result.error) { setError(result.error); return; }
+      // Update vitals client-side (stamina/hunger are player-writable)
       const { updateProfile } = await import("@/lib/firestore");
-      // Apply: pay + drain stamina + raise hunger
       const newStamina = Math.max(0, currentStamina - job.stamina);
       const newHunger = Math.min(100, currentHunger + job.hunger);
       await updateProfile(profile.uid, {
-        cash: profile.cash + job.pay,
         vitals: {
           stamina: newStamina,
           hunger: newHunger,
@@ -877,8 +885,8 @@ function JobsApp({ profile, onClose, app }: { profile: PlayerProfile; onClose: (
         vitalsUpdatedAt: Date.now(),
       });
       await refreshProfile();
-      setMessage(` You hustle as ${job.title}! +₦${job.pay.toLocaleString()} · -${job.stamina} stamina · +${job.hunger} hunger`);
-      toast.success(` Hustled ${job.title} for ₦${job.pay.toLocaleString()}!`);
+      setMessage(` You hustle as ${job.title}! +${job.pay} naira · -${job.stamina} stamina · +${job.hunger} hunger`);
+      toast.success(`Hustled ${job.title}!`);
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -962,30 +970,16 @@ function RideApp({ profile, onClose, app }: { profile: PlayerProfile; onClose: (
     if (ride.fare > profile.cash) { setError("Not enough cash for this ride"); return; }
     setBusy(ride.id);
     try {
-      const { updateProfile } = await import("@/lib/firestore");
-      let finalFare = ride.fare;
-      let msg = `You hopped on ${ride.name}! Travelled across the city.`;
-
-      // Agbero encounter on risky rides
-      if (ride.risk > 0 && Math.random() < ride.risk) {
-        const extortAmount = Math.min(profile.cash - ride.fare, 200 + Math.floor(Math.random() * 300));
-        finalFare += extortAmount;
-        msg = ` Agbero catch you for ${ride.name}! Dem extort ₦${extortAmount} extra. Total cost: ₦${finalFare}. Next time, take BRT!`;
-      }
-
-      // Apply fare + stamina drain
-      const newStamina = Math.max(0, (profile.vitals?.stamina ?? 80) - ride.staminaCost);
-      await updateProfile(profile.uid, {
-        cash: profile.cash - finalFare,
-        vitals: {
-          stamina: newStamina,
-          hunger: profile.vitals?.hunger ?? 20,
-          street_cred: profile.vitals?.street_cred ?? 10,
-        },
-        vitalsUpdatedAt: Date.now(),
-      });
+      // Call server API — server looks up fare, rolls agbero, writes cash + vitals
+      const result = await callRideApi(ride.id);
+      if (result.error) { setError(result.error); return; }
       await refreshProfile();
-      setMessage(msg);
+      if (result.agberoHit) {
+        setMessage(`Agbero catch you for ${ride.name}! Dem extort ${result.extortAmount} extra. Next time, take BRT!`);
+        toast.error("Agbero caught you!");
+      } else {
+        setMessage(`You hopped on ${ride.name}! Travelled across the city.`);
+      }
     } catch (e) {
       setError((e as Error).message);
     } finally { setBusy(null); }
@@ -1054,19 +1048,12 @@ function BukaApp({ profile, onClose, app }: { profile: PlayerProfile; onClose: (
     if (profile.cash < item.price) { setError("You no get enough cash for this food."); return; }
     setBusy(item.id);
     try {
-      const { updateProfile } = await import("@/lib/firestore");
-      const newStamina = Math.min(100, (profile.vitals?.stamina ?? 80) + item.stamina);
-      const newHunger = Math.max(0, (profile.vitals?.hunger ?? 20) - item.hunger);
-      const credBoost = item.id === "pepper-soup" ? 3 : item.id === "small-chops" ? 5 : 0;
-      const newCred = Math.min(100, (profile.vitals?.street_cred ?? 10) + credBoost);
-      await updateProfile(profile.uid, {
-        cash: profile.cash - item.price,
-        vitals: { stamina: newStamina, hunger: newHunger, street_cred: newCred },
-        vitalsUpdatedAt: Date.now(),
-      });
+      // Call server API — server looks up price, validates balance, writes cash + vitals
+      const result = await callBukaApi(item.id);
+      if (result.error) { setError(result.error); return; }
       await refreshProfile();
-      setMessage(` You chop ${item.name}! +${item.stamina} stamina · -${item.hunger} hunger${credBoost ? ` · +${credBoost} street_cred` : ""}`);
-      toast.success(`${item.emoji} Chopped ${item.name}! +${item.stamina} stamina`);
+      setMessage(` You chop ${item.name}! +${item.stamina} stamina · -${item.hunger} hunger`);
+      toast.success(`Chopped ${item.name}! +${item.stamina} stamina`);
     } catch (e) {
       setError((e as Error).message);
     } finally { setBusy(null); }
@@ -1142,14 +1129,15 @@ function QuiloxApp({ profile, onClose, app }: { profile: PlayerProfile; onClose:
 
   const payCover = async () => {
     if (busy) return;
-    if (profile.cash < COVER_FEE) { setError(`Cover fee na ₦${COVER_FEE}. You no get enough.`); return; }
+    if (profile.cash < COVER_FEE) { setError(`Cover fee na ${COVER_FEE}. You no get enough.`); return; }
     setBusy("cover");
     try {
-      const { updateProfile } = await import("@/lib/firestore");
-      await updateProfile(profile.uid, { cash: profile.cash - COVER_FEE });
+      const result = await callQuiloxApi("cover");
+      if (result.error) { setError(result.error); return; }
       await refreshProfile();
       setInside(true);
       setMessage(" You don enter Quilox! Order drinks to flex street_cred ");
+      toast.success("Entered Quilox!");
     } catch (e) { setError((e as Error).message); }
     finally { setBusy(null); }
   };
@@ -1159,19 +1147,12 @@ function QuiloxApp({ profile, onClose, app }: { profile: PlayerProfile; onClose:
     if (profile.cash < drink.price) { setError("You no get enough cash."); return; }
     setBusy(drink.id);
     try {
-      const { updateProfile } = await import("@/lib/firestore");
-      const newCred = Math.min(100, (profile.vitals?.street_cred ?? 10) + drink.cred);
-      await updateProfile(profile.uid, {
-        cash: profile.cash - drink.price,
-        vitals: {
-          stamina: profile.vitals?.stamina ?? 80,
-          hunger: profile.vitals?.hunger ?? 20,
-          street_cred: newCred,
-        },
-        vitalsUpdatedAt: Date.now(),
-      });
+      // Call server API — server looks up price + cred, validates balance, writes cash + vitals
+      const result = await callQuiloxApi("drink", drink.id);
+      if (result.error) { setError(result.error); return; }
       await refreshProfile();
-      setMessage(` You pop ${drink.name}! +${drink.cred} street_cred. Total cred: ${newCred}`);
+      setMessage(` You pop ${drink.name}! +${drink.cred} street_cred.`);
+      toast.success(`Popped ${drink.name}! +${drink.cred} cred`);
     } catch (e) { setError((e as Error).message); }
     finally { setBusy(null); }
   };
@@ -1240,14 +1221,14 @@ function LoanApp({ profile, onClose, app }: { profile: PlayerProfile; onClose: (
 
   const takeLoan = async () => {
     const amt = parseInt(loanAmount);
-    if (!amt || amt <= 0) { setError("Enter amount (₦1 - ₦50,000)"); return; }
+    if (!amt || amt <= 0) { setError("Enter amount (1 - 50,000)"); return; }
     setBusy("take"); setError(null); setMessage(null);
     try {
-      const { takeMicroLoan } = await import("@/lib/firestore");
-      await takeMicroLoan(profile, amt);
+      const result = await callLoanApi("take", amt);
+      if (result.error) { setError(result.error); return; }
       await refreshProfile();
-      setMessage(` You don borrow ₦${amt.toLocaleString()}. Interest na 5% per hour. Pay quick before e grow!`);
-      toast.success(` Borrowed ₦${amt.toLocaleString()}. Pay quick!`);
+      setMessage(` You don borrow ${amt.toLocaleString()}. Interest na 5% per hour. Pay quick!`);
+      toast.success(`Borrowed ${amt.toLocaleString()} naira`);
       setLoanAmount("");
     } catch (e) { setError((e as Error).message); }
     finally { setBusy(null); }
@@ -1256,10 +1237,11 @@ function LoanApp({ profile, onClose, app }: { profile: PlayerProfile; onClose: (
   const repay = async (amount: number) => {
     setBusy("repay"); setError(null); setMessage(null);
     try {
-      const { repayMicroLoan } = await import("@/lib/firestore");
-      await repayMicroLoan(profile, amount);
+      const result = await callLoanApi("repay", amount);
+      if (result.error) { setError(result.error); return; }
       await refreshProfile();
-      setMessage(` You don repay ₦${amount.toLocaleString()}.`);
+      setMessage(` You don repay ${amount.toLocaleString()}.`);
+      toast.success("Loan repaid!");
     } catch (e) { setError((e as Error).message); }
     finally { setBusy(null); }
   };
@@ -1361,13 +1343,11 @@ function StreetApp({ profile, onClose, app }: { profile: PlayerProfile; onClose:
     setBusy(`pick-${targetUid}`);
     setError(null); setMessage(null);
     try {
-      const { pickpocket } = await import("@/lib/firestore");
-      const result = await pickpocket(profile, targetUid);
-      setMessage(result.message);
-      // If we got jailed, refresh profile
-      if (!result.success) {
-        await refreshProfile();
-      }
+      const result = await callPickpocketApi(targetUid);
+      if (result.error) { setError(result.error); return; }
+      setMessage(result.message ?? "Done");
+      if (!result.success) { await refreshProfile(); }
+      else { await refreshProfile(); toast.success(`Stole ${result.stolen} naira!`); }
     } catch (e) { setError((e as Error).message); }
     finally { setBusy(null); }
   };
@@ -1377,9 +1357,9 @@ function StreetApp({ profile, onClose, app }: { profile: PlayerProfile; onClose:
     setBusy(`report-${targetUid}`);
     setError(null); setMessage(null);
     try {
-      const { reportToPolice } = await import("@/lib/firestore");
-      const result = await reportToPolice(profile, targetUid);
-      setMessage(result.message);
+      const result = await callReportApi(targetUid);
+      if (result.error) { setError(result.error); return; }
+      setMessage(result.message ?? "Reported");
     } catch (e) { setError((e as Error).message); }
     finally { setBusy(null); }
   };
@@ -1579,17 +1559,21 @@ function PhotoBoothApp({ profile, onClose, app }: { profile: PlayerProfile; onCl
 
   const take = async () => {
     if (busy) return;
-    if (profile.cash < BOOTH_FEE) { setError(`Booth fee na ₦${BOOTH_FEE}. You no get enough.`); return; }
+    if (profile.cash < BOOTH_FEE) { setError(`Booth fee na ${BOOTH_FEE}. You no get enough.`); return; }
     setBusy(true); setError(null); setMessage(null);
     try {
-      const { updateProfile } = await import("@/lib/firestore");
-      await updateProfile(profile.uid, { cash: profile.cash - BOOTH_FEE });
+      // Call server API — buy endpoint handles booth fee as a "purchase" of "photo-booth-session"
+      // The server deducts BOOTH_FEE and we can't cheat the reward since it's server-side
+      const { callBuyApi } = await import("@/systems/economy");
+      const buyResult = await callBuyApi("photo-booth-session");
+      if (buyResult.error) { setError(buyResult.error); return; }
+      // Reward is computed server-side too — call job API with a "photo-booth" job
+      const { callJobApi } = await import("@/systems/economy");
+      const jobResult = await callJobApi("photo-booth");
+      if (jobResult.error) { setError(jobResult.error); return; }
       await refreshProfile();
-      const reward = 100 + Math.floor(Math.random() * 200);
-      await updateProfile(profile.uid, { cash: (profile.cash - BOOTH_FEE) + reward });
-      await refreshProfile();
-      setMessage(` Photo taken! +₦${reward} for the shot. Saved to your gallery.`);
-      toast.success(` Photo taken! +₦${reward}`);
+      setMessage(` Photo taken! Reward added. Saved to your gallery.`);
+      toast.success(`Photo taken!`);
     } catch (e) { setError((e as Error).message); }
     finally { setBusy(false); }
   };

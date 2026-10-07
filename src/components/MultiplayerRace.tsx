@@ -16,6 +16,7 @@ import {
   type RaceRoom,
   type RaceRoomPlayer,
 } from "@/lib/firestore";
+import { callRaceApi } from "@/systems/economy";
 import type { PlayerProfile } from "@/lib/storage";
 
 export interface MultiplayerRaceProps {
@@ -215,6 +216,8 @@ export default function MultiplayerRace({ roomCode, profile, onExit }: Multiplay
           isEliminated: false,
           lastUpdated: Date.now(),
         }).catch(() => {});
+        // Call server API to claim race reward (server computes cash + rep)
+        callRaceApi(playerState.current.distance, 0, place, "multiplayer").catch(() => {});
       }
 
       // === THROTTLED FIRESTORE WRITE (1 write per 5 frames ≈ 12 writes/sec) ===
@@ -428,10 +431,10 @@ export default function MultiplayerRace({ roomCode, profile, onExit }: Multiplay
         <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/70 p-4">
           <div className="rush-card w-full max-w-sm p-6 text-center">
             <div className="mb-2 text-5xl">{finalPlace === 1 ? "🏆" : finalPlace === 2 ? "🥈" : "🥉"}</div>
-            <h2 className="font-display text-2xl text-rush-navy">
+            <h2 className="font-display text-2xl text-rush-ink">
               {finalPlace === 1 ? "You win!" : `You finish #${finalPlace}`}
             </h2>
-            <p className="mt-2 text-xs text-rush-navy/60">
+            <p className="mt-2 text-xs text-rush-ink/60">
               Distance: {myDistance}m · +₦{finalPlace === 1 ? 1000 : finalPlace === 2 ? 500 : 250} · +{finalPlace === 1 ? 50 : 25} rep
             </p>
             <button
