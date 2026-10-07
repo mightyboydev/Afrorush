@@ -1,55 +1,54 @@
 /*
- * AfroRush — Kaduna "Harmattan Sun" design tokens.
- * Warm dusty palette inspired by northern Nigeria: terracotta earth,
- * indigo Hausa textile, emerald Islam green, gold leather craft.
- * Harmattan haze, mud-brick warmth, calmer than Lagos.
+ * AfroRush — "Harmattan Dusk" design tokens.
+ * Deep warm-dark mode inspired by Lagos Life premium look.
+ * Dark canvas (#1a0f1f indigo-brown) makes terracotta/gold/emerald
+ * ACCENTS GLOW against the dark — like harmattan sunset fading to night.
  */
 
 :root {
-  /* ===== Brand palette ===== */
-  /* Terracotta — the dominant earth tone (harmattan dust + mud-brick) */
+  /* ===== Brand palette (kept) ===== */
   --ar-terracotta: #c87f3f;
   --ar-terracotta-deep: #9c5a26;
   --ar-terracotta-soft: #e8b886;
 
-  /* Indigo — Hausa textile dye (deep ceremonial blue) */
   --ar-indigo: #1e3a8a;
   --ar-indigo-deep: #0f1f4d;
   --ar-indigo-soft: #c5d4f0;
 
-  /* Emerald — northern Islam green / Hausa flag */
   --ar-emerald: #0d7c4a;
   --ar-emerald-deep: #07543a;
   --ar-emerald-soft: #b8e6cf;
 
-  /* Gold — leather craft + royalty */
   --ar-gold: #d4a017;
   --ar-gold-deep: #9c7510;
   --ar-gold-soft: #f5d77a;
 
-  /* Pottery rose — accent (terracotta pottery) */
   --ar-rose: #c8463d;
   --ar-rose-soft: #f0c2bc;
 
-  /* Ink — deep warm brown text (NOT pure black) */
-  --ar-ink: #2b1810;
-  --ar-ink-soft: #6b4f3f;
-  --ar-ink-faint: #a08878;
+  /* ===== NEW: Dark mode ink colors (Harmattan Dusk) ===== */
+  /* Page bg — deep indigo-brown (warm dark, not cool blue-black) */
+  --ar-bg: #1a0f1f;
+  --ar-bg-deep: #0f0814;
+  --ar-bg-elev: #221530;          /* elevated surface (cards) */
+  --ar-bg-glass: rgba(40, 24, 50, 0.7);  /* glass tint */
 
-  /* Surfaces — warm cream + harmattan haze */
-  --ar-cream: #f5ead0;
-  --ar-cream-deep: #ebd9b0;
-  --ar-haze: #faf3e0;
-  --ar-paper: #fffcf2;
-  --ar-mist: #f0e4c8;
+  /* Text on dark */
+  --ar-text: #f5ead0;             /* warm cream (was warm brown) */
+  --ar-text-soft: #b8a890;        /* muted warm grey */
+  --ar-text-faint: #807060;
 
-  /* Lines + shadows */
-  --ar-line: rgba(43, 24, 16, 0.10);
-  --ar-line-strong: rgba(43, 24, 16, 0.18);
-  --ar-shadow: rgba(122, 60, 20, 0.18);
-  --ar-shadow-strong: rgba(80, 35, 10, 0.32);
+  /* Lines + borders on dark */
+  --ar-line: rgba(245, 234, 208, 0.10);
+  --ar-line-strong: rgba(245, 234, 208, 0.18);
+  --ar-line-glow: rgba(245, 234, 208, 0.5);
 
-  /* ===== Radius scale ===== */
+  /* Shadows — DEEPER on dark, with subtle color tint */
+  --ar-shadow: rgba(0, 0, 0, 0.5);
+  --ar-shadow-strong: rgba(0, 0, 0, 0.7);
+  --ar-shadow-glow: rgba(212, 160, 23, 0.25);  /* gold-tinted glow */
+
+  /* ===== Radius scale (kept) ===== */
   --ar-radius-sm: 0.5rem;
   --ar-radius-md: 0.75rem;
   --ar-radius-lg: 1rem;
@@ -66,15 +65,32 @@
   --ar-dur-default: 0.18s;
   --ar-dur-slow: 0.4s;
 
-  /* ===== Typography ===== */
+  /* ===== Typography — heavier weights + tighter tracking for premium feel ===== */
   --ar-font-display: "Fredoka", "Plus Jakarta Sans", ui-sans-serif, system-ui;
   --ar-font-body: "Plus Jakarta Sans", ui-sans-serif, system-ui;
   --ar-font-mono: "JetBrains Mono", ui-monospace;
+  --ar-tracking-tight: -0.025em;
 
   /* ===== Container widths ===== */
   --ar-container-sm: 28rem;
   --ar-container-md: 32rem;
   --ar-container-lg: 48rem;
+
+  /* ===== Multi-stop sunset gradient (the magic) ===== */
+  --ar-sunset-gradient: linear-gradient(135deg, #1e3a8a 0%, #7c3aed 40%, #c026d3 70%, #f97316 100%);
+  --ar-sunset-glow: 0 10px 25px -5px rgba(124, 58, 237, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+
+  /* Warm harmattan gradient (terracotta + gold) */
+  --ar-warm-gradient: linear-gradient(135deg, #9c5a26 0%, #c87f3f 40%, #d4a017 80%, #f5d77a 100%);
+  --ar-warm-glow: 0 10px 25px -5px rgba(200, 127, 63, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+
+  /* Emerald glow gradient */
+  --ar-emerald-gradient: linear-gradient(135deg, #07543a 0%, #0d7c4a 50%, #34d399 100%);
+  --ar-emerald-glow: 0 10px 25px -5px rgba(13, 124, 74, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+
+  /* Rose glow gradient (for destructive/alerts) */
+  --ar-rose-gradient: linear-gradient(135deg, #9c352d 0%, #c8463d 50%, #fb7185 100%);
+  --ar-rose-glow: 0 10px 25px -5px rgba(200, 70, 61, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.25);
 }
 
 /* ===== Backward-compatible aliases ===== */
@@ -87,39 +103,41 @@
   --color-rush-amber: var(--ar-gold);
   --color-rush-amber-deep: var(--ar-gold-deep);
   --color-rush-sunset: var(--ar-terracotta);
-  --color-rush-ink: var(--ar-ink);
-  --color-rush-ink-soft: var(--ar-ink-soft);
-  --color-rush-paper: var(--ar-paper);
-  --color-rush-mist: var(--ar-mist);
+  --color-rush-ink: var(--ar-text);          /* now warm cream on dark */
+  --color-rush-ink-soft: var(--ar-text-soft);
+  --color-rush-paper: var(--ar-bg-elev);      /* elevated dark surface */
+  --color-rush-mist: rgba(245, 234, 208, 0.06);  /* very subtle warm tint */
   --color-rush-line: var(--ar-line);
+  /* Legacy colors kept for compat */
   --color-rush-green: var(--ar-emerald);
   --color-rush-green-dark: var(--ar-emerald-deep);
-  --color-rush-navy: var(--ar-indigo-deep);
-  --color-rush-cream: var(--ar-cream);
+  --color-rush-navy: var(--ar-bg-deep);
+  --color-rush-cream: var(--ar-text);
   --color-rush-orange: var(--ar-terracotta);
   --color-rush-gold: var(--ar-gold);
-  --color-rush-sky: #bfe0f7;
+  --color-rush-sky: #2f7de1;
   --color-rush-magenta: #c026d3;
   --color-rush-purple: #7c3aed;
   --color-rush-jade: var(--ar-emerald);
 
-  --background: var(--ar-haze);
-  --foreground: var(--ar-ink);
-  --card: var(--ar-paper);
-  --card-foreground: var(--ar-ink);
-  --popover: var(--ar-paper);
-  --popover-foreground: var(--ar-ink);
+  /* Tailwind theme tokens — now dark mode */
+  --background: var(--ar-bg);
+  --foreground: var(--ar-text);
+  --card: var(--ar-bg-elev);
+  --card-foreground: var(--ar-text);
+  --popover: var(--ar-bg-elev);
+  --popover-foreground: var(--ar-text);
   --primary: var(--ar-emerald);
   --primary-foreground: #ffffff;
-  --secondary: var(--ar-mist);
-  --secondary-foreground: var(--ar-ink);
-  --muted: var(--ar-mist);
-  --muted-foreground: var(--ar-ink-soft);
+  --secondary: rgba(245, 234, 208, 0.06);
+  --secondary-foreground: var(--ar-text);
+  --muted: rgba(245, 234, 208, 0.06);
+  --muted-foreground: var(--ar-text-soft);
   --accent: var(--ar-terracotta);
   --accent-foreground: #ffffff;
   --destructive: var(--ar-rose);
   --border: var(--ar-line);
   --input: var(--ar-line-strong);
-  --ring: var(--ar-indigo);
+  --ring: var(--ar-gold);
   --radius: var(--ar-radius-lg);
 }

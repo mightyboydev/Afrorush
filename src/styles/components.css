@@ -1,73 +1,103 @@
 /*
- * AfroRush — Kaduna "Harmattan Sun" component classes.
- * Built on theme.css tokens. Glassmorphism with TERRACOTTA-tinted shadows
- * (not the cool ink ones Lagos Life uses), Hausa geometric pattern borders,
- * sticker-style layered cards.
+ * AfroRush — "Harmattan Dusk" component classes.
+ * Real glassmorphism (translucent + blur + saturate + inset highlight),
+ * colored glow shadows on CTAs, neumorphic dock, multi-stop gradients.
  */
 
 /* ============================================================
-   GLASSMORPHISM PANEL — the signature primitive
-   The 1px inset cream highlight + terracotta-tinted shadow
-   gives panels a sun-baked, sun-warmed feel.
+   GLASSMORPHISM PANEL — the signature primitive (FIXED for dark mode)
+   Translucent dark surface + blur + saturate + inset cream highlight.
    ============================================================ */
 .panel,
 .ar-panel,
 .rush-glass {
-  -webkit-backdrop-filter: blur(16px) saturate(1.3);
-  backdrop-filter: blur(16px) saturate(1.3);
-  border: 1px solid rgba(255, 252, 242, 0.7);
-  background: rgba(255, 252, 242, 0.94);
+  -webkit-backdrop-filter: blur(16px) saturate(1.8);
+  backdrop-filter: blur(16px) saturate(1.8);
+  border: 1px solid rgba(245, 234, 208, 0.12);
+  background: rgba(40, 24, 50, 0.65);
   box-shadow:
-    inset 0 1px rgba(255, 252, 242, 1),
-    0 8px 28px var(--ar-shadow);
-}
-
-/* Dark glass variant — for night mode or club scenes */
-.ar-panel-dark,
-.rush-glass-dark {
-  -webkit-backdrop-filter: blur(16px) saturate(1.3);
-  backdrop-filter: blur(16px) saturate(1.3);
-  border: 1px solid rgba(212, 160, 23, 0.18);
-  background: rgba(15, 31, 77, 0.78);
-  box-shadow:
-    inset 0 1px rgba(212, 160, 23, 0.25),
+    inset 0 1px 0 rgba(245, 234, 208, 0.18),
     0 8px 32px rgba(0, 0, 0, 0.4);
 }
 
-/* Frosted pill — for HUD chips */
-.ar-pill,
-.rush-glass-pill {
-  -webkit-backdrop-filter: blur(12px) saturate(1.3);
-  backdrop-filter: blur(12px) saturate(1.3);
-  border-radius: var(--ar-radius-pill);
-  border: 1px solid rgba(255, 252, 242, 0.7);
-  background: rgba(255, 252, 242, 0.94);
-  box-shadow:
-    inset 0 1px rgba(255, 252, 242, 1),
-    0 4px 14px -2px var(--ar-shadow);
-}
-
-/* Plain card — solid cream surface */
+/* Solid elevated card (no transparency — used when blur doesn't fit) */
 .ar-card,
 .rush-card {
-  background: var(--ar-paper);
+  background: var(--ar-bg-elev);
   border-radius: var(--ar-radius-xl);
+  border: 1px solid var(--ar-line);
   box-shadow:
-    inset 0 1px rgba(255, 252, 242, 1),
-    0 8px 28px var(--ar-shadow);
+    inset 0 1px 0 rgba(245, 234, 208, 0.10),
+    0 8px 28px rgba(0, 0, 0, 0.35);
+}
+
+/* Frosted pill — for HUD chips (translucent over the 3D world) */
+.ar-pill,
+.rush-glass-pill {
+  -webkit-backdrop-filter: blur(12px) saturate(1.6);
+  backdrop-filter: blur(12px) saturate(1.6);
+  border-radius: var(--ar-radius-pill);
+  border: 1px solid rgba(245, 234, 208, 0.15);
+  background: rgba(40, 24, 50, 0.55);
+  box-shadow:
+    inset 0 1px 0 rgba(245, 234, 208, 0.18),
+    0 4px 14px -2px rgba(0, 0, 0, 0.4);
 }
 
 .rush-pill {
-  background: var(--ar-paper);
+  background: rgba(40, 24, 50, 0.6);
   border-radius: var(--ar-radius-pill);
   border: 1px solid var(--ar-line);
   box-shadow:
-    inset 0 1px rgba(255, 252, 242, 1),
-    0 4px 12px -4px var(--ar-shadow);
+    inset 0 1px 0 rgba(245, 234, 208, 0.12),
+    0 4px 12px -4px rgba(0, 0, 0, 0.4);
 }
 
 /* ============================================================
-   BUTTONS — fast tap feedback, brand-colored glow shadows
+   HERO / WALLET CARD — multi-stop sunset gradient with colored glow
+   This is the killer visual that makes the page feel alive.
+   ============================================================ */
+.ar-hero-sunset,
+.rush-hero-card {
+  background: var(--ar-sunset-gradient);
+  border-radius: var(--ar-radius-xl);
+  border: none;
+  box-shadow: var(--ar-sunset-glow);
+  color: #ffffff;
+  position: relative;
+  overflow: hidden;
+}
+.ar-hero-sunset::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 30% 20%, rgba(255,255,255,0.15), transparent 50%);
+  pointer-events: none;
+}
+
+.ar-hero-warm {
+  background: var(--ar-warm-gradient);
+  border-radius: var(--ar-radius-xl);
+  box-shadow: var(--ar-warm-glow);
+  color: #ffffff;
+}
+
+.ar-hero-emerald {
+  background: var(--ar-emerald-gradient);
+  border-radius: var(--ar-radius-xl);
+  box-shadow: var(--ar-emerald-glow);
+  color: #ffffff;
+}
+
+.ar-hero-rose {
+  background: var(--ar-rose-gradient);
+  border-radius: var(--ar-radius-xl);
+  box-shadow: var(--ar-rose-glow);
+  color: #ffffff;
+}
+
+/* ============================================================
+   BUTTONS — fast tap feedback, colored glow shadows
    ============================================================ */
 .btn-press,
 .rush-btn-press {
@@ -77,74 +107,72 @@
     background-color var(--ar-dur-default);
 }
 
-/* Primary CTA — emerald green with emerald-tinted glow */
+/* Primary CTA — emerald with emerald-tinted GLOW (was too subtle) */
 .ar-btn-primary,
 .rush-btn-primary {
-  background: var(--ar-emerald);
+  background: var(--ar-emerald-gradient);
   color: #ffffff;
   box-shadow:
-    inset 0 1px rgba(255, 255, 255, 0.3),
-    0 6px 16px -4px rgba(13, 124, 74, 0.55);
+    inset 0 1px 0 rgba(255, 255, 255, 0.25),
+    0 6px 18px -4px rgba(13, 124, 74, 0.55),
+    0 0 0 1px rgba(13, 124, 74, 0.4);
+  border: none;
   transition: transform var(--ar-dur-fast), box-shadow var(--ar-dur-fast), background-color var(--ar-dur-default);
 }
-.ar-btn-primary:hover, .rush-btn-primary:hover { background: var(--ar-emerald-deep); }
+.ar-btn-primary:hover, .rush-btn-primary:hover { filter: brightness(1.1); }
 .ar-btn-primary:active, .rush-btn-primary:active { transform: scale(0.97); }
 .ar-btn-primary:disabled, .rush-btn-primary:disabled { opacity: 0.4; }
 
-/* Secondary CTA — cream with subtle ring */
+/* Secondary CTA — translucent dark with subtle highlight */
 .ar-btn-secondary,
 .rush-btn-secondary {
-  background: var(--ar-paper);
-  color: var(--ar-ink);
+  background: rgba(245, 234, 208, 0.08);
+  color: var(--ar-text);
   box-shadow:
-    inset 0 1px rgba(255, 252, 242, 1),
-    0 1px 2px rgba(122, 60, 20, 0.10),
-    0 4px 12px rgba(122, 60, 20, 0.08);
-  outline: 1px solid var(--ar-line);
-  outline-offset: -1px;
+    inset 0 1px 0 rgba(245, 234, 208, 0.15),
+    0 1px 2px rgba(0, 0, 0, 0.3),
+    0 0 0 1px var(--ar-line);
+  border: none;
   transition: transform var(--ar-dur-fast), box-shadow var(--ar-dur-fast), background-color var(--ar-dur-default);
 }
-.ar-btn-secondary:hover, .rush-btn-secondary:hover { background: var(--ar-mist); }
+.ar-btn-secondary:hover, .rush-btn-secondary:hover { background: rgba(245, 234, 208, 0.12); }
 .ar-btn-secondary:active, .rush-btn-secondary:active { transform: scale(0.97); }
 
-/* Gold CTA — for money/vip actions */
+/* Gold CTA — terracotta→gold gradient with gold glow */
 .ar-btn-gold {
-  background: linear-gradient(145deg, var(--ar-gold-soft), var(--ar-gold-deep));
-  color: var(--ar-ink);
+  background: var(--ar-warm-gradient);
+  color: #ffffff;
   box-shadow:
-    inset 0 1px rgba(255, 255, 255, 0.4),
-    0 6px 16px -4px rgba(212, 160, 23, 0.55);
+    inset 0 1px 0 rgba(255, 255, 255, 0.4),
+    0 6px 18px -4px rgba(200, 127, 63, 0.55);
+  border: none;
   transition: transform var(--ar-dur-fast), box-shadow var(--ar-dur-fast);
 }
-.ar-btn-gold:hover { filter: brightness(1.05); }
+.ar-btn-gold:hover { filter: brightness(1.1); }
 .ar-btn-gold:active { transform: scale(0.97); }
 
 /* ============================================================
    HAUSA GEOMETRIC PATTERN BORDER
-   Decorative top stripe for premium cards
    ============================================================ */
-.ar-pattern-top {
-  position: relative;
-}
+.ar-pattern-top { position: relative; }
 .ar-pattern-top::before {
   content: "";
   position: absolute;
   top: 0; left: 0; right: 0;
   height: 4px;
-  background:
-    repeating-linear-gradient(
-      90deg,
-      var(--ar-terracotta) 0 8px,
-      var(--ar-gold) 8px 14px,
-      var(--ar-indigo) 14px 22px,
-      var(--ar-emerald) 22px 28px
-    );
+  background: repeating-linear-gradient(
+    90deg,
+    var(--ar-terracotta) 0 8px,
+    var(--ar-gold) 8px 14px,
+    var(--ar-indigo) 14px 22px,
+    var(--ar-emerald) 22px 28px
+  );
   border-radius: var(--ar-radius-xl) var(--ar-radius-xl) 0 0;
-  opacity: 0.85;
+  opacity: 0.9;
 }
 
 /* ============================================================
-   ONLINE DOT — pulsing emerald
+   ONLINE DOT — pulsing emerald (kept)
    ============================================================ */
 .ar-online-dot,
 .rush-online-dot {
@@ -152,11 +180,12 @@
   height: 6px;
   border-radius: var(--ar-radius-pill);
   background: var(--ar-emerald);
+  box-shadow: 0 0 6px rgba(13, 124, 74, 0.7);
   animation: ar-pulse 2s var(--ar-ease-in-out) infinite;
 }
 
 /* ============================================================
-   TABULAR NUMS — rock-solid number alignment
+   TABULAR NUMS
    ============================================================ */
 .tabular-nums,
 .ar-tabular {
@@ -165,17 +194,11 @@
 }
 
 /* ============================================================
-   KEYFRAMES — Harmattan Sun motion library
+   KEYFRAMES (kept — Harmattan Sun motion library)
    ============================================================ */
-
-/* Slide up — sheet + tab content */
-@keyframes ar-slide-up {
-  from { opacity: 0; transform: translateY(12px); }
-  to { opacity: 1; transform: translateY(0); }
-}
+@keyframes ar-slide-up { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
 .ar-slide-up, .rush-slide-up { animation: ar-slide-up 0.25s var(--ar-ease-out); }
 
-/* Bounce-in — modal + card entrance */
 @keyframes ar-bounce-in {
   0% { opacity: 0; transform: scale(0.9) translateY(20px); }
   60% { opacity: 1; transform: scale(1.02) translateY(-2px); }
@@ -183,7 +206,6 @@
 }
 .ar-bounce-in, .rush-bounce-in { animation: ar-bounce-in 0.3s var(--ar-ease-spring); }
 
-/* Pop — badge appearing */
 @keyframes ar-pop {
   0% { transform: scale(0); opacity: 0; }
   70% { transform: scale(1.1); opacity: 1; }
@@ -191,100 +213,83 @@
 }
 .ar-pop, .rush-pop { animation: ar-pop 0.3s var(--ar-ease-out); }
 
-/* Pulse — online dot, live indicators */
 @keyframes ar-pulse {
   0%, 100% { opacity: 1; transform: scale(1); }
   50% { opacity: 0.5; transform: scale(1.15); }
 }
 .ar-pulse, .rush-pulse { animation: ar-pulse 2s var(--ar-ease-in-out) infinite; }
 
-/* Floaty — harmattan dust + clouds */
 @keyframes ar-float {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-8px); }
 }
 .ar-float, .rush-float { animation: ar-float 3s var(--ar-ease-in-out) infinite; }
 
-/* Bob — avatar idle */
 @keyframes ar-bob {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-3px); }
 }
 .ar-bob, .rush-bob { animation: ar-bob 2.5s var(--ar-ease-in-out) infinite; }
 
-/* Breathe — avatar chest */
 @keyframes ar-breathe {
   0%, 100% { transform: scaleY(1); }
   50% { transform: scaleY(1.02); }
 }
 .ar-breathe, .rush-breathe { animation: ar-breathe 3s var(--ar-ease-in-out) infinite; }
 
-/* Plumbob spin — player marker */
 @keyframes ar-plumbob-spin {
-  0% { transform: scaleX(1); }
-  25% { transform: scaleX(0.25); }
-  50% { transform: scaleX(-1); }
-  75% { transform: scaleX(-0.25); }
-  100% { transform: scaleX(1); }
+  0% { transform: scaleX(1); } 25% { transform: scaleX(0.25); }
+  50% { transform: scaleX(-1); } 75% { transform: scaleX(-0.25); } 100% { transform: scaleX(1); }
 }
 .ar-plumbob-spin, .rush-plumbob-spin { animation: ar-plumbob-spin 2s linear infinite; }
 
-/* Pulse ring — expanding sonar */
 @keyframes ar-pulsering {
-  0% { box-shadow: 0 0 0 0 rgba(212, 160, 23, 0.6); }
+  0% { box-shadow: 0 0 0 0 rgba(212, 160, 23, 0.7); }
   100% { box-shadow: 0 0 0 14px rgba(212, 160, 23, 0); }
 }
 .ar-pulsering, .rush-pulsering { animation: ar-pulsering 1.5s var(--ar-ease-out) infinite; }
 
-/* Map pulse */
 @keyframes ar-mappulse {
   0% { opacity: 0.9; transform: scale(0.6); }
   100% { opacity: 0; transform: scale(2.2); }
 }
 .ar-mappulse, .rush-mappulse { animation: ar-mappulse 2s var(--ar-ease-out) infinite; }
 
-/* Sway — neem trees */
 @keyframes ar-sway {
   0%, 100% { transform: rotate(-1.5deg); }
   50% { transform: rotate(1.5deg); }
 }
 .ar-sway, .rush-sway { animation: ar-sway 4s var(--ar-ease-in-out) infinite; }
 
-/* Wiggle — attention badges */
 @keyframes ar-wiggle {
   0%, 100% { transform: rotate(0deg); }
-  25% { transform: rotate(-6deg); }
-  75% { transform: rotate(6deg); }
+  25% { transform: rotate(-6deg); } 75% { transform: rotate(6deg); }
 }
 .ar-wiggle, .rush-wiggle { animation: ar-wiggle 0.5s var(--ar-ease-in-out); }
 
-/* Steam — for cooking, hot tea */
 @keyframes ar-steam {
   0% { opacity: 0.9; transform: translateY(0); }
   100% { opacity: 0; transform: translateY(-14px); }
 }
 .ar-steam, .rush-steam { animation: ar-steam 2s var(--ar-ease-out) infinite; }
 
-/* Shimmer — skeleton loaders */
 @keyframes ar-shimmer {
   0% { background-position: -200% 0; }
   100% { background-position: 200% 0; }
 }
 .ar-skeleton, .rush-skeleton {
-  background: linear-gradient(90deg, var(--ar-mist) 25%, var(--ar-cream-deep) 50%, var(--ar-mist) 75%);
+  background: linear-gradient(90deg, rgba(245,234,208,0.06) 25%, rgba(245,234,208,0.12) 50%, rgba(245,234,208,0.06) 75%);
   background-size: 200% 100%;
   animation: ar-shimmer 1.4s infinite;
   border-radius: var(--ar-radius-md);
 }
 
-/* Confetti — victories */
 @keyframes ar-confetti-fall {
   0% { transform: translateY(-100vh) rotate(0deg); opacity: 1; }
   100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
 }
 .ar-confetti, .rush-confetti { animation: ar-confetti-fall 2.6s linear forwards; }
 
-/* Harmattan dust drift — for hero scene */
 @keyframes ar-dust-drift {
   0% { transform: translateX(0) translateY(0); opacity: 0.4; }
   50% { transform: translateX(20px) translateY(-12px); opacity: 0.8; }
@@ -292,53 +297,62 @@
 }
 .ar-dust-drift { animation: ar-dust-drift 6s var(--ar-ease-in-out) infinite; }
 
+/* NEW: neon glow pulse for hero cards */
+@keyframes ar-glow-pulse {
+  0%, 100% { box-shadow: 0 10px 25px -5px rgba(124, 58, 237, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.3); }
+  50% { box-shadow: 0 10px 35px -5px rgba(124, 58, 237, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.4); }
+}
+.ar-glow-pulse { animation: ar-glow-pulse 3s var(--ar-ease-in-out) infinite; }
+
 /* ============================================================
-   LEGACY HELPERS — kept for backward compat
+   LEGACY HELPERS
    ============================================================ */
-.rush-gradient { background: linear-gradient(135deg, var(--ar-emerald) 0%, var(--ar-gold) 100%); }
-.rush-gradient-orange { background: linear-gradient(135deg, var(--ar-terracotta) 0%, var(--ar-gold) 100%); }
-.rush-gradient-sky { background: linear-gradient(180deg, #bfe0f7 0%, var(--ar-haze) 60%, var(--ar-haze) 100%); }
+.rush-gradient { background: var(--ar-sunset-gradient); }
+.rush-gradient-orange { background: var(--ar-warm-gradient); }
+.rush-gradient-sky { background: linear-gradient(180deg, #1e3a8a 0%, var(--ar-bg) 60%); }
 
 .rush-soft-shadow {
   box-shadow:
-    inset 0 1px rgba(255, 252, 242, 1),
-    0 6px 24px -6px var(--ar-shadow);
+    inset 0 1px 0 rgba(245, 234, 208, 0.15),
+    0 6px 24px -6px rgba(0, 0, 0, 0.4);
 }
 
 .rush-glow-green {
   box-shadow:
-    0 0 0 4px rgba(13, 124, 74, 0.18),
-    0 8px 24px -6px rgba(13, 124, 74, 0.4);
+    0 0 0 4px rgba(13, 124, 74, 0.25),
+    0 8px 24px -6px rgba(13, 124, 74, 0.5);
 }
 .rush-glow-gold {
   box-shadow:
-    0 0 0 4px rgba(212, 160, 23, 0.18),
-    0 8px 24px -6px rgba(212, 160, 23, 0.4);
+    0 0 0 4px rgba(212, 160, 23, 0.25),
+    0 8px 24px -6px rgba(212, 160, 23, 0.5);
 }
 
+/* Bottom dock — neumorphic with double shadow + top highlight */
 .rush-dock {
-  -webkit-backdrop-filter: blur(20px) saturate(1.6);
-  backdrop-filter: blur(20px) saturate(1.6);
-  background: rgba(255, 252, 242, 0.94);
-  border: 1px solid rgba(255, 252, 242, 0.7);
+  -webkit-backdrop-filter: blur(20px) saturate(1.8);
+  backdrop-filter: blur(20px) saturate(1.8);
+  background: rgba(40, 24, 50, 0.85);
+  border: 1px solid rgba(245, 234, 208, 0.12);
   border-radius: var(--ar-radius-3xl);
   box-shadow:
-    inset 0 1px rgba(255, 252, 242, 1),
-    0 8px 28px var(--ar-shadow);
+    inset 0 1px 0 rgba(245, 234, 208, 0.20),
+    0 -4px 24px -4px rgba(0, 0, 0, 0.4),
+    0 8px 32px rgba(0, 0, 0, 0.5);
 }
 
 .rush-squircle {
   border-radius: 22%;
   background: linear-gradient(145deg, var(--icon-from, var(--ar-emerald)), var(--icon-to, var(--ar-emerald-deep)));
   box-shadow:
-    inset 0 1px rgba(255, 255, 255, 0.4),
-    0 4px 12px -2px var(--ar-shadow);
+    inset 0 1px 0 rgba(255, 255, 255, 0.25),
+    0 4px 12px -2px rgba(0, 0, 0, 0.4);
 }
 
 .joystick-knob {
   background: linear-gradient(145deg, var(--ar-emerald) 0%, var(--ar-emerald-deep) 100%);
   box-shadow:
-    inset 0 1px rgba(255, 255, 255, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4),
     0 4px 12px -2px rgba(13, 124, 74, 0.5);
 }
 
@@ -348,13 +362,13 @@
   animation: ar-shimmer 1.8s linear infinite;
 }
 
-/* Day/Night harmattan backgrounds with cross-fade */
+/* Day/Night harmattan backgrounds (now dark mode native) */
 .page-bg-day {
-  background: linear-gradient(180deg, #faf3e0 0%, var(--ar-cream) 55%, var(--ar-cream-deep) 100%);
+  background: linear-gradient(180deg, var(--ar-bg-deep) 0%, var(--ar-bg) 60%, var(--ar-bg) 100%);
   transition: background 1s var(--ar-ease-in-out);
 }
 .page-bg-night {
-  background: linear-gradient(180deg, var(--ar-indigo-deep) 0%, #1a2a5a 70%, #2a3a6a 100%);
+  background: linear-gradient(180deg, var(--ar-bg-deep) 0%, #0a0510 70%, #060309 100%);
   transition: background 1s var(--ar-ease-in-out);
 }
 
@@ -380,7 +394,7 @@
    ============================================================ */
 :where(button, a, input, select, textarea, [role="button"], [tabindex]):focus-visible {
   outline-offset: 2px;
-  outline: 3px solid var(--ar-indigo);
+  outline: 3px solid var(--ar-gold);
 }
 
 @media (prefers-reduced-motion: reduce) {
