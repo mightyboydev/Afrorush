@@ -5,6 +5,7 @@
 
 import { useEffect, useState, useRef, lazy, Suspense } from "react";
 import { useRouter } from "next/navigation";
+import { Plus } from "lucide-react";
 import { AuthProvider, useAuth } from "@/lib/auth";
 import {
   formatNaira,
@@ -110,10 +111,10 @@ function HubContent() {
 
   if (loading || loadingProfile || !profile) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-gradient-to-b from-[#b3e5fc] via-[#fff8e7] to-[#fff8e7]">
+      <main className="page-bg-day flex min-h-screen items-center justify-center">
         <div className="text-center">
-          <div className="mb-3 inline-block h-10 w-10 animate-spin rounded-full border-4 border-rush-green border-t-transparent" />
-          <div className="text-sm uppercase tracking-widest text-rush-navy/60">Loading your home…</div>
+          <div className="mb-3 inline-block h-10 w-10 animate-spin rounded-full border-4 border-rush-leaf border-t-transparent" />
+          <div className="text-sm uppercase tracking-widest text-rush-ink-soft">Loading your home…</div>
         </div>
       </main>
     );
@@ -139,7 +140,7 @@ function HubContent() {
   const hasLoan = !!profile.activeLoan;
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-gradient-to-b from-[#b3e5fc] via-[#fff8e7] to-[#fff8e7]">
+    <main className="page-bg-day relative min-h-screen overflow-hidden">
       {/* Decorative clouds (matches Landing page) */}
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute left-[10%] top-[8%] h-16 w-32 rounded-full bg-white/80 blur-md rush-float" />
@@ -151,9 +152,9 @@ function HubContent() {
       <div className="fixed inset-0 z-0">
         <SafeCanvas
           fallback={
-            <div className="flex h-full w-full flex-col items-center justify-center bg-gradient-to-b from-[#b3e5fc] to-[#fff8e7] text-center">
+            <div className="page-bg-day flex h-full w-full flex-col items-center justify-center text-center">
               <div className="text-7xl" style={{ filter: "drop-shadow(0 8px 12px rgba(20,33,61,0.2))" }}>🏍️💨</div>
-              <p className="mt-3 px-6 text-xs text-rush-navy/50">
+              <p className="mt-3 px-6 text-xs text-rush-ink-soft">
                 3D no dey your phone, but you fit still play AfroRush — the rest of the app dey work fine!
               </p>
             </div>
@@ -180,114 +181,150 @@ function HubContent() {
         </div>
       )}
 
-      {/* Top status bar — compact, always visible, like Lagos Life */}
+      {/* Top status bar — Lagos Life style: ONE compact row + scrollable chip ticker + single status banner */}
       {!cleanScreen && (
         <header className="fixed inset-x-0 top-0 z-30 safe-pt">
-          <div className="mx-auto flex max-w-md items-center justify-between gap-1.5 px-2.5 pt-2">
-            {/* Left — avatar + time + weather */}
-            <button
-              onClick={() => setShowLogoutConfirm(true)}
-              className="flex items-center gap-1.5 rounded-full rush-glass-pill py-1 pl-1 pr-2.5 active:scale-95"
-              aria-label="Profile menu"
-            >
-              <div
-                className="flex h-7 w-7 items-center justify-center rounded-full text-[11px] font-bold text-white ring-2 ring-white/70"
-                style={{ background: profile.avatar?.skinTone ?? "#c68642" }}
+          {/* === Row 1 — single panel bar (avatar | time/weather | dividers | wallet) === */}
+          <div className="mx-auto flex max-w-md px-2.5 pt-2">
+            <div className="panel rush-glass flex h-12 w-full items-center gap-1 rounded-full py-1 pl-1 pr-1">
+              {/* Avatar + level (tap = logout menu) */}
+              <button
+                onClick={() => setShowLogoutConfirm(true)}
+                className="btn-press flex h-full items-center gap-2 rounded-full py-0.5 pl-1 pr-2 hover:bg-rush-mist/40"
+                aria-label="Profile menu"
               >
-                {profile.username.charAt(0).toUpperCase()}
-              </div>
-              <div className="text-left leading-tight">
-                <div className="flex items-center gap-1 text-[10px] font-bold text-rush-navy">
-                  {clock}
-                  <span>{weather.emoji}</span>
-                  <span className="font-medium text-rush-navy/70">{weather.text}</span>
+                <div className="relative">
+                  <div
+                    className="flex h-8 w-8 items-center justify-center rounded-full text-[11px] font-bold text-white"
+                    style={{
+                      background: profile.avatar?.skinTone ?? "#c68642",
+                      boxShadow: "rgb(34, 197, 94) 0px 0px 0px 3px inset", // online ring
+                    }}
+                  >
+                    {profile.username.charAt(0).toUpperCase()}
+                  </div>
                 </div>
-                <div className="text-[8px] uppercase tracking-wide text-rush-navy/50">
-                  {levelTitle(lvl)} · Lvl {lvl}
+                <div className="text-left leading-tight">
+                  <div className="text-[11px] font-bold text-rush-ink tabular-nums">
+                    {clock}
+                    <span className="ml-1">{weather.emoji}</span>
+                  </div>
+                  <div className="text-[9px] font-medium text-rush-ink-soft">
+                    {levelTitle(lvl)} · Lvl {lvl}
+                  </div>
                 </div>
-              </div>
-            </button>
+              </button>
 
-            {/* Right — money pill + add button + share handle */}
-            <div className="flex items-center gap-1 rounded-full rush-glass-pill py-1 pl-2.5 pr-1">
-              <span className="text-[11px]">💵</span>
-              <span className="text-[11px] font-bold text-rush-gold">{formatNaira(profile.cash)}</span>
+              {/* Divider */}
+              <div className="h-5 w-px bg-rush-ink/10" />
+
+              {/* Birth class chip (Nepo/Lapo) */}
+              <div
+                className={`flex h-full items-center rounded-full px-2 text-[10px] font-bold ${
+                  isNepo ? "bg-rush-amber/15 text-rush-amber-deep" : "bg-rush-ink/8 text-rush-ink"
+                }`}
+                title={isNepo ? "Nepo Baby — born with silver spoon" : "Lapo Baby — hustler from day one"}
+              >
+                {isNepo ? "👶 Nepo" : "💪 Lapo"}
+              </div>
+
+              {/* Spacer */}
+              <div className="flex-1" />
+
+              {/* Wallet button (right) */}
               <button
                 onClick={() => setTab("phone")}
-                className="flex h-6 w-6 items-center justify-center rounded-full bg-rush-green text-xs font-bold text-white active:scale-90"
+                className="btn-press ml-1 flex h-full items-center gap-1.5 rounded-full bg-rush-mist pr-1 pl-3 hover:bg-rush-mist/80"
                 aria-label="Open Bank to send or top up"
-                title="Open Bank"
               >
-                +
+                <span className="text-[13px] font-bold text-rush-amber-deep tabular-nums">
+                  ₦{formatNaira(profile.cash)}
+                </span>
+                {/* Plus button — green circle */}
+                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-rush-leaf text-white">
+                  <Plus className="h-4 w-4" strokeWidth={2.5} />
+                </span>
               </button>
             </div>
           </div>
 
-          {/* Share handle row — the Lagos Life viral hook */}
-          <div className="mx-auto flex max-w-md items-center justify-end px-2.5 pt-1">
-            <div className="flex items-center gap-1.5 rounded-full bg-white/80 px-2 py-0.5 backdrop-blur-md">
-              <span className="text-[8px] font-bold uppercase tracking-wider text-rush-navy/50">Handle</span>
-              <span className="text-[9px] font-bold text-rush-navy">@{profile.username}</span>
-              <ShareHandleButton username={profile.username} cash={profile.cash} />
+          {/* === Row 2 — horizontally scrollable chip ticker (online / city / streak / rep / handle) === */}
+          <div className="mx-auto max-w-md px-2.5 pt-1.5">
+            <div className="no-scrollbar flex w-max gap-1.5 overflow-x-auto pb-0.5">
+              {/* Online */}
+              <div className="rush-glass-pill flex shrink-0 items-center gap-1.5 px-2.5 py-1 text-[11px] font-semibold text-rush-leaf-deep">
+                <span className="rush-online-dot" />
+                <span className="tabular-nums">{onlineCount.toLocaleString()} online</span>
+              </div>
+              {/* Home city */}
+              <div className="rush-glass-pill flex shrink-0 items-center gap-1 px-2.5 py-1 text-[11px] font-semibold text-rush-ink">
+                <span>📍</span>
+                <span className="uppercase">{(profile.city ?? "lagos").replace(/^\w/, (c) => c.toUpperCase())}</span>
+              </div>
+              {/* Streak */}
+              <div className="rush-glass-pill flex shrink-0 items-center gap-1 px-2.5 py-1 text-[11px] font-semibold text-rush-ink">
+                <span>🔥</span>
+                <span className="tabular-nums">{profile.loginStreak || 1} day</span>
+              </div>
+              {/* Rep */}
+              <div className="rush-glass-pill flex shrink-0 items-center gap-1 px-2.5 py-1 text-[11px] font-semibold text-rush-ink">
+                <span>🏆</span>
+                <span className="tabular-nums">{profile.rep.toLocaleString()}</span>
+              </div>
+              {/* Handle + share buttons */}
+              <div className="rush-glass-pill flex shrink-0 items-center gap-1.5 px-2.5 py-1 text-[11px] font-semibold text-rush-ink">
+                <span className="text-rush-ink-soft">@{profile.username}</span>
+                <ShareHandleButton username={profile.username} cash={profile.cash} />
+              </div>
             </div>
           </div>
 
-          {/* Live chips — small, under top bar */}
-          <div className="mx-auto flex max-w-md items-center gap-1.5 px-2.5 pt-1.5">
-            <div className="flex items-center gap-1 rounded-full bg-white/80 px-2 py-0.5 backdrop-blur-md">
-              <span className="h-1.5 w-1.5 rounded-full bg-rush-green animate-pulse" />
-              <span className="text-[9px] font-bold text-rush-navy">{onlineCount} online</span>
-            </div>
-            {/* Player's home city — Lagos, Kaduna, Abuja, etc. */}
-            <div
-              className="flex items-center gap-1 rounded-full px-2 py-0.5 backdrop-blur-md"
-              style={{ background: "rgba(255,255,255,0.8)" }}
-              title={`Home city: ${profile.city ?? "lagos"}`}
-            >
-              <span className="text-[10px]">📍</span>
-              <span className="text-[9px] font-bold text-rush-navy uppercase">{(profile.city ?? "lagos").replace(/^\w/, (c) => c.toUpperCase())}</span>
-            </div>
-            <div className="rounded-full bg-white/80 px-2 py-0.5 text-[9px] font-bold text-rush-navy backdrop-blur-md">
-              🔥 {profile.loginStreak || 1} day
-            </div>
-            <div className="rounded-full bg-white/80 px-2 py-0.5 text-[9px] font-bold text-rush-navy backdrop-blur-md">
-              🏆 {profile.rep.toLocaleString()} rep
-            </div>
-            {/* Birth class badge — Nepo (rich) or Lapo (broke) */}
-            <div
-              className={`rounded-full px-2 py-0.5 text-[9px] font-bold backdrop-blur-md ${isNepo ? "bg-rush-gold/30 text-rush-navy" : "bg-rush-navy/15 text-rush-navy"}`}
-              title={isNepo ? "Nepo Baby — born with silver spoon" : "Lapo Baby — hustler from day one"}
-            >
-              {isNepo ? "👶 Nepo" : "💪 Lapo"}
-            </div>
-          </div>
-
-          {/* Lagos Life state banners — Jailed / Stranded / Loan warning */}
+          {/* === Row 3 — single status banner (jailed / stranded / loan / nothing) === */}
           {isJailed && (
-            <div className="mx-auto mt-1.5 max-w-md rounded-2xl bg-red-600/95 px-3 py-2 text-center backdrop-blur-md">
-              <div className="text-[10px] font-bold uppercase tracking-wider text-white">🚔 You dey inside cell</div>
-              <div className="text-[9px] text-white/80">{profile.jailedReason}</div>
-              <div className="text-[9px] font-bold text-white">
-                Release in {Math.ceil(((profile.jailedUntil ?? 0) - Date.now()) / 60000)} min
+            <div className="mx-auto mt-1.5 max-w-md px-2.5">
+              <div className="flex items-center gap-2 rounded-2xl bg-rush-rose/95 px-3 py-2 text-white shadow-lg">
+                <span className="text-lg">🚔</span>
+                <div className="flex-1">
+                  <div className="text-[10px] font-bold uppercase tracking-wider">You dey inside cell</div>
+                  <div className="text-[9px] text-white/80">{profile.jailedReason}</div>
+                </div>
+                <div className="text-[10px] font-bold tabular-nums">
+                  {Math.ceil(((profile.jailedUntil ?? 0) - Date.now()) / 60000)}m
+                </div>
               </div>
             </div>
           )}
           {isStranded && !isJailed && (
-            <div className="mx-auto mt-1.5 max-w-md rounded-2xl bg-rush-orange/95 px-3 py-2 text-center backdrop-blur-md">
-              <div className="text-[10px] font-bold uppercase tracking-wider text-white">😅 You dey stranded!</div>
-              <div className="text-[9px] text-white/90">Cash = 0. Take loan for Buka/phone to bounce back.</div>
+            <div className="mx-auto mt-1.5 max-w-md px-2.5">
               <button
                 onClick={() => setTab("phone")}
-                className="mt-1 rounded-full bg-white px-3 py-0.5 text-[9px] font-bold text-rush-orange active:scale-95"
+                className="btn-press flex w-full items-center gap-2 rounded-2xl bg-rush-sunset/95 px-3 py-2 text-white shadow-lg"
               >
-                Open Phone →
+                <span className="text-lg">😅</span>
+                <div className="flex-1 text-left">
+                  <div className="text-[10px] font-bold uppercase tracking-wider">You dey stranded!</div>
+                  <div className="text-[9px] text-white/90">Cash = 0. Take loan for Buka/phone to bounce back.</div>
+                </div>
+                <span className="text-[10px] font-bold">Open Phone →</span>
               </button>
             </div>
           )}
           {hasLoan && !isJailed && !isStranded && (
-            <div className="mx-auto mt-1.5 max-w-md rounded-2xl bg-red-50/95 px-3 py-1.5 text-center backdrop-blur-md">
-              <div className="text-[9px] font-bold text-red-700">
-                💸 Active loan: ₦{profile.activeLoan!.totalOwed.toLocaleString()} (5%/hr) — pay quick!
+            <div className="mx-auto mt-1.5 max-w-md px-2.5">
+              <div className="flex items-center gap-2 rounded-2xl bg-rush-rose/15 px-3 py-2 ring-1 ring-rush-rose/30">
+                <span className="text-base">💸</span>
+                <div className="flex-1">
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-rush-rose">Active loan</div>
+                  <div className="text-[9px] text-rush-ink-soft">
+                    ₦{profile.activeLoan!.totalOwed.toLocaleString()} owed · 5%/hr — pay quick!
+                  </div>
+                </div>
+                <button
+                  onClick={() => setTab("phone")}
+                  className="btn-press rounded-full bg-rush-rose px-3 py-1 text-[9px] font-bold uppercase tracking-wider text-white"
+                >
+                  Pay →
+                </button>
               </div>
             </div>
           )}
@@ -302,8 +339,8 @@ function HubContent() {
           <div className="mx-auto max-w-md space-y-2">
             {/* Lagos Life vitals — stamina / hunger / street_cred */}
             <div className="grid grid-cols-3 gap-1.5">
-              <VitalCard label="Stamina" value={profile.vitals?.stamina ?? 80} color="#1fb86f" icon="⚡" />
-              <VitalCard label="Hunger" value={profile.vitals?.hunger ?? 20} color="#ff6a1a" icon="🍽️" inverted />
+              <VitalCard label="Stamina" value={profile.vitals?.stamina ?? 80} color="#22b573" icon="⚡" />
+              <VitalCard label="Hunger" value={profile.vitals?.hunger ?? 20} color="#f59e42" icon="🍽️" inverted />
               <VitalCard label="Cred" value={profile.vitals?.street_cred ?? 10} color="#7c3aed" icon="💯" />
             </div>
 
@@ -314,42 +351,42 @@ function HubContent() {
             <div className="grid grid-cols-2 gap-2">
               <button
                 onClick={() => setOverlay("suya")}
-                className="flex flex-col gap-1 rounded-2xl bg-white/70 p-2.5 text-left backdrop-blur-md active:scale-95"
+                className="panel rush-glass btn-press flex flex-col gap-1 p-2.5 text-left"
               >
                 <div className="flex items-center justify-between">
-                  <span className="text-[8px] font-bold uppercase tracking-wider text-rush-navy/50">Today&apos;s Task</span>
-                  <span className="text-[8px] font-bold text-rush-gold">+₦500</span>
+                  <span className="text-[8px] font-bold uppercase tracking-wider text-rush-ink-soft">Today&apos;s Task</span>
+                  <span className="text-[8px] font-bold text-rush-amber-deep tabular-nums">+₦500</span>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <span className="text-base">🍢</span>
-                  <span className="text-[10px] font-bold text-rush-navy">Visit Suya Spot</span>
+                  <span className="text-[10px] font-bold text-rush-ink">Visit Suya Spot</span>
                 </div>
               </button>
               <button
                 onClick={() => setTab("map")}
-                className="flex flex-col gap-1 rounded-2xl bg-white/70 p-2.5 text-left backdrop-blur-md active:scale-95"
+                className="panel rush-glass btn-press flex flex-col gap-1 p-2.5 text-left"
               >
                 <div className="flex items-center justify-between">
-                  <span className="text-[8px] font-bold uppercase tracking-wider text-rush-navy/50">Daily Gems</span>
-                  <span className="text-[8px] font-bold text-rush-purple">💎 {profile.gemsFound?.length || 0}/5</span>
+                  <span className="text-[8px] font-bold uppercase tracking-wider text-rush-ink-soft">Daily Gems</span>
+                  <span className="text-[8px] font-bold text-rush-purple tabular-nums">💎 {profile.gemsFound?.length || 0}/5</span>
                 </div>
-                <p className="text-[9px] leading-tight text-rush-navy/60">Find hidden gems in the city — open Map</p>
+                <p className="text-[9px] leading-tight text-rush-ink-soft">Find hidden gems in the city — open Map</p>
               </button>
             </div>
 
             {/* Quick action — open Map to see all locations */}
             <button
               onClick={() => setTab("map")}
-              className="flex w-full items-center justify-between rounded-2xl bg-white/70 p-2.5 backdrop-blur-md active:scale-95"
+              className="panel rush-glass btn-press flex w-full items-center justify-between p-2.5"
             >
               <div className="flex items-center gap-2">
                 <span className="text-base">🗺️</span>
                 <div className="text-left">
-                  <div className="text-[10px] font-bold text-rush-navy">Explore Lagos</div>
-                  <div className="text-[9px] text-rush-navy/60">Motor Park · Garage · Race Track · Market · Crew HQ</div>
+                  <div className="text-[10px] font-bold text-rush-ink">Explore Lagos</div>
+                  <div className="text-[9px] text-rush-ink-soft">Motor Park · Garage · Race Track · Market · Crew HQ</div>
                 </div>
               </div>
-              <span className="text-rush-navy/40">→</span>
+              <span className="text-rush-ink-soft">→</span>
             </button>
           </div>
         )}
@@ -881,22 +918,22 @@ function VitalCard({ label, value, color, icon, inverted = false }: {
   const v = Math.round(value);
   const isLow = inverted ? v > 70 : v < 30;
   return (
-    <div className="rounded-2xl bg-white/65 p-2 backdrop-blur-md">
+    <div className="panel rush-glass p-2">
       <div className="mb-0.5 flex items-center justify-between">
         <span className="text-[10px]">{icon}</span>
-        <span className="text-[8px] font-bold uppercase tracking-wider text-rush-navy/50">{label}</span>
+        <span className="text-[8px] font-bold uppercase tracking-wider text-rush-ink-soft">{label}</span>
       </div>
-      <div className="h-1 w-full overflow-hidden rounded-full bg-rush-cream">
+      <div className="h-1 w-full overflow-hidden rounded-full bg-rush-mist">
         <div
           className="h-full rounded-full transition-all"
           style={{
             width: `${v}%`,
-            background: isLow ? "#ef4444" : color,
-            transition: "width 0.4s, background 0.3s",
+            background: isLow ? "#ef5a6f" : color,
+            transition: "width 0.4s ease-out, background 0.3s",
           }}
         />
       </div>
-      <div className="mt-0.5 text-center text-[10px] font-bold text-rush-navy">{v}</div>
+      <div className="mt-0.5 text-center text-[10px] font-bold text-rush-ink tabular-nums">{v}</div>
     </div>
   );
 }
