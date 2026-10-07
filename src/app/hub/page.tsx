@@ -22,6 +22,7 @@ import PhoneScreen from "@/components/PhoneScreen";
 import MapScreen from "@/components/MapScreen";
 import SafeCanvas from "@/components/SafeCanvas";
 import { ShareHandleButton } from "@/components/PhoneScreen";
+import { PLACES, STATES, getState, getPlaces, getCategoriesForState, CATEGORY_META, type StateId, type Place, type PlaceCategory } from "@/data/places";
 
 // 3D Home Room — heavy, ssr:false
 const HomeRoom = lazy(() => import("@/world/HomeRoom"));
@@ -30,33 +31,33 @@ const City = lazy(() => import("@/world/City"));
 const CharacterPreview3D = lazy(() => import("@/components/CharacterPreview"));
 const MultiplayerRace = lazy(() => import("@/components/MultiplayerRace"));
 
-const LOCATIONS = [
-  // Lagos hubs
-  { id: "motor-park", name: "Motor Park", emoji: "🛺", color: "#1fb86f", desc: "Social hub. Okadas, danfos, keke." },
-  { id: "garage", name: "Garage", emoji: "🏍️", color: "#ff6a1a", desc: "Customize your bike & outfit." },
-  { id: "race-track", name: "Race Track", emoji: "🏁", color: "#ffc531", desc: "Street, Delivery, Police Chase, Freestyle." },
-  { id: "market", name: "Balogun Market", emoji: "🛍️", color: "#c026d3", desc: "Buy items with Naira and gold." },
-  { id: "suya-spot", name: "Suya Spot", emoji: "🍢", color: "#ff6a1a", desc: "Daily free reward + food buffs." },
-  { id: "crew-hq", name: "Crew HQ", emoji: "👥", color: "#7c3aed", desc: "Manage crew, crew wars." },
-  { id: "stadium", name: "National Stadium", emoji: "🏟️", color: "#1fb86f", desc: "Lagos National Stadium, Surulere." },
-  { id: "quilox", name: "Quilox Club", emoji: "🎉", color: "#ff6a1a", desc: "Lagos hottest nightclub. V/I." },
-  { id: "church", name: "Cathedral", emoji: "⛪", color: "#16a3b1", desc: "Holy Cross Cathedral." },
-  { id: "mosque", name: "Central Mosque", emoji: "🕌", color: "#16a3b1", desc: "Lagos Central Mosque." },
-  { id: "unilag", name: "UNILAG", emoji: "🎓", color: "#ffc531", desc: "University of Lagos, Akoka." },
-  { id: "lekki", name: "Lekki Bridge", emoji: "🌉", color: "#7c3aed", desc: "Lekki-Ikoyi Link Bridge." },
-  // Kaduna hubs
-  { id: "kaduna-park", name: "Kaduna Motor Park", emoji: "🚐", color: "#7c3aed", desc: "Wuse park · northern okada + go-slow." },
-  { id: "ahmadu-bello", name: "ABU Zaria", emoji: "🎓", color: "#1fb86f", desc: "Ahmadu Bello University · samaru campus." },
-  { id: "murtala-square", name: "Murtala Square", emoji: "🏟️", color: "#ff6a1a", desc: "Sports + recreation ground, Kaduna." },
-  { id: "kaduna-mall", name: "Kaduna Mega Mall", emoji: "🏬", color: "#c026d3", desc: "Shoprite + cinema · biggest in the north." },
-  { id: "hamdala", name: "Hamdala Hotel", emoji: "🏨", color: "#ffc531", desc: "Legendary hotel on Ahmadu Bello Way." },
-  { id: "kaduna-river", name: "River Kaduna", emoji: "🐊", color: "#16a3b1", desc: "Crocodile-infested · bridge views." },
-  // Abuja hubs (extra)
-  { id: "abuja-city-gate", name: "City Gate", emoji: "🚪", color: "#16a3b1", desc: "Iconic Abuja welcome arch." },
-  { id: "wuse-market", name: "Wuse Market", emoji: "🛍️", color: "#c026d3", desc: "Biggest market in the capital." },
+// Game-only hubs (these have actual overlays: race-track, garage, suya, etc.)
+// These always show regardless of state. The real-world places from places.ts
+// are added on top based on the player's home city.
+const GAME_HUBS = [
+  { id: "motor-park", name: "Motor Park", emoji: "🛺", color: "#0d7c4a", desc: "Social hub. Okadas, danfos, keke.", category: "social" as PlaceCategory, state: "lagos" as StateId },
+  { id: "garage", name: "Garage", emoji: "🏍️", color: "#c87f3f", desc: "Customize your bike & outfit.", category: "social" as PlaceCategory, state: "lagos" as StateId },
+  { id: "race-track", name: "Race Track", emoji: "🏁", color: "#d4a017", desc: "Street, Delivery, Police Chase, Freestyle.", category: "recreation" as PlaceCategory, state: "lagos" as StateId },
+  { id: "suya-spot", name: "Suya Spot", emoji: "🍢", color: "#c87f3f", desc: "Daily free reward + food buffs.", category: "social" as PlaceCategory, state: "lagos" as StateId },
+  { id: "crew-hq", name: "Crew HQ", emoji: "👥", color: "#7c3aed", desc: "Manage crew, crew wars.", category: "social" as PlaceCategory, state: "lagos" as StateId },
 ];
 
-type Overlay = "race-mode" | "shop" | "suya" | "crew" | "motor-park" | "mp-lobby" | null;
+// Build a flat LOCATIONS array: game hubs + real places for the player's state
+function getLocationsForState(stateId: StateId) {
+  const realPlaces = getPlaces(stateId).map((p) => ({
+    id: p.id,
+    name: p.name,
+    emoji: p.emoji,
+    color: getState(p.state)?.accent ?? "#c87f3f",
+    desc: p.desc,
+    category: p.category,
+    state: p.state,
+  }));
+  // Game hubs first, then real places
+  return [...GAME_HUBS, ...realPlaces];
+}
+
+type Overlay = "race-mode" | "shop" | "suya" | "crew" | "motor-park" | "mp-lobby" | "city-picker" | null;
 
 export default function HubPage() {
   return (
@@ -99,12 +100,15 @@ function HubContent() {
 
   const handleLocation = (id: string) => {
     if (id === "race-track") setOverlay("race-mode");
-    else if (id === "garage" || id === "market") setOverlay("shop");
+    else if (id === "garage") setOverlay("shop");
     else if (id === "suya-spot") setOverlay("suya");
     else if (id === "crew-hq") setOverlay("crew");
     else if (id === "motor-park") setOverlay("motor-park");
     else {
-      const loc = LOCATIONS.find((l) => l.id === id);
+      // Look in the current state's locations (game hubs + real places)
+      const stateId = (profile?.city as StateId) ?? "lagos";
+      const locs = getLocationsForState(stateId);
+      const loc = locs.find((l) => l.id === id);
       if (loc) setSelectedLocation(loc);
     }
   };
@@ -256,11 +260,15 @@ function HubContent() {
                 <span className="rush-online-dot" />
                 <span className="tabular-nums">{onlineCount.toLocaleString()} online</span>
               </div>
-              {/* Home city */}
-              <div className="rush-glass-pill flex shrink-0 items-center gap-1 px-2.5 py-1 text-[11px] font-semibold text-rush-ink">
+              {/* Home city — tap to open city picker */}
+              <button
+                onClick={() => setOverlay("city-picker")}
+                className="rush-glass-pill btn-press flex shrink-0 items-center gap-1 px-2.5 py-1 text-[11px] font-semibold text-rush-ink"
+              >
                 <span>📍</span>
                 <span className="uppercase">{(profile.city ?? "lagos").replace(/^\w/, (c) => c.toUpperCase())}</span>
-              </div>
+                <span className="text-rush-ink-soft text-[9px]">⌄</span>
+              </button>
               {/* Streak */}
               <div className="rush-glass-pill flex shrink-0 items-center gap-1 px-2.5 py-1 text-[11px] font-semibold text-rush-ink">
                 <span>🔥</span>
@@ -460,6 +468,22 @@ function HubContent() {
           profile={profile}
           onClose={() => setOverlay(null)}
           onJoinRoom={(code) => { setOverlay(null); setMpRoomCode(code); }}
+        />
+      )}
+      {overlay === "city-picker" && (
+        <CityPickerOverlay
+          currentCity={(profile.city as StateId) ?? "lagos"}
+          onClose={() => setOverlay(null)}
+          onPick={async (newCity) => {
+            try {
+              const { updateProfile } = await import("@/lib/firestore");
+              await updateProfile(profile.uid, { city: newCity });
+              await refreshProfile();
+              setOverlay(null);
+            } catch (e) {
+              console.error("City switch failed:", e);
+            }
+          }}
         />
       )}
 
@@ -934,6 +958,167 @@ function VitalCard({ label, value, color, icon, inverted = false }: {
         />
       </div>
       <div className="mt-0.5 text-center text-[10px] font-bold text-rush-ink tabular-nums">{v}</div>
+    </div>
+  );
+}
+
+// ---------- City Picker Overlay — switch between Kaduna, Abuja, Lagos, PH ----------
+
+function CityPickerOverlay({
+  currentCity,
+  onClose,
+  onPick,
+}: {
+  currentCity: StateId;
+  onClose: () => void;
+  onPick: (city: StateId) => Promise<void>;
+}) {
+  const [busy, setBusy] = useState<StateId | null>(null);
+  const [selectedState, setSelectedState] = useState<StateId>(currentCity);
+  const [selectedCategory, setSelectedCategory] = useState<PlaceCategory | null>(null);
+
+  const places = selectedCategory
+    ? getPlaces(selectedState, selectedCategory)
+    : getPlaces(selectedState);
+
+  const categories = getCategoriesForState(selectedState);
+
+  const pick = async (city: StateId) => {
+    setBusy(city);
+    try { await onPick(city); }
+    finally { setBusy(null); }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-rush-ink/50 backdrop-blur-sm sm:items-center" onClick={onClose}>
+      <div
+        className="ar-panel ar-bounce-in max-h-[88vh] w-full max-w-md overflow-y-auto rounded-t-3xl p-4 sm:rounded-3xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="font-display text-xl text-rush-ink">Pick Your City</h2>
+          <button onClick={onClose} className="btn-press flex h-9 w-9 items-center justify-center rounded-full bg-rush-mist text-rush-ink">✕</button>
+        </div>
+
+        {/* State tabs */}
+        <div className="no-scrollbar mb-4 flex gap-2 overflow-x-auto pb-1">
+          {STATES.map((s) => {
+            const isActive = selectedState === s.id;
+            const isCurrent = currentCity === s.id;
+            return (
+              <button
+                key={s.id}
+                onClick={() => { setSelectedState(s.id); setSelectedCategory(null); }}
+                className="btn-press flex shrink-0 items-center gap-2 rounded-2xl px-3 py-2 text-left transition-all"
+                style={{
+                  background: isActive ? s.accent : "var(--ar-paper)",
+                  color: isActive ? "#fff" : "var(--ar-ink)",
+                  boxShadow: isActive ? `0 6px 16px -6px ${s.accent}aa` : "inset 0 1px rgba(255,252,242,1), 0 4px 12px var(--ar-shadow)",
+                }}
+              >
+                <span className="text-lg">{s.emoji}</span>
+                <div className="leading-tight">
+                  <div className="text-xs font-bold">{s.name}</div>
+                  <div className="text-[9px] opacity-80">{s.capital}</div>
+                </div>
+                {isCurrent && (
+                  <span className="ml-1 rounded-full bg-white/30 px-1.5 py-0.5 text-[8px] font-bold uppercase">Current</span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Selected state info */}
+        {(() => {
+          const s = getState(selectedState);
+          if (!s) return null;
+          return (
+            <div className="ar-card mb-3 flex items-center gap-3 p-3" style={{ borderColor: s.accent }}>
+              <div className="text-3xl">{s.emoji}</div>
+              <div className="flex-1">
+                <div className="font-display text-base text-rush-ink">{s.name} <span className="text-[10px] font-normal text-rush-ink-soft">· {s.capital}</span></div>
+                <div className="text-[11px] text-rush-ink-soft">{s.tagline}</div>
+              </div>
+              <div className="text-right">
+                <div className="text-[9px] font-bold uppercase tracking-wider text-rush-ink-soft">Places</div>
+                <div className="font-display text-lg tabular-nums" style={{ color: s.accent }}>{getPlaces(s.id).length}</div>
+              </div>
+            </div>
+          );
+        })()}
+
+        {/* Category filter pills */}
+        <div className="no-scrollbar mb-3 flex gap-1.5 overflow-x-auto pb-1">
+          <button
+            onClick={() => setSelectedCategory(null)}
+            className={`btn-press shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider transition-all ${
+              !selectedCategory ? "bg-rush-ink text-white" : "bg-rush-paper text-rush-ink-soft"
+            }`}
+          >
+            All
+          </button>
+          {categories.map((cat) => {
+            const meta = CATEGORY_META[cat];
+            const isActive = selectedCategory === cat;
+            return (
+              <button
+                key={cat}
+                onClick={() => setSelectedCategory(cat)}
+                className="btn-press flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider transition-all"
+                style={{
+                  background: isActive ? meta.color : "var(--ar-paper)",
+                  color: isActive ? "#fff" : "var(--ar-ink-soft)",
+                }}
+              >
+                <span>{meta.emoji}</span>
+                {meta.label}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Places list */}
+        <div className="grid grid-cols-2 gap-2">
+          {places.map((p) => {
+            const meta = CATEGORY_META[p.category];
+            const s = getState(p.state);
+            return (
+              <button
+                key={p.id}
+                onClick={() => setSelectedCategory(p.category)}
+                className="btn-press ar-card flex flex-col gap-1 p-2.5 text-left"
+                style={{ borderLeft: `3px solid ${meta.color}` }}
+              >
+                <div className="flex items-start justify-between">
+                  <span className="text-xl">{p.emoji}</span>
+                  <span className="text-[8px] font-bold uppercase tracking-wider" style={{ color: meta.color }}>{meta.label}</span>
+                </div>
+                <div className="text-[11px] font-bold text-rush-ink leading-tight">{p.name}</div>
+                <div className="text-[9px] text-rush-ink-soft leading-tight">{p.desc}</div>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Action button — switch to this state */}
+        {selectedState !== currentCity && (
+          <button
+            onClick={() => pick(selectedState)}
+            disabled={busy !== null}
+            className="ar-btn-primary btn-press mt-4 w-full rounded-2xl px-4 py-3 text-sm font-bold uppercase tracking-wider text-white disabled:opacity-50"
+            style={{ background: getState(selectedState)?.accent }}
+          >
+            {busy === selectedState ? "Switching…" : `Move to ${getState(selectedState)?.name} →`}
+          </button>
+        )}
+        {selectedState === currentCity && (
+          <div className="mt-4 rounded-2xl bg-rush-mist/60 px-4 py-3 text-center text-xs text-rush-ink-soft">
+            ✓ This is your current city
+          </div>
+        )}
+      </div>
     </div>
   );
 }
