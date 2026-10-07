@@ -6,6 +6,7 @@
 import { useEffect, useState, useRef, lazy, Suspense } from "react";
 import { useRouter } from "next/navigation";
 import { PlusIcon } from "@/ui/icons";
+import { OkadaMascot } from "@/ui/mascot";
 import { AuthProvider, useAuth } from "@/lib/auth";
 import {
   formatNaira,
@@ -115,9 +116,12 @@ function HubContent() {
 
   if (loading || loadingProfile || !profile) {
     return (
-      <main className="page-bg-day flex min-h-screen items-center justify-center">
+      <main className="page-bg-night flex min-h-screen items-center justify-center">
         <div className="text-center">
-          <div className="mb-3 inline-block h-10 w-10 animate-spin rounded-full border-4 border-rush-leaf border-t-transparent" />
+          <div
+            className="mb-3 inline-block h-10 w-10 animate-spin rounded-full border-4 border-t-transparent"
+            style={{ borderColor: "var(--ar-gold)", borderTopColor: "transparent" }}
+          />
           <div className="text-sm uppercase tracking-widest text-rush-ink-soft">Loading your home…</div>
         </div>
       </main>
@@ -144,21 +148,36 @@ function HubContent() {
   const hasLoan = !!profile.activeLoan;
 
   return (
-    <main className="page-bg-day relative min-h-screen overflow-hidden">
-      {/* Decorative clouds (matches Landing page) */}
+    <main className="page-bg-night relative min-h-screen overflow-hidden">
+      {/* Decorative drifting dust particles (now glowing on dark) */}
       <div className="pointer-events-none absolute inset-0">
-        <div className="absolute left-[10%] top-[8%] h-16 w-32 rounded-full bg-white/80 blur-md rush-float" />
-        <div className="absolute right-[15%] top-[15%] h-12 w-24 rounded-full bg-white/70 blur-md rush-float" style={{ animationDelay: "1s" }} />
-        <div className="absolute left-[60%] top-[5%] h-20 w-40 rounded-full bg-white/60 blur-md rush-float" style={{ animationDelay: "2s" }} />
+        {[...Array(15)].map((_, i) => (
+          <div
+            key={i}
+            className="ar-dust-drift absolute rounded-full"
+            style={{
+              left: `${(i * 7) % 100}%`,
+              top: `${(i * 13) % 100}%`,
+              width: "2px",
+              height: "2px",
+              background: "var(--ar-gold)",
+              boxShadow: "0 0 6px var(--ar-gold)",
+              opacity: 0.4,
+              animationDelay: `${i * 0.5}s`,
+            }}
+          />
+        ))}
       </div>
       {/* 3D Home Room — always rendered, behind UI. Wrapped in SafeCanvas
           so a Three.js / WebGL crash never takes down the whole hub. */}
       <div className="fixed inset-0 z-0">
         <SafeCanvas
           fallback={
-            <div className="page-bg-day flex h-full w-full flex-col items-center justify-center text-center">
-              <div className="text-7xl" style={{ filter: "drop-shadow(0 8px 12px rgba(20,33,61,0.2))" }}>🏍️💨</div>
-              <p className="mt-3 px-6 text-xs text-rush-ink-soft">
+            <div className="page-bg-night flex h-full w-full flex-col items-center justify-center text-center">
+              <div className="ar-bob mb-3">
+                <OkadaMascot size={120} />
+              </div>
+              <p className="px-6 text-xs text-rush-ink-soft">
                 3D no dey your phone, but you fit still play AfroRush — the rest of the app dey work fine!
               </p>
             </div>
@@ -235,17 +254,27 @@ function HubContent() {
               {/* Spacer */}
               <div className="flex-1" />
 
-              {/* Wallet button (right) */}
+              {/* Wallet button (right) — sunset glow gradient */}
               <button
                 onClick={() => setTab("phone")}
-                className="btn-press ml-1 flex h-full items-center gap-1.5 rounded-full bg-rush-mist pr-1 pl-3 hover:bg-rush-mist/80"
+                className="btn-press ml-1 flex h-full items-center gap-1.5 rounded-full pr-1 pl-3 hover:brightness-110"
+                style={{
+                  background: "var(--ar-sunset-gradient)",
+                  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.25), 0 4px 14px -2px rgba(124,58,237,0.5)",
+                }}
                 aria-label="Open Bank to send or top up"
               >
-                <span className="text-[13px] font-bold text-rush-amber-deep tabular-nums">
+                <span className="text-[13px] font-bold text-white tabular-nums">
                   ₦{formatNaira(profile.cash)}
                 </span>
-                {/* Plus button — green circle */}
-                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-rush-leaf text-white">
+                {/* Plus button — gold circle with glow */}
+                <span
+                  className="flex h-7 w-7 items-center justify-center rounded-full text-white"
+                  style={{
+                    background: "linear-gradient(145deg, #f5d77a, #d4a017)",
+                    boxShadow: "inset 0 1px 0 rgba(255,255,255,0.4), 0 2px 6px rgba(212,160,23,0.6)",
+                  }}
+                >
                   <PlusIcon size={16} strokeWidth={2.5} />
                 </span>
               </button>
@@ -941,19 +970,30 @@ function VitalCard({ label, value, color, icon, inverted = false }: {
 }) {
   const v = Math.round(value);
   const isLow = inverted ? v > 70 : v < 30;
+  const fillColor = isLow ? "#c8463d" : color;
   return (
-    <div className="panel rush-glass p-2">
+    <div
+      className="rounded-2xl p-2"
+      style={{
+        background: "rgba(40, 24, 50, 0.65)",
+        backdropFilter: "blur(12px) saturate(1.6)",
+        WebkitBackdropFilter: "blur(12px) saturate(1.6)",
+        border: "1px solid rgba(245, 234, 208, 0.12)",
+        boxShadow: "inset 0 1px 0 rgba(245, 234, 208, 0.15), 0 4px 12px rgba(0,0,0,0.3)",
+      }}
+    >
       <div className="mb-0.5 flex items-center justify-between">
         <span className="text-[10px]">{icon}</span>
         <span className="text-[8px] font-bold uppercase tracking-wider text-rush-ink-soft">{label}</span>
       </div>
-      <div className="h-1 w-full overflow-hidden rounded-full bg-rush-mist">
+      <div className="h-1.5 w-full overflow-hidden rounded-full" style={{ background: "rgba(245, 234, 208, 0.10)" }}>
         <div
           className="h-full rounded-full transition-all"
           style={{
             width: `${v}%`,
-            background: isLow ? "#ef5a6f" : color,
-            transition: "width 0.4s ease-out, background 0.3s",
+            background: fillColor,
+            boxShadow: `0 0 8px ${fillColor}`,
+            transition: "width 0.4s ease-out, background 0.3s, box-shadow 0.3s",
           }}
         />
       </div>
