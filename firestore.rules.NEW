@@ -1,0 +1,153 @@
+// firestore.rules.NEW — SECURE rules. Publish ONLY after testing the API routes.
+// 
+// CHANGES from current rules:
+// 1. Removed 'cash', 'gold', 'rep', 'totalRuns', 'highScores' from player-writable list.
+//    Players can no longer write their own money — all economy goes through API routes.
+// 2. Restricted race_rooms so only room members can update their own player entry.
+//
+// PUBLISH INSTRUCTIONS:
+// 1. Test all 5 API routes (job, race, buy, transfer, loan) first.
+// 2. Then paste this into Firebase Console → Firestore → Rules → Publish.
+// 3. If any route breaks, DO NOT publish — revert to old rules and debug.
+
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    function isOwner() {
+      return isSignedIn() && request.auth.uid == '1rf7yswl35QuUyfdQehMs1qdlIy2';
+    }
+    function isStaff() {
+      return isSignedIn() && (
+        isOwner()
+        || exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+        || (exists(/databases/$(database)/documents/users/$(request.auth.uid))
+            && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('role', 'player')
+               in ['admin', 'moderator', 'owner'])
+      );
+    }
+
+    // ---------- Users ----------
+    match /users/{uid} {
+      allow read: if true;
+
+      allow create: if isSignedIn() && request.auth.uid == uid
+        && (request.resource.data.cash == 0 || request.resource.data.cash == 5000000)
+        && request.resource.data.gold == (request.resource.data.cash == 5000000 ? 100 : 10)
+        && request.resource.data.rep == 0
+        && request.resource.data.banned == false
+        && (!('role' in request.resource.data) || request.resource.data.role == 'player');
+
+      allow update: if
+        // Player: safe fields only — NO cash, gold, or rep (server-only)
+        (isSignedIn() && request.auth.uid == uid
+          && request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly([
+              'username', 'avatar', 'city', 'loadout', 'soundOn',
+              'graphicsQuality', 'lastSeen', 'onboardingComplete', 'photoURL',
+              'birthClass', 'vitals', 'vitalsUpdatedAt',
+              'activeLoan', 'lastBillDate',
+              'jailedUntil', 'jailedReason',
+              'needs', 'needsUpdatedAt', 'loginStreak', 'lastLoginDate',
+              'dailyTasks', 'gemsFound', 'homeType', 'homeLayout',
+              'totalRuns', 'highScores',
+              'crewId', 'crewName', 'crewColor', 'crewTag'
+            ]))
+        || isOwner()
+        || (isStaff() && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role']));
+
+      allow delete: if false;
+
+      match /private/{docId} {
+        allow read: if isSignedIn() && (request.auth.uid == uid || isStaff());
+        allow write: if isSignedIn() && request.auth.uid == uid;
+      }
+
+      match /notifications/{notifId} {
+        allow read: if isSignedIn() && request.auth.uid == uid;
+        allow create: if isStaff();
+        allow update: if isSignedIn() && request.auth.uid == uid
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read']);
+        allow delete: if false;
+      }
+
+      match /meta/{docId} {
+        allow read: if isSignedIn() && (request.auth.uid == uid || isStaff());
+        allow create: if (isSignedIn() && request.auth.uid == uid
+            && request.resource.data.ids == ['bike-spark', 'outfit-street', 'stk-none', 'horn-beep', 'exh-stock'])
+          || isStaff();
+        allow update, delete: if isStaff();
+      }
+    }
+
+    // ---------- Crews ----------
+    match /crews/{crewId} {
+      allow read: if true;
+      allow create: if isSignedIn();
+      allow update, delete: if isSignedIn()
+        && (resource.data.ownerId == request.auth.uid || isStaff());
+    }
+
+    // ---------- Presence ----------
+    match /presence/{uid} {
+      allow read: if true;
+      allow write: if isSignedIn() && request.auth.uid == uid;
+    }
+
+    // ---------- Admins ----------
+    match /admins/{uid} {
+      allow read: if isSignedIn() && (request.auth.uid == uid || isStaff());
+      allow write: if isOwner();
+    }
+
+    match /adminLogs/{logId} {
+      allow read: if isStaff();
+      allow create: if isStaff();
+      allow update, delete: if false;
+    }
+
+    match /settings/{docId} {
+      allow read: if true;
+      allow write: if isStaff();
+    }
+
+    // ---------- Direct Messages (DMs) ----------
+    match /dm_chats/{msgId} {
+      allow read: if isSignedIn()
+        && (resource.data.fromUid == request.auth.uid || resource.data.toUid == request.auth.uid);
+      allow create: if isSignedIn()
+        && request.resource.data.fromUid == request.auth.uid
+        && request.resource.data.text is string
+        && request.resource.data.text.size() > 0
+        && request.resource.data.text.size() <= 1000;
+      allow update: if isSignedIn()
+        && request.auth.uid == resource.data.toUid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read']);
+      allow delete: if false;
+    }
+
+    // ---------- Multiplayer Race Rooms (RESTRICTED) ----------
+    // Only players who are already in the room's players map can update.
+    // Each player can only edit their own players.{uid} sub-field.
+    match /race_rooms/{roomId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn()
+        && request.resource.data.host_uid == request.auth.uid;
+      allow update: if isSignedIn()
+        && (
+          // Host can change room_status/started_at
+          (resource.data.host_uid == request.auth.uid
+            && request.resource.data.diff(resource.data).affectedKeys()
+              .hasOnly(['room_status', 'started_at', 'finished_at', 'host_uid']))
+          // Player can only update their own entry inside the players map
+          || request.resource.data.diff(resource.data).affectedKeys()
+              .hasOnly([request.auth.uid])
+        );
+      allow delete: if false;
+    }
+  }
+}
