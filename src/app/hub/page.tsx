@@ -9,6 +9,7 @@ import { PlusIcon } from "@/ui/icons";
 import { OkadaMascot } from "@/ui/mascot";
 import { Panel, PrimaryButton } from "@/ui/kit";
 import { BukaIcon, StarIcon, MapIcon as MapIconSvg } from "@/ui/icons";
+import { callDailyApi } from "@/systems/economy";
 import { AuthProvider, useAuth } from "@/lib/auth";
 import {
   formatNaira,
@@ -717,8 +718,9 @@ function SuyaOverlay({ profile, onClose, onClaimed }: { profile: PlayerProfile; 
     if (claimed || busy) return;
     setBusy(true);
     try {
-      const { updateProfile } = await import("@/lib/firestore");
-      await updateProfile(profile.uid, { cash: profile.cash + 500, rep: profile.rep + 25 });
+      // Call server API — server checks date (once per day), writes cash + rep
+      const result = await callDailyApi();
+      if (result.error) { setClaimed(false); return; }
       await onClaimed();
       setClaimed(true);
     } finally { setBusy(false); }
