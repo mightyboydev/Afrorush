@@ -1,14 +1,16 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
-@custom-variant dark (&:is(.dark *));
-
 /*
- * AfroRush design system — Lagos Life-inspired.
- * Glassmorphism panels with 1px inset white highlight + ink-tinted shadows,
- * Fredoka display font, tabular-nums everywhere, 20+ keyframes for life,
- * focus-visible 3px ring, prefers-reduced-motion respected.
+ * AfroRush globals.css — just imports the design system + base layer.
+ * All design tokens live in src/styles/theme.css (Kaduna "Harmattan Sun").
+ * All component classes live in src/styles/components.css.
  */
+
+@import "../styles/theme.css";
+@import "../styles/components.css";
+
+@custom-variant dark (&:is(.dark *));
 
 @theme inline {
   --color-background: var(--background);
@@ -33,99 +35,38 @@
   --color-popover-foreground: var(--popover-foreground);
   --color-input: var(--input);
 
-  /* AfroRush brand palette — Lagos Life-inspired */
-  --color-rush-leaf:        #22b573;   /* primary brand green */
-  --color-rush-leaf-deep:   #128a55;   /* hover / dark variant */
-  --color-rush-lagoon:      #2f7de1;   /* accent blue, focus rings */
-  --color-rush-lagoon-soft: #e8f1fd;   /* light blue accent bg */
-  --color-rush-rose:        #ef5a6f;   /* destructive, NEW badge */
-  --color-rush-amber:       #fcbb00;   /* money gold */
-  --color-rush-amber-deep:  #f99c00;   /* money gradient stop */
-  --color-rush-sunset:      #f59e42;   /* warm orange */
-  --color-rush-ink:        #1d2433;   /* primary text + dark UI */
-  --color-rush-ink-soft:   #5b6478;   /* muted text */
-  --color-rush-paper:      #ffffff;   /* pure white card bg */
-  --color-rush-mist:       #f3f5f9;   /* secondary bg, track, muted fill */
-  --color-rush-line:       rgba(29,36,51,0.08);   /* 8% ink borders */
+  /* AfroRush brand palette (alias to theme.css tokens) */
+  --color-rush-leaf: var(--ar-emerald);
+  --color-rush-leaf-deep: var(--ar-emerald-deep);
+  --color-rush-lagoon: var(--ar-indigo);
+  --color-rush-lagoon-soft: var(--ar-indigo-soft);
+  --color-rush-rose: var(--ar-rose);
+  --color-rush-amber: var(--ar-gold);
+  --color-rush-amber-deep: var(--ar-gold-deep);
+  --color-rush-sunset: var(--ar-terracotta);
+  --color-rush-ink: var(--ar-ink);
+  --color-rush-ink-soft: var(--ar-ink-soft);
+  --color-rush-paper: var(--ar-paper);
+  --color-rush-mist: var(--ar-mist);
+  --color-rush-line: var(--ar-line);
 
-  /* Legacy aliases (so existing components don't break) */
-  --color-rush-green:      var(--color-rush-leaf);
-  --color-rush-green-dark: var(--color-rush-leaf-deep);
-  --color-rush-navy:       var(--color-rush-ink);
-  --color-rush-cream:      var(--color-rush-mist);
-  --color-rush-orange:     var(--color-rush-sunset);
-  --color-rush-gold:       var(--color-rush-amber);
-  --color-rush-sky:        #bfe0f7;
-  --color-rush-magenta:    #c026d3;
-  --color-rush-purple:     #7c3aed;
-  --color-rush-jade:       #0d9488;
+  /* Legacy aliases for backward compat */
+  --color-rush-green: var(--ar-emerald);
+  --color-rush-green-dark: var(--ar-emerald-deep);
+  --color-rush-navy: var(--ar-indigo-deep);
+  --color-rush-cream: var(--ar-cream);
+  --color-rush-orange: var(--ar-terracotta);
+  --color-rush-gold: var(--ar-gold);
+  --color-rush-sky: #bfe0f7;
+  --color-rush-magenta: #c026d3;
+  --color-rush-purple: #7c3aed;
+  --color-rush-jade: var(--ar-emerald);
 
-  /* Radius scale (Lagos Life uses 1rem base, scales up to 46px phone bezel) */
-  --radius-sm: 0.5rem;     /* 8px */
-  --radius-md: 0.75rem;    /* 12px */
-  --radius-lg: 1rem;       /* 16px — base */
-  --radius-xl: 1.5rem;    /* 24px */
-  --radius-2xl: 1.875rem; /* 30px — big CTA buttons */
-  --radius-3xl: 2.875rem; /* 46px — phone bezel */
-
-  /* Motion — Lagos Life uses 150ms default, .btn-press uses 120ms */
-  --ease-out: cubic-bezier(0, 0, 0.2, 1);
-  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
-  --default-transition-duration: 0.15s;
-  --default-transition-timing-function: var(--ease-in-out);
-}
-
-:root {
-  --radius: 1rem;          /* 16px — Lagos Life base */
-
-  /* Cool blue-grey page background (replaces warm cream) */
-  --background: #eef2f7;
-  --foreground: #1d2433;
-  --card: #ffffff;
-  --card-foreground: #1d2433;
-  --popover: #ffffff;
-  --popover-foreground: #1d2433;
-  --primary: #22b573;                       /* leaf green */
-  --primary-foreground: #ffffff;
-  --secondary: #f3f5f9;                    /* mist */
-  --secondary-foreground: #1d2433;
-  --muted: #f3f5f9;
-  --muted-foreground: #5b6478;
-  --accent: #ff6a1a;                       /* AfroRush orange (kept for backward compat) */
-  --accent-foreground: #ffffff;
-  --destructive: #ef5a6f;                  /* rose */
-  --border: rgba(29, 36, 51, 0.08);        /* 8% ink line */
-  --input: rgba(29, 36, 51, 0.12);         /* 12% ink line for inputs */
-  --ring: #2f7de1;                          /* lagoon focus ring */
-
-  /* Ink-tinted shadow color — NEVER pure black on light backgrounds */
-  --ink-shadow: rgba(22, 32, 60, 0.14);
-
-  /* Font stacks (the actual family is set via next/font in layout.tsx) */
-  --font-jakarta: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Fredoka", "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
-  --font-jetbrains: "JetBrains Mono", ui-monospace, monospace;
-}
-
-.dark {
-  --background: #0f172a;
-  --foreground: #f8fafc;
-  --card: #1e293b;
-  --card-foreground: #f8fafc;
-  --popover: #1e293b;
-  --popover-foreground: #f8fafc;
-  --primary: #22b573;
-  --primary-foreground: #0f172a;
-  --secondary: #334155;
-  --secondary-foreground: #f8fafc;
-  --muted: #334155;
-  --muted-foreground: #94a3b8;
-  --accent: #ff6a1a;
-  --accent-foreground: #0f172a;
-  --destructive: #f87171;
-  --border: #334155;
-  --input: #334155;
-  --ring: #22b573;
+  --radius-sm: var(--ar-radius-sm);
+  --radius-md: var(--ar-radius-md);
+  --radius-lg: var(--ar-radius-lg);
+  --radius-xl: var(--ar-radius-xl);
+  --radius-2xl: var(--ar-radius-2xl);
 }
 
 @layer base {
@@ -134,385 +75,22 @@
   }
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: var(--font-jakarta);
+    font-family: var(--ar-font-body);
     -webkit-tap-highlight-color: transparent;
     -webkit-font-smoothing: antialiased;
     overscroll-behavior: none;
   }
-  /* Display font for headings — Fredoka 600 */
   h1, h2, h3, .font-display {
-    font-family: var(--font-display);
+    font-family: var(--ar-font-display);
     font-weight: 600;
-    letter-spacing: -0.025em;       /* tracking-tight like Lagos Life */
+    letter-spacing: -0.025em;
   }
   button {
     -webkit-tap-highlight-color: transparent;
     touch-action: manipulation;
   }
-
-  /* Focus-visible — 3px solid lagoon ring with 2px offset (Lagos Life style) */
   :where(button, a, input, select, textarea, [role="button"], [tabindex]):focus-visible {
     outline-offset: 2px;
-    outline: 3px solid var(--ring);
-  }
-}
-
-/* ---------- THE .panel glassmorphism primitive (Lagos Life signature) ---------- */
-.panel,
-.rush-glass {
-  -webkit-backdrop-filter: blur(16px) saturate(1.4);
-  backdrop-filter: blur(16px) saturate(1.4);
-  border: 1px solid rgba(255, 255, 255, 0.7);     /* 70% white border */
-  background: rgba(255, 255, 255, 0.97);           /* 97% white — barely translucent */
-  box-shadow:
-    inset 0 1px rgba(255, 255, 255, 1),            /* ← secret 1px inner top highlight */
-    0 8px 28px var(--ink-shadow);                   /* ink-tinted drop shadow (NOT pure black) */
-}
-
-/* Dark glassmorphism variant — for night mode or dark UI surfaces */
-.rush-glass-dark {
-  -webkit-backdrop-filter: blur(16px) saturate(1.4);
-  backdrop-filter: blur(16px) saturate(1.4);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(29, 36, 51, 0.6);
-  box-shadow:
-    inset 0 1px rgba(255, 255, 255, 0.15),
-    0 8px 32px rgba(0, 0, 0, 0.3);
-}
-
-/* Frosted pill — for top status bar chips, status indicators */
-.rush-glass-pill {
-  -webkit-backdrop-filter: blur(12px) saturate(1.4);
-  backdrop-filter: blur(12px) saturate(1.4);
-  border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.7);
-  background: rgba(255, 255, 255, 0.97);
-  box-shadow:
-    inset 0 1px rgba(255, 255, 255, 1),
-    0 4px 16px -4px var(--ink-shadow);
-}
-
-/* Plain white card — solid, no glassmorphism (when panel transparency is unwanted) */
-.rush-card {
-  background: var(--card);
-  border-radius: var(--radius-xl);
-  box-shadow:
-    inset 0 1px rgba(255, 255, 255, 1),
-    0 8px 28px var(--ink-shadow);
-}
-
-/* Legacy alias (so existing components don't break) */
-.rush-pill {
-  background: var(--card);
-  border-radius: 999px;
-  box-shadow:
-    inset 0 1px rgba(255, 255, 255, 1),
-    0 4px 12px -4px var(--ink-shadow);
-  border: 1px solid var(--rush-line);
-}
-
-/* ---------- Button tap feedback (fast, tactile) ---------- */
-.btn-press,
-.rush-btn-press {
-  transition:
-    transform 0.12s,
-    box-shadow 0.12s,
-    background-color 0.15s;
-}
-
-/* ---------- Button recipes ---------- */
-
-/* Primary CTA — brand green with green-glow shadow (Lagos Life style) */
-.rush-btn-primary {
-  background: var(--color-rush-leaf);
-  color: #ffffff;
-  box-shadow:
-    inset 0 1px rgba(255, 255, 255, 0.3),
-    0 6px 16px -6px rgba(34, 181, 115, 0.7);       /* green-tinted glow */
-  transition: transform 0.12s, box-shadow 0.12s, background-color 0.15s;
-}
-.rush-btn-primary:hover { background: var(--color-rush-leaf-deep); }
-.rush-btn-primary:active { transform: scale(0.97); }
-.rush-btn-primary:disabled { opacity: 0.4; }
-
-/* Secondary CTA — white with two-layer subtle ink shadow + 5% black ring */
-.rush-btn-secondary {
-  background: var(--card);
-  color: var(--color-rush-ink);
-  box-shadow:
-    inset 0 1px rgba(255, 255, 255, 1),
-    0 1px 2px rgba(22, 32, 60, 0.08),
-    0 4px 12px rgba(22, 32, 60, 0.06);
-  /* ring-1 ring-black/5 — implemented via outline */
-  outline: 1px solid rgba(0, 0, 0, 0.05);
-  outline-offset: -1px;
-  transition: transform 0.12s, box-shadow 0.12s, background-color 0.15s;
-}
-.rush-btn-secondary:hover { background: var(--color-rush-mist); }
-.rush-btn-secondary:active { transform: scale(0.97); }
-.rush-btn-secondary:disabled { opacity: 0.4; }
-
-/* ---------- Legacy helpers (kept for backward compat with existing components) ---------- */
-
-.rush-gradient {
-  background: linear-gradient(135deg, #22b573 0%, #fcbb00 100%);
-}
-.rush-gradient-orange {
-  background: linear-gradient(135deg, #f59e42 0%, #fcbb00 100%);
-}
-.rush-gradient-sky {
-  background: linear-gradient(180deg, #bfe0f7 0%, #eef2f7 60%, #eef2f7 100%);
-}
-
-.rush-soft-shadow {
-  box-shadow:
-    inset 0 1px rgba(255, 255, 255, 1),
-    0 6px 24px -6px var(--ink-shadow);
-}
-
-/* Green glow shadow (for hover states, success highlights) */
-.rush-glow-green {
-  box-shadow:
-    0 0 0 4px rgba(34, 181, 115, 0.2),
-    0 8px 24px -6px rgba(34, 181, 115, 0.4);
-}
-.rush-glow-gold {
-  box-shadow:
-    0 0 0 4px rgba(252, 187, 0, 0.2),
-    0 8px 24px -6px rgba(252, 187, 0, 0.4);
-}
-
-/* Premium bottom navigation bar — frosted-glass dock */
-.rush-dock {
-  -webkit-backdrop-filter: blur(20px) saturate(1.8);
-  backdrop-filter: blur(20px) saturate(1.8);
-  background: rgba(255, 255, 255, 0.97);
-  border: 1px solid rgba(255, 255, 255, 0.7);
-  border-radius: var(--radius-3xl);   /* 46px — pill dock */
-  box-shadow:
-    inset 0 1px rgba(255, 255, 255, 1),
-    0 8px 28px var(--ink-shadow);
-}
-
-/* App icon (squircle) — iOS-style with gradient */
-.rush-squircle {
-  border-radius: 22%;
-  background: linear-gradient(145deg, var(--icon-from, #22b573), var(--icon-to, #128a55));
-  box-shadow:
-    inset 0 1px rgba(255, 255, 255, 0.4),
-    0 4px 12px -2px var(--ink-shadow);
-}
-
-/* Online dot — pulsing green */
-.rush-online-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 999px;
-  background: var(--color-rush-leaf);
-  animation: rush-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-/* ---------- tabular-nums (rock-solid number alignment, Lagos Life style) ---------- */
-.tabular-nums,
-.rush-tabular {
-  font-variant-numeric: tabular-nums;
-  font-feature-settings: "tnum";
-}
-
-/* ---------- KEYFRAMES (Lagos Life-inspired — 20+ for life) ---------- */
-
-/* Smooth slide-up — for tab content + bottom sheets */
-@keyframes rush-slide-up {
-  from { opacity: 0; transform: translateY(12px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-.rush-slide-up { animation: rush-slide-up 0.25s var(--ease-out); }
-
-/* Bounce-in — for modals + cards entering */
-@keyframes rush-bounce-in {
-  0% { opacity: 0; transform: scale(0.9) translateY(20px); }
-  60% { opacity: 1; transform: scale(1.02) translateY(-2px); }
-  100% { transform: scale(1) translateY(0); }
-}
-.rush-bounce-in { animation: rush-bounce-in 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
-
-/* Pop — for badges appearing (NEW badge, achievement unlocks) */
-@keyframes rush-pop {
-  0% { transform: scale(0); opacity: 0; }
-  70% { transform: scale(1.1); opacity: 1; }
-  100% { transform: scale(1); }
-}
-.rush-pop { animation: rush-pop 0.3s var(--ease-out); }
-
-/* Pulse — for online dot, "live" indicators */
-@keyframes rush-pulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.5; transform: scale(1.15); }
-}
-.rush-pulse { animation: rush-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
-
-/* Floaty — gentle floating, for clouds + decorative elements */
-@keyframes rush-float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-8px); }
-}
-.rush-float { animation: rush-float 3s ease-in-out infinite; }
-
-/* Bob — avatar idle bobbing (subtle) */
-@keyframes rush-bob {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-2px); }
-}
-.rush-bob { animation: rush-bob 2.5s ease-in-out infinite; }
-
-/* Breathe — avatar chest breathing (subtle scaleY) */
-@keyframes rush-breathe {
-  0%, 100% { transform: scaleY(1); }
-  50% { transform: scaleY(1.018); }
-}
-.rush-breathe { animation: rush-breathe 3s ease-in-out infinite; }
-
-/* Plumbob spin — Sims-style diamond marker above player avatar */
-@keyframes rush-plumbob-spin {
-  0% { transform: scaleX(1); }
-  25% { transform: scaleX(0.25); }
-  50% { transform: scaleX(-1); }
-  75% { transform: scaleX(-0.25); }
-  100% { transform: scaleX(1); }
-}
-.rush-plumbob-spin { animation: rush-plumbob-spin 2s linear infinite; }
-
-/* Plumbob bob — combined with spin for the player marker */
-@keyframes rush-plumbob-bob {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-3px); }
-}
-.rush-plumbob-bob { animation: rush-plumbob-bob 1.5s ease-in-out infinite; }
-
-/* Pulse ring — expanding sonar ring (yellow, like Lagos Life) */
-@keyframes rush-pulsering {
-  0% { box-shadow: 0 0 0 0 rgba(252, 187, 0, 0.7); }
-  100% { box-shadow: 0 0 0 14px rgba(252, 187, 0, 0); }
-}
-.rush-pulsering { animation: rush-pulsering 1.5s ease-out infinite; }
-
-/* Map pulse — fading expanding circle (used on minimap markers) */
-@keyframes rush-mappulse {
-  0% { opacity: 0.9; transform: scale(0.6); }
-  100% { opacity: 0; transform: scale(2.2); }
-}
-.rush-mappulse { animation: rush-mappulse 2s ease-out infinite; }
-
-/* Sway — for trees, signs, decorative elements */
-@keyframes rush-sway {
-  0%, 100% { transform: rotate(-2deg); }
-  50% { transform: rotate(2deg); }
-}
-.rush-sway { animation: rush-sway 4s ease-in-out infinite; }
-
-/* Wiggle — attention grabber, for "new!" badges */
-@keyframes rush-wiggle {
-  0%, 100% { transform: rotate(0deg); }
-  25% { transform: rotate(-6deg); }
-  75% { transform: rotate(6deg); }
-}
-.rush-wiggle { animation: rush-wiggle 0.5s ease-in-out; }
-
-/* Steam — for cooking, hot food, coffee */
-@keyframes rush-steam {
-  0% { opacity: 0.9; transform: translateY(0); }
-  100% { opacity: 0; transform: translateY(-14px); }
-}
-.rush-steam { animation: rush-steam 2s ease-out infinite; }
-
-/* Shimmer — for skeleton loaders + progress bars */
-@keyframes rush-shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
-}
-.rush-skeleton {
-  background: linear-gradient(90deg, var(--color-rush-mist) 25%, #e8eef5 50%, var(--color-rush-mist) 75%);
-  background-size: 200% 100%;
-  animation: rush-shimmer 1.4s infinite;
-  border-radius: var(--radius-md);
-}
-
-/* Confetti — for race victories */
-@keyframes rush-confetti-fall {
-  0% { transform: translateY(-100vh) rotate(0deg); opacity: 1; }
-  100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
-}
-.rush-confetti { animation: rush-confetti-fall 2.6s linear forwards; }
-
-/* Drive — yellow danfo buses driving across the world */
-@keyframes rush-drive {
-  0% { transform: translateX(-140px); }
-  100% { transform: translateX(calc(100vw + 140px)); }
-}
-.rush-drive { animation: rush-drive 12s linear infinite; }
-
-/* Rain — for rainy weather */
-@keyframes rush-rain {
-  0% { opacity: 0; transform: translateY(-8px); }
-  30% { opacity: 1; }
-  100% { opacity: 0; transform: translateY(14px); }
-}
-.rush-rain { animation: rush-rain 0.8s linear infinite; }
-
-/* ---------- Utility helpers ---------- */
-
-/* No scrollbar */
-.no-scrollbar::-webkit-scrollbar { display: none; }
-.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-
-/* Safe area for mobile (Lagos Life uses max(env(), 10px) for non-iOS fallback) */
-.safe-pt { padding-top: max(env(safe-area-inset-top), 10px); }
-.safe-pb { padding-bottom: max(env(safe-area-inset-bottom), 10px); }
-.safe-px { padding-left: max(env(safe-area-inset-left), 12px); padding-right: max(env(safe-area-inset-right), 12px); }
-
-/* 3D canvas: full bleed */
-.world-canvas {
-  display: block;
-  width: 100% !important;
-  height: 100% !important;
-  touch-action: none;
-}
-
-/* Joystick */
-.joystick-base {
-  background: radial-gradient(circle, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.7) 70%, rgba(255,255,255,0) 100%);
-  border: 2px solid rgba(29, 36, 51, 0.1);
-}
-.joystick-knob {
-  background: linear-gradient(145deg, #22b573 0%, #128a55 100%);
-  box-shadow:
-    inset 0 1px rgba(255, 255, 255, 0.4),
-    0 4px 12px -2px rgba(34, 181, 115, 0.5);
-}
-
-/* Progress bar — Lagos Life-style gradient */
-.progress-bar {
-  background: linear-gradient(90deg, #22b573 0%, #fcbb00 50%, #f59e42 100%);
-  background-size: 200% 100%;
-  animation: rush-shimmer 1.8s linear infinite;
-}
-
-/* ---------- Day / night page background (Lagos Life pattern) ---------- */
-.page-bg-day {
-  background: linear-gradient(180deg, #bfe0f7 0%, #e8f1f7 55%, #eef2f7 100%);
-  transition: background 1s var(--ease-in-out);
-}
-.page-bg-night {
-  background: linear-gradient(180deg, #0f1733 0%, #1d2a52 70%, #27335e 100%);
-  transition: background 1s var(--ease-in-out);
-}
-
-/* ---------- Reduced motion — respect user preference ---------- */
-@media (prefers-reduced-motion: reduce) {
-  *, :before, :after {
-    transition-duration: 0.01ms !important;
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    scroll-behavior: auto !important;
+    outline: 3px solid var(--ar-indigo);
   }
 }
