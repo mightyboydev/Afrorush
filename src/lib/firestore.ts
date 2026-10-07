@@ -110,44 +110,23 @@ export async function updateLoadout(uid: string, loadout: Loadout): Promise<void
   await updateProfile(uid, { loadout });
 }
 
-export async function purchaseItem(uid: string, itemId: string, price: number): Promise<void> {
-  const db = getFirebaseDb();
-  // Atomic-ish: deduct cash + add to unlocked list in one transaction-like sequence.
-  // For simplicity we use field transforms; if cash goes negative it's a bug to fix
-  // at the UI layer (which already gates the purchase button).
-  await updateDoc(doc(db, USERS, uid), { cash: increment(-price) });
-  await updateDoc(doc(db, USERS, uid, "meta", UNLOCKED_KEY), {
-    ids: arrayUnion(itemId),
-  });
+export async function purchaseItem(uid: string, itemId: string, _price: number): Promise<void> {
+  // SECURITY: All purchases must go through the server API route /api/economy/buy
+  // This client-side function is kept for backward compat but should NOT be called.
+  throw new Error("Use callBuyApi() from systems/economy.ts instead of purchaseItem()");
 }
 
 export async function applyRaceResult(
-  uid: string,
-  result: {
+  _uid: string,
+  _result: {
     cashEarned: number;
     repEarned: number;
     mode: RaceMode;
     score: number;
   }
 ): Promise<void> {
-  const db = getFirebaseDb();
-  // Update cash, rep, totalRuns in one write.
-  await updateDoc(doc(db, USERS, uid), {
-    cash: increment(result.cashEarned),
-    rep: increment(result.repEarned),
-    totalRuns: increment(1),
-    lastSeen: Date.now(),
-  });
-  // High score: read-then-write (single-client app, acceptable).
-  const profile = await fetchProfile(uid);
-  if (profile) {
-    const prevHigh = profile.highScores[result.mode] ?? 0;
-    if (result.score > prevHigh) {
-      const newHighScores = { ...profile.highScores, [result.mode]: result.score };
-      await updateDoc(doc(db, USERS, uid), { highScores: newHighScores });
-      return;
-    }
-  }
+  // SECURITY: All race rewards must go through the server API route /api/economy/race
+  throw new Error("Use callRaceApi() from systems/economy.ts instead of applyRaceResult()");
 }
 
 // ---------- Presence ----------
@@ -496,43 +475,15 @@ export async function findPlayerByUsername(
 }
 
 // Transfer cash from `from` profile to a recipient username.
-// Atomic-ish: debits sender, credits recipient, sends the recipient a DM
-// notification of the transfer. Throws if recipient not found or insufficient
-// balance. Returns the recipient's display name on success.
+// SECURITY: All transfers must go through the server API route /api/economy/transfer
+// This client-side function is kept for backward compat but should NOT be called.
 export async function transferCash(
-  from: PlayerProfile,
-  recipientUsername: string,
-  amount: number,
-  note?: string
+  _from: PlayerProfile,
+  _recipientUsername: string,
+  _amount: number,
+  _note?: string
 ): Promise<{ recipientName: string; recipientUid: string }> {
-  if (amount <= 0) throw new Error("Amount must be positive");
-  if (amount > from.cash) throw new Error("You no get enough cash for this transfer");
-  const recipient = await findPlayerByUsername(recipientUsername);
-  if (!recipient) throw new Error(`No player called "${recipientUsername}". Tell them make them sign up first!`);
-  if (recipient.uid === from.uid) throw new Error("You no fit send money to yourself");
-
-  const db = getFirebaseDb();
-
-  // Debit sender
-  await updateDoc(doc(db, USERS, from.uid), { cash: increment(-amount) });
-  // Credit recipient (best-effort — if this fails, refund sender)
-  try {
-    await updateDoc(doc(db, USERS, recipient.uid), { cash: increment(amount) });
-  } catch (e) {
-    // Refund sender if recipient credit fails
-    await updateDoc(doc(db, USERS, from.uid), { cash: increment(amount) });
-    throw new Error("Transfer failed. Try again.");
-  }
-
-  // Send recipient a DM so they see the money land (the viral hook!)
-  try {
-    const text = `💸 You don receive ₦${amount.toLocaleString()} from @${from.username}${note ? ` — "${note}"` : ""}. Open AfroRush to spend am!`;
-    await sendDm(from, recipient.uid, recipient.username, text);
-  } catch {
-    /* DM is best-effort — don't fail the transfer */
-  }
-
-  return { recipientName: recipient.username, recipientUid: recipient.uid };
+  throw new Error("Use callTransferApi() from systems/economy.ts instead of transferCash()");
 }
 
 // ---------- Multiplayer Race Rooms ----------
@@ -692,39 +643,20 @@ export async function leaveRaceRoom(
 // compounds at 5% per hour (so ₦1000 becomes ₦1050 in 1h, ₦1102 in 2h).
 // Auto-deducted from cash as the player earns.
 
+// SECURITY: All loan operations must go through the server API route /api/economy/loan
+// The server writes activeLoan + cash. Clients cannot write either.
 export async function takeMicroLoan(
-  profile: PlayerProfile,
-  amount: number
+  _profile: PlayerProfile,
+  _amount: number
 ): Promise<void> {
-  if (amount <= 0 || amount > 50000) throw new Error("Loan must be ₦1 - ₦50,000");
-  if (profile.activeLoan) throw new Error("You still get outstanding loan. Pay am first!");
-  const db = getFirebaseDb();
-  const loan = {
-    principal: amount,
-    interestRate: 0.05, // 5% per hour
-    totalOwed: amount,
-    takenAt: Date.now(),
-  };
-  await updateDoc(doc(db, USERS, profile.uid), {
-    cash: increment(amount),
-    activeLoan: loan,
-  });
+  throw new Error("Use callLoanApi('take', amount) from systems/economy.ts instead");
 }
 
 export async function repayMicroLoan(
-  profile: PlayerProfile,
-  amount: number
+  _profile: PlayerProfile,
+  _amount: number
 ): Promise<void> {
-  if (!profile.activeLoan) throw new Error("You no get outstanding loan.");
-  if (amount <= 0) throw new Error("Enter amount");
-  if (amount > profile.cash) throw new Error("You no get enough cash");
-  if (amount > profile.activeLoan.totalOwed) amount = profile.activeLoan.totalOwed;
-  const db = getFirebaseDb();
-  const newOwed = profile.activeLoan.totalOwed - amount;
-  await updateDoc(doc(db, USERS, profile.uid), {
-    cash: increment(-amount),
-    activeLoan: newOwed === 0 ? null : { ...profile.activeLoan, totalOwed: newOwed },
-  });
+  throw new Error("Use callLoanApi('repay', amount) from systems/economy.ts instead");
 }
 
 // ---------- Lagos Life: Street interactions ----------
@@ -732,66 +664,18 @@ export async function repayMicroLoan(
 // Success rate depends on attacker's street_cred vs victim's street_cred.
 // On success: attacker gains cash, victim loses cash, victim gets a DM.
 // On failure: attacker gets reported automatically, jailed for 5 minutes.
+// SECURITY: All pickpocket/report operations must go through the server API route /api/economy/pickpocket
+// The server handles cash transfers between players atomically.
 export async function pickpocket(
-  attacker: PlayerProfile,
-  victimUid: string
+  _attacker: PlayerProfile,
+  _victimUid: string
 ): Promise<{ success: boolean; stolen: number; message: string }> {
-  const db = getFirebaseDb();
-  const victimSnap = await getDoc(doc(db, USERS, victimUid));
-  if (!victimSnap.exists()) throw new Error("Victim no dey");
-  const victim = victimSnap.data() as PlayerProfile;
-  if (victim.cash <= 0) {
-    return { success: false, stolen: 0, message: `${victim.username} no get cash for pocket. Try another person.` };
-  }
-  // Success rate: 50% base + (attacker.cred - victim.cred) / 2
-  const attackerCred = attacker.vitals?.street_cred ?? 10;
-  const victimCred = victim.vitals?.street_cred ?? 10;
-  const successRate = Math.max(0.1, Math.min(0.85, 0.5 + (attackerCred - victimCred) / 200));
-  const success = Math.random() < successRate;
-  if (!success) {
-    // Auto-jail the attacker for 5 minutes
-    await updateDoc(doc(db, USERS, attacker.uid), {
-      jailedUntil: Date.now() + 5 * 60 * 1000,
-      jailedReason: `Caught trying to pickpocket ${victim.username}`,
-    });
-    return { success: false, stolen: 0, message: `🚔 You been caught! Dem lock you for 5 minutes.` };
-  }
-  // Steal 5-20% of victim's cash
-  const pct = 0.05 + Math.random() * 0.15;
-  const stolen = Math.min(victim.cash, Math.round(victim.cash * pct));
-  await updateDoc(doc(db, USERS, victimUid), { cash: increment(-stolen) });
-  await updateDoc(doc(db, USERS, attacker.uid), { cash: increment(stolen) });
-  // Notify victim via DM
-  try {
-    await sendDm(attacker, victimUid, victim.username, `🚨 Pickpocket alert! @${attacker.username} don steal ₦${stolen.toLocaleString()} from your pocket! Report am if you catch am.`);
-  } catch { /* best-effort */ }
-  return { success: true, stolen, message: `💰 Success! You don pickpocket ₦${stolen.toLocaleString()} from @${victim.username}!` };
+  throw new Error("Use callPickpocketApi() from systems/economy.ts instead");
 }
 
-// Report to police: target a player who's been harassing you. If they've
-// pickpocketed someone in the last hour (we can't verify, so it's a vote
-// system), they get jailed. For simplicity, anyone can jail anyone for
-// 5 minutes — but each player can only report once per hour (cooldown
-// tracked in their own profile).
 export async function reportToPolice(
-  reporter: PlayerProfile,
-  offenderUid: string
+  _reporter: PlayerProfile,
+  _offenderUid: string
 ): Promise<{ success: boolean; message: string }> {
-  const db = getFirebaseDb();
-  const offenderSnap = await getDoc(doc(db, USERS, offenderUid));
-  if (!offenderSnap.exists()) throw new Error("Person no dey");
-  const offender = offenderSnap.data() as PlayerProfile;
-  if (offender.jailedUntil && offender.jailedUntil > Date.now()) {
-    return { success: false, message: `${offender.username} dey inside cell already.` };
-  }
-  // Jail offender for 10 minutes
-  await updateDoc(doc(db, USERS, offenderUid), {
-    jailedUntil: Date.now() + 10 * 60 * 1000,
-    jailedReason: `Reported by @${reporter.username}`,
-  });
-  // Notify offender via DM
-  try {
-    await sendDm(reporter, offenderUid, offender.username, `🚔 @${reporter.username} don report you to police! Dem lock you for 10 minutes. Stay calm — e go pass.`);
-  } catch { /* best-effort */ }
-  return { success: true, message: `✓ You don report @${offender.username}. Police lock am for 10 minutes.` };
+  throw new Error("Use callReportApi() from systems/economy.ts instead");
 }
