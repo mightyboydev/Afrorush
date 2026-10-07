@@ -79,11 +79,14 @@
     -webkit-tap-highlight-color: transparent;
     -webkit-font-smoothing: antialiased;
     overscroll-behavior: none;
+    /* Dark Harmattan Dusk base — deep indigo-brown */
+    background-color: var(--ar-bg);
+    color: var(--ar-text);
   }
   h1, h2, h3, .font-display {
     font-family: var(--ar-font-display);
-    font-weight: 600;
-    letter-spacing: -0.025em;
+    font-weight: 700;          /* heavier for premium feel */
+    letter-spacing: var(--ar-tracking-tight);
   }
   button {
     -webkit-tap-highlight-color: transparent;
@@ -91,6 +94,6 @@
   }
   :where(button, a, input, select, textarea, [role="button"], [tabindex]):focus-visible {
     outline-offset: 2px;
-    outline: 3px solid var(--ar-indigo);
+    outline: 3px solid var(--ar-gold);
   }
 }
